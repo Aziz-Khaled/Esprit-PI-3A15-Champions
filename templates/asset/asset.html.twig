@@ -1,0 +1,285 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+  {% if mode == 'form' %}
+    {{ asset.id ? 'Edit ' ~ asset.name : 'Add Asset' }}
+  {% else %}
+    Asset Management
+  {% endif %}
+{% endblock %}
+
+{% block body %}
+<div style="display:flex; min-height:100vh;">
+
+  <aside class="sidebar">
+    <h2>Management Panel</h2>
+    <a href="#" class="nav-btn"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a href="{{ path('app_backoffice_asset_index') }}" class="nav-btn {{ mode == 'index' ? 'active' : '' }}">
+      <i class="fas fa-coins"></i> Assets
+    </a>
+    <a href="#" class="nav-btn"><i class="fas fa-chart-line"></i> Trading</a>
+    <a href="#" class="nav-btn"><i class="fas fa-cog"></i> Settings</a>
+  </aside>
+
+  <main class="main-content">
+
+    {% for type, messages in app.flashes %}
+      {% for message in messages %}
+        <div class="alert alert-{{ type }}">
+          {{ message }}
+          <button onclick="this.parentElement.remove()">✕</button>
+        </div>
+      {% endfor %}
+    {% endfor %}
+
+    {# ========== LIST ========== #}
+    {% if mode == 'index' %}
+
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+        <div>
+          <h1>Market Assets</h1>
+          <p class="text-muted">Manage the assets available for trading.</p>
+        </div>
+        <a href="{{ path('app_backoffice_asset_new') }}" class="btn-primary">
+          <i class="fas fa-plus"></i> Add Asset
+        </a>
+      </header>
+
+      <div class="table-card">
+        <table class="asset-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Market</th>
+              <th>Price (USD)</th>
+              <th>Status</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for asset in assets %}
+            <tr>
+              <td><span class="symbol-badge">{{ asset.symbol }}</span></td>
+              <td class="fw-500">{{ asset.name }}</td>
+              <td>{{ asset.type|capitalize }}</td>
+              <td>{{ asset.market|upper }}</td>
+              <td class="price-cell">${{ asset.currentPrice|number_format(2, '.', ',') }}</td>
+              <td>
+                <span class="status-badge status-{{ asset.status }}">
+                  {% if asset.status == 'ACTIVE' %}Active
+                  {% elseif asset.status == 'PENDING' %}Pending
+                  {% else %}Disabled{% endif %}
+                </span>
+              </td>
+              <td class="text-muted">{{ asset.createdAt ? asset.createdAt|date('m/d/Y') : '-' }}</td>
+              <td style="display:flex; gap:8px;">
+                <a href="{{ path('app_backoffice_asset_edit', {id: asset.id}) }}" class="btn-icon btn-edit" title="Edit">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <form method="post" action="{{ path('app_backoffice_asset_delete', {id: asset.id}) }}"
+                      onsubmit="return confirm('Delete {{ asset.name }}?');">
+                  <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ asset.id) }}">
+                  <button type="submit" class="btn-icon btn-delete" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8" class="empty-state">
+                <i class="fas fa-coins"></i>
+                <p>No assets found. <a href="{{ path('app_backoffice_asset_new') }}">Add the first one</a>.</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {# ========== FORM (new + edit) ========== #}
+    {% elseif mode == 'form' %}
+
+      <header style="margin-bottom:32px;">
+        <a href="{{ path('app_backoffice_asset_index') }}" class="back-link">
+          <i class="fas fa-arrow-left"></i> Back to list
+        </a>
+        <h1 style="margin-top:12px;">
+          {{ asset.id ? 'Edit ' ~ asset.name : 'Add New Asset' }}
+        </h1>
+        <p class="text-muted">
+          {{ asset.id ? 'Update the information for this asset.' : 'Fill in the details for the new asset.' }}
+        </p>
+      </header>
+
+      <div class="form-card">
+        {{ form_start(form, {attr: {novalidate: 'novalidate', id: 'asset-form'}}) }}
+          <div class="form-grid">
+
+            <div class="form-group">
+              {{ form_label(form.symbol) }}
+              {{ form_widget(form.symbol, {attr: {class: 'form-control', id: 'symbol-input'}}) }}
+              {{ form_errors(form.symbol) }}
+              <small class="field-hint">Uppercase letters and numbers only (e.g. BTC, ETH)</small>
+            </div>
+
+            <div class="form-group">
+              {{ form_label(form.name) }}
+              {{ form_widget(form.name, {attr: {class: 'form-control'}}) }}
+              {{ form_errors(form.name) }}
+              <small class="field-hint">Full name of the asset (e.g. Bitcoin)</small>
+            </div>
+
+            <div class="form-group">
+              {{ form_label(form.type) }}
+              {{ form_widget(form.type, {attr: {class: 'form-select'}}) }}
+              {{ form_errors(form.type) }}
+            </div>
+
+            <div class="form-group">
+              {{ form_label(form.market) }}
+              {{ form_widget(form.market, {attr: {class: 'form-select'}}) }}
+              {{ form_errors(form.market) }}
+            </div>
+
+            <div class="form-group">
+              {{ form_label(form.currentPrice) }}
+              {{ form_widget(form.currentPrice, {attr: {class: 'form-control'}}) }}
+              {{ form_errors(form.currentPrice) }}
+              <small class="field-hint">Must be a positive number (e.g. 45000.50)</small>
+            </div>
+
+            <div class="form-group">
+              {{ form_label(form.status) }}
+              {{ form_widget(form.status, {attr: {class: 'form-select'}}) }}
+              {{ form_errors(form.status) }}
+              {% if not asset.id %}
+                <small class="field-hint">Default: Active</small>
+              {% endif %}
+            </div>
+
+          </div>
+
+          <div class="form-actions">
+            <a href="{{ path('app_backoffice_asset_index') }}" class="btn-cancel">Cancel</a>
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-save"></i>
+              {{ asset.id ? 'Update Asset' : 'Save Asset' }}
+            </button>
+          </div>
+        {{ form_end(form) }}
+      </div>
+
+    {% endif %}
+  </main>
+</div>
+
+<style>
+  :root { --primary: #6366f1; --primary-end: #a855f7; }
+
+  .sidebar {
+    width: 240px; background: #fff; border-right: 1px solid #e5e7eb;
+    padding: 28px 16px; display: flex; flex-direction: column;
+  }
+  .sidebar h2 { color: var(--primary); font-size: 1rem; text-align: center; margin-bottom: 32px; }
+  .nav-btn {
+    display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+    border-radius: 10px; text-decoration: none; color: #374151;
+    font-weight: 500; margin-bottom: 6px; transition: all .2s;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-end)); color: #fff;
+  }
+  .main-content { flex: 1; padding: 36px 40px; background: #f9fafb; }
+
+  .alert {
+    padding: 12px 16px; border-radius: 10px; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;
+  }
+  .alert-success { background: #dcfce7; color: #166534; }
+  .alert-warning  { background: #fef9c3; color: #854d0e; }
+  .alert-danger   { background: #fee2e2; color: #991b1b; }
+  .alert button   { background: none; border: none; cursor: pointer; font-size: 1rem; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-end));
+    color: #fff; padding: 10px 22px; border-radius: 10px; border: none;
+    text-decoration: none; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; transition: opacity .2s;
+  }
+  .btn-primary:hover { opacity: .88; color: #fff; }
+  .back-link { color: var(--primary); text-decoration: none; font-size: 0.9rem; }
+  .back-link:hover { text-decoration: underline; }
+  .text-muted { color: #6b7280; font-size: 0.9rem; }
+
+  .table-card {
+    background: #fff; border-radius: 20px; overflow: hidden;
+    border: 1px solid #f1f5f9; box-shadow: 0 2px 12px rgba(0,0,0,.04);
+  }
+  .asset-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .asset-table thead tr { background: #f8fafc; }
+  .asset-table th {
+    padding: 14px 18px; text-align: left; font-weight: 600; color: #6b7280;
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: .05em;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .asset-table td { padding: 14px 18px; border-bottom: 1px solid #f8fafc; color: #374151; }
+  .asset-table tr:last-child td { border-bottom: none; }
+  .asset-table tr:hover td { background: #fafbff; }
+  .symbol-badge { background: #ede9fe; color: #5b21b6; font-weight: 700; padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; }
+  .fw-500 { font-weight: 500; }
+  .price-cell { font-weight: 600; color: #059669; }
+  .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .status-ACTIVE    { background: #dcfce7; color: #166534; }
+  .status-PENDING   { background: #fef9c3; color: #854d0e; }
+  .status-DESACTIVE { background: #fee2e2; color: #991b1b; }
+  .btn-icon {
+    width: 32px; height: 32px; border-radius: 8px; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.8rem; transition: all .2s; text-decoration: none;
+  }
+  .btn-edit    { background: #ede9fe; color: #6366f1; }
+  .btn-delete  { background: #fee2e2; color: #ef4444; }
+  .btn-edit:hover   { background: #6366f1; color: #fff; }
+  .btn-delete:hover { background: #ef4444; color: #fff; }
+  .empty-state { text-align: center; padding: 60px; color: #9ca3af; }
+  .empty-state i { font-size: 2rem; margin-bottom: 12px; display: block; }
+
+  .form-card { background: #fff; border-radius: 20px; padding: 36px; border: 1px solid #f1f5f9; max-width: 760px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { font-weight: 500; font-size: 0.88rem; margin-bottom: 6px; color: #374151; }
+  .form-control, .form-select {
+    width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb;
+    border-radius: 10px; font-size: 0.9rem; outline: none; background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+  }
+  .field-hint { font-size: 0.75rem; color: #9ca3af; margin-top: 4px; }
+  .form-actions {
+    display: flex; justify-content: flex-end; gap: 14px;
+    margin-top: 30px; padding-top: 22px; border-top: 1px solid #f1f5f9;
+  }
+  .btn-cancel {
+    padding: 10px 22px; border-radius: 10px; border: 1px solid #e5e7eb;
+    text-decoration: none; color: #6b7280; font-weight: 500;
+  }
+  .form-error, ul.form-error {
+    color: #ef4444; font-size: 0.78rem; margin-top: 4px; list-style: none; padding: 0;
+  }
+</style>
+
+<script>
+  const symbolInput = document.getElementById('symbol-input');
+  if (symbolInput) {
+    symbolInput.addEventListener('input', function () {
+      this.value = this.value.toUpperCase();
+    });
+  }
+</script>
+{% endblock %}
