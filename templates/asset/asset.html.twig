@@ -8,271 +8,404 @@
   {% endif %}
 {% endblock %}
 
+{% block stylesheets %}
+<link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+<link href="/css/sb-admin-2.min.css" rel="stylesheet">
+{% endblock %}
+
 {% block body %}
-<div style="display:flex; min-height:100vh;">
 
-  <aside class="sidebar">
-    <h2>Management Panel</h2>
-    <a href="#" class="nav-btn"><i class="fas fa-th-large"></i> Dashboard</a>
-    <a href="{{ path('app_backoffice_asset_index') }}" class="nav-btn {{ mode == 'index' ? 'active' : '' }}">
-      <i class="fas fa-coins"></i> Assets
+<body id="page-top">
+
+<!-- Page Wrapper -->
+<div id="wrapper">
+
+  {# =============================================
+     SIDEBAR
+     ============================================= #}
+  <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+    <!-- Sidebar - Brand -->
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ path('app_admin_panel') }}">
+      <div class="sidebar-brand-icon rotate-n-15">
+        <i class="fas fa-coins"></i>
+      </div>
+      <div class="sidebar-brand-text mx-3">Management <sup>Panel</sup></div>
     </a>
-    <a href="#" class="nav-btn"><i class="fas fa-chart-line"></i> Trading</a>
-    <a href="#" class="nav-btn"><i class="fas fa-cog"></i> Settings</a>
-  </aside>
 
-  <main class="main-content">
+    <hr class="sidebar-divider my-0">
 
-    {% for type, messages in app.flashes %}
-      {% for message in messages %}
-        <div class="alert alert-{{ type }}">
-          {{ message }}
-          <button onclick="this.parentElement.remove()">✕</button>
-        </div>
-      {% endfor %}
-    {% endfor %}
+    <!-- Dashboard -->
+    <li class="nav-item">
+      <a class="nav-link" href="{{ path('app_backoffice_asset_index') }}">
+        <i class="fas fa-fw fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+      </a>
+    </li>
 
-    {# ========== LIST ========== #}
-    {% if mode == 'index' %}
+    <hr class="sidebar-divider">
 
-      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
-        <div>
-          <h1>Market Assets</h1>
-          <p class="text-muted">Manage the assets available for trading.</p>
-        </div>
-        <a href="{{ path('app_backoffice_asset_new') }}" class="btn-primary">
-          <i class="fas fa-plus"></i> Add Asset
-        </a>
-      </header>
+    <div class="sidebar-heading">Backoffice</div>
 
-      <div class="table-card">
-        <table class="asset-table">
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Market</th>
-              <th>Price (USD)</th>
-              <th>Status</th>
-              <th>Created At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for asset in assets %}
-            <tr>
-              <td><span class="symbol-badge">{{ asset.symbol }}</span></td>
-              <td class="fw-500">{{ asset.name }}</td>
-              <td>{{ asset.type|capitalize }}</td>
-              <td>{{ asset.market|upper }}</td>
-              <td class="price-cell">${{ asset.currentPrice|number_format(2, '.', ',') }}</td>
-              <td>
-                <span class="status-badge status-{{ asset.status }}">
-                  {% if asset.status == 'ACTIVE' %}Active
-                  {% elseif asset.status == 'PENDING' %}Pending
-                  {% else %}Disabled{% endif %}
-                </span>
-              </td>
-              <td class="text-muted">{{ asset.createdAt ? asset.createdAt|date('m/d/Y') : '-' }}</td>
-              <td style="display:flex; gap:8px;">
-                <a href="{{ path('app_backoffice_asset_edit', {id: asset.id}) }}" class="btn-icon btn-edit" title="Edit">
-                  <i class="fas fa-edit"></i>
-                </a>
-                <form method="post" action="{{ path('app_backoffice_asset_delete', {id: asset.id}) }}"
-                      onsubmit="return confirm('Delete {{ asset.name }}?');">
-                  <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ asset.id) }}">
-                  <button type="submit" class="btn-icon btn-delete" title="Delete">
-                    <i class="fas fa-trash"></i>
+    <!-- Assets -->
+    <li class="nav-item {{ mode is defined ? 'active' : '' }}">
+      <a class="nav-link" href="{{ path('app_backoffice_asset_index') }}">
+        <i class="fas fa-fw fa-coins"></i>
+        <span>Assets</span>
+      </a>
+    </li>
+
+    <!-- Trading -->
+    <li class="nav-item">
+      <a class="nav-link" href="#">
+        <i class="fas fa-fw fa-chart-line"></i>
+        <span>Trading</span>
+      </a>
+    </li>
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-heading">System</div>
+
+    <!-- Settings -->
+    <li class="nav-item">
+      <a class="nav-link" href="#">
+        <i class="fas fa-fw fa-cog"></i>
+        <span>Settings</span>
+      </a>
+    </li>
+
+    <hr class="sidebar-divider d-none d-md-block">
+
+    <!-- Sidebar Toggler -->
+    <div class="text-center d-none d-md-inline">
+      <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+
+  </ul>
+  {# End of Sidebar #}
+
+  {# =============================================
+     CONTENT WRAPPER
+     ============================================= #}
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+
+      {# ---- TOPBAR ---- #}
+      <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+        <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+          <i class="fa fa-bars"></i>
+        </button>
+
+        <!-- Search -->
+        <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+          <div class="input-group">
+            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
+              aria-label="Search" aria-describedby="basic-addon2">
+            <div class="input-group-append">
+              <button class="btn btn-primary" type="button">
+                <i class="fas fa-search fa-sm"></i>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Topbar Nav -->
+        <ul class="navbar-nav ml-auto">
+
+          <div class="topbar-divider d-none d-sm-block"></div>
+
+          <!-- User Info -->
+          <li class="nav-item dropdown no-arrow">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <span class="mr-2 d-none d-lg-inline text-gray-600 small">Admin</span>
+              <img class="img-profile rounded-circle" src="/img/undraw_profile.svg" alt="profile">
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+              <a class="dropdown-item" href="#">
+                <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profile
+              </a>
+              <a class="dropdown-item" href="#">
+                <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i> Settings
+              </a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Logout
+              </a>
+            </div>
+          </li>
+
+        </ul>
+      </nav>
+      {# End Topbar #}
+
+      {# ---- PAGE CONTENT ---- #}
+      <div class="container-fluid">
+
+        {# Flash Messages #}
+        {% for type, messages in app.flashes %}
+          {% for message in messages %}
+            <div class="alert alert-{{ type == 'success' ? 'success' : (type == 'warning' ? 'warning' : 'danger') }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          {% endfor %}
+        {% endfor %}
+
+        {# ========== LIST MODE ========== #}
+        {% if mode == 'index' %}
+
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Market Assets</h1>
+            <a href="{{ path('app_backoffice_asset_new') }}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+              <i class="fas fa-plus fa-sm text-white-50"></i> Add Asset
+            </a>
+          </div>
+
+          <!-- Assets Table Card -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+              <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-coins mr-2"></i> Assets List
+              </h6>
+              <a href="{{ path('app_backoffice_asset_new') }}" class="btn btn-primary btn-sm d-sm-none">
+                <i class="fas fa-plus"></i>
+              </a>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                  <thead>
+                    <tr>
+                      <th>Symbol</th>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Market</th>
+                      <th>Price (USD)</th>
+                      <th>Status</th>
+                      <th>Created At</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for asset in assets %}
+                    <tr>
+                      <td>
+                        <span class="badge badge-primary font-weight-bold">{{ asset.symbol }}</span>
+                      </td>
+                      <td class="font-weight-bold">{{ asset.name }}</td>
+                      <td>{{ asset.type|capitalize }}</td>
+                      <td><span class="text-uppercase">{{ asset.market }}</span></td>
+                      <td class="text-success font-weight-bold">
+                        ${{ asset.currentPrice|number_format(2, '.', ',') }}
+                      </td>
+                      <td>
+                        {% if asset.status == 'ACTIVE' %}
+                          <span class="badge badge-success">Active</span>
+                        {% elseif asset.status == 'PENDING' %}
+                          <span class="badge badge-warning">Pending</span>
+                        {% else %}
+                          <span class="badge badge-danger">Disabled</span>
+                        {% endif %}
+                      </td>
+                      <td class="text-gray-500 small">
+                        {{ asset.createdAt ? asset.createdAt|date('m/d/Y') : '-' }}
+                      </td>
+                      <td>
+                        <a href="{{ path('app_backoffice_asset_edit', {id: asset.id}) }}"
+                           class="btn btn-info btn-sm" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <form method="post" action="{{ path('app_backoffice_asset_delete', {id: asset.id}) }}"
+                              style="display:inline;"
+                              onsubmit="return confirm('Delete {{ asset.name }}?');">
+                          <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ asset.id) }}">
+                          <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                      <td colspan="8" class="text-center text-gray-500 py-5">
+                        <i class="fas fa-coins fa-3x mb-3 d-block text-gray-300"></i>
+                        No assets found.
+                        <a href="{{ path('app_backoffice_asset_new') }}">Add the first one</a>.
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        {# ========== FORM MODE (new + edit) ========== #}
+        {% elseif mode == 'form' %}
+
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <div>
+              <a href="{{ path('app_backoffice_asset_index') }}" class="btn btn-sm btn-secondary shadow-sm mb-2">
+                <i class="fas fa-arrow-left fa-sm"></i> Back to list
+              </a>
+              <h1 class="h3 mb-0 text-gray-800">
+                {{ asset.id ? 'Edit ' ~ asset.name : 'Add New Asset' }}
+              </h1>
+              <p class="text-muted small mt-1">
+                {{ asset.id ? 'Update the information for this asset.' : 'Fill in the details for the new asset.' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Form Card -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-{{ asset.id ? 'edit' : 'plus-circle' }} mr-2"></i>
+                {{ asset.id ? 'Edit Asset' : 'New Asset' }}
+              </h6>
+            </div>
+            <div class="card-body">
+
+              {{ form_start(form, {attr: {novalidate: 'novalidate', id: 'asset-form'}}) }}
+
+                <div class="row">
+
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      {{ form_label(form.symbol, null, {label_attr: {class: 'font-weight-bold text-gray-700 small text-uppercase'}}) }}
+                      {{ form_widget(form.symbol, {attr: {class: 'form-control form-control-user', id: 'symbol-input', placeholder: 'e.g. BTC'}}) }}
+                      {{ form_errors(form.symbol) }}
+                      <small class="form-text text-muted">Uppercase letters and numbers only (e.g. BTC, ETH)</small>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      {{ form_label(form.name, null, {label_attr: {class: 'font-weight-bold text-gray-700 small text-uppercase'}}) }}
+                      {{ form_widget(form.name, {attr: {class: 'form-control form-control-user', placeholder: 'e.g. Bitcoin'}}) }}
+                      {{ form_errors(form.name) }}
+                      <small class="form-text text-muted">Full name of the asset</small>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      {{ form_label(form.type, null, {label_attr: {class: 'font-weight-bold text-gray-700 small text-uppercase'}}) }}
+                      {{ form_widget(form.type, {attr: {class: 'form-control'}}) }}
+                      {{ form_errors(form.type) }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      {{ form_label(form.market, null, {label_attr: {class: 'font-weight-bold text-gray-700 small text-uppercase'}}) }}
+                      {{ form_widget(form.market, {attr: {class: 'form-control'}}) }}
+                      {{ form_errors(form.market) }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      {{ form_label(form.currentPrice, null, {label_attr: {class: 'font-weight-bold text-gray-700 small text-uppercase'}}) }}
+                      {{ form_widget(form.currentPrice, {attr: {class: 'form-control form-control-user', placeholder: 'e.g. 45000.50'}}) }}
+                      {{ form_errors(form.currentPrice) }}
+                      <small class="form-text text-muted">Must be a positive number</small>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      {{ form_label(form.status, null, {label_attr: {class: 'font-weight-bold text-gray-700 small text-uppercase'}}) }}
+                      {{ form_widget(form.status, {attr: {class: 'form-control'}}) }}
+                      {{ form_errors(form.status) }}
+                      {% if not asset.id %}
+                        <small class="form-text text-muted">Default: Active</small>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-end gap-2" style="gap: 12px;">
+                  <a href="{{ path('app_backoffice_asset_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                  </a>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-1"></i>
+                    {{ asset.id ? 'Update Asset' : 'Save Asset' }}
                   </button>
-                </form>
-              </td>
-            </tr>
-            {% else %}
-            <tr>
-              <td colspan="8" class="empty-state">
-                <i class="fas fa-coins"></i>
-                <p>No assets found. <a href="{{ path('app_backoffice_asset_new') }}">Add the first one</a>.</p>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+                </div>
 
-    {# ========== FORM (new + edit) ========== #}
-    {% elseif mode == 'form' %}
+              {{ form_end(form) }}
 
-      <header style="margin-bottom:32px;">
-        <a href="{{ path('app_backoffice_asset_index') }}" class="back-link">
-          <i class="fas fa-arrow-left"></i> Back to list
-        </a>
-        <h1 style="margin-top:12px;">
-          {{ asset.id ? 'Edit ' ~ asset.name : 'Add New Asset' }}
-        </h1>
-        <p class="text-muted">
-          {{ asset.id ? 'Update the information for this asset.' : 'Fill in the details for the new asset.' }}
-        </p>
-      </header>
-
-      <div class="form-card">
-        {{ form_start(form, {attr: {novalidate: 'novalidate', id: 'asset-form'}}) }}
-          <div class="form-grid">
-
-            <div class="form-group">
-              {{ form_label(form.symbol) }}
-              {{ form_widget(form.symbol, {attr: {class: 'form-control', id: 'symbol-input'}}) }}
-              {{ form_errors(form.symbol) }}
-              <small class="field-hint">Uppercase letters and numbers only (e.g. BTC, ETH)</small>
             </div>
-
-            <div class="form-group">
-              {{ form_label(form.name) }}
-              {{ form_widget(form.name, {attr: {class: 'form-control'}}) }}
-              {{ form_errors(form.name) }}
-              <small class="field-hint">Full name of the asset (e.g. Bitcoin)</small>
-            </div>
-
-            <div class="form-group">
-              {{ form_label(form.type) }}
-              {{ form_widget(form.type, {attr: {class: 'form-select'}}) }}
-              {{ form_errors(form.type) }}
-            </div>
-
-            <div class="form-group">
-              {{ form_label(form.market) }}
-              {{ form_widget(form.market, {attr: {class: 'form-select'}}) }}
-              {{ form_errors(form.market) }}
-            </div>
-
-            <div class="form-group">
-              {{ form_label(form.currentPrice) }}
-              {{ form_widget(form.currentPrice, {attr: {class: 'form-control'}}) }}
-              {{ form_errors(form.currentPrice) }}
-              <small class="field-hint">Must be a positive number (e.g. 45000.50)</small>
-            </div>
-
-            <div class="form-group">
-              {{ form_label(form.status) }}
-              {{ form_widget(form.status, {attr: {class: 'form-select'}}) }}
-              {{ form_errors(form.status) }}
-              {% if not asset.id %}
-                <small class="field-hint">Default: Active</small>
-              {% endif %}
-            </div>
-
           </div>
 
-          <div class="form-actions">
-            <a href="{{ path('app_backoffice_asset_index') }}" class="btn-cancel">Cancel</a>
-            <button type="submit" class="btn-primary">
-              <i class="fas fa-save"></i>
-              {{ asset.id ? 'Update Asset' : 'Save Asset' }}
-            </button>
-          </div>
-        {{ form_end(form) }}
-      </div>
+        {% endif %}
 
-    {% endif %}
-  </main>
+      </div>
+      {# /.container-fluid #}
+
+    </div>
+    {# End of Main Content #}
+
+    {# Footer #}
+    <footer class="sticky-footer bg-white">
+      <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+          <span>Copyright &copy; Your Website {{ "now"|date("Y") }}</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+  {# End of Content Wrapper #}
+
+</div>
+{# End of Page Wrapper #}
+
+<!-- Scroll to Top -->
+<a class="scroll-to-top rounded" href="#page-top">
+  <i class="fas fa-angle-up"></i>
+</a>
+
+<!-- Logout Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="logoutModalLabel">Ready to Leave?</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+        <a class="btn btn-primary" href="#">Logout</a>
+      </div>
+    </div>
+  </div>
 </div>
 
-<style>
-  :root { --primary: #6366f1; --primary-end: #a855f7; }
-
-  .sidebar {
-    width: 240px; background: #fff; border-right: 1px solid #e5e7eb;
-    padding: 28px 16px; display: flex; flex-direction: column;
-  }
-  .sidebar h2 { color: var(--primary); font-size: 1rem; text-align: center; margin-bottom: 32px; }
-  .nav-btn {
-    display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-    border-radius: 10px; text-decoration: none; color: #374151;
-    font-weight: 500; margin-bottom: 6px; transition: all .2s;
-  }
-  .nav-btn:hover, .nav-btn.active {
-    background: linear-gradient(135deg, var(--primary), var(--primary-end)); color: #fff;
-  }
-  .main-content { flex: 1; padding: 36px 40px; background: #f9fafb; }
-
-  .alert {
-    padding: 12px 16px; border-radius: 10px; margin-bottom: 20px;
-    display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;
-  }
-  .alert-success { background: #dcfce7; color: #166534; }
-  .alert-warning  { background: #fef9c3; color: #854d0e; }
-  .alert-danger   { background: #fee2e2; color: #991b1b; }
-  .alert button   { background: none; border: none; cursor: pointer; font-size: 1rem; }
-
-  .btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-end));
-    color: #fff; padding: 10px 22px; border-radius: 10px; border: none;
-    text-decoration: none; font-weight: 600; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 8px; transition: opacity .2s;
-  }
-  .btn-primary:hover { opacity: .88; color: #fff; }
-  .back-link { color: var(--primary); text-decoration: none; font-size: 0.9rem; }
-  .back-link:hover { text-decoration: underline; }
-  .text-muted { color: #6b7280; font-size: 0.9rem; }
-
-  .table-card {
-    background: #fff; border-radius: 20px; overflow: hidden;
-    border: 1px solid #f1f5f9; box-shadow: 0 2px 12px rgba(0,0,0,.04);
-  }
-  .asset-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-  .asset-table thead tr { background: #f8fafc; }
-  .asset-table th {
-    padding: 14px 18px; text-align: left; font-weight: 600; color: #6b7280;
-    font-size: 0.78rem; text-transform: uppercase; letter-spacing: .05em;
-    border-bottom: 1px solid #f1f5f9;
-  }
-  .asset-table td { padding: 14px 18px; border-bottom: 1px solid #f8fafc; color: #374151; }
-  .asset-table tr:last-child td { border-bottom: none; }
-  .asset-table tr:hover td { background: #fafbff; }
-  .symbol-badge { background: #ede9fe; color: #5b21b6; font-weight: 700; padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; }
-  .fw-500 { font-weight: 500; }
-  .price-cell { font-weight: 600; color: #059669; }
-  .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-  .status-ACTIVE    { background: #dcfce7; color: #166534; }
-  .status-PENDING   { background: #fef9c3; color: #854d0e; }
-  .status-DESACTIVE { background: #fee2e2; color: #991b1b; }
-  .btn-icon {
-    width: 32px; height: 32px; border-radius: 8px; border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; font-size: 0.8rem; transition: all .2s; text-decoration: none;
-  }
-  .btn-edit    { background: #ede9fe; color: #6366f1; }
-  .btn-delete  { background: #fee2e2; color: #ef4444; }
-  .btn-edit:hover   { background: #6366f1; color: #fff; }
-  .btn-delete:hover { background: #ef4444; color: #fff; }
-  .empty-state { text-align: center; padding: 60px; color: #9ca3af; }
-  .empty-state i { font-size: 2rem; margin-bottom: 12px; display: block; }
-
-  .form-card { background: #fff; border-radius: 20px; padding: 36px; border: 1px solid #f1f5f9; max-width: 760px; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-  .form-group { display: flex; flex-direction: column; }
-  .form-group label { font-weight: 500; font-size: 0.88rem; margin-bottom: 6px; color: #374151; }
-  .form-control, .form-select {
-    width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb;
-    border-radius: 10px; font-size: 0.9rem; outline: none; background: #fff;
-    transition: border-color .2s, box-shadow .2s;
-  }
-  .form-control:focus, .form-select:focus {
-    border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.12);
-  }
-  .field-hint { font-size: 0.75rem; color: #9ca3af; margin-top: 4px; }
-  .form-actions {
-    display: flex; justify-content: flex-end; gap: 14px;
-    margin-top: 30px; padding-top: 22px; border-top: 1px solid #f1f5f9;
-  }
-  .btn-cancel {
-    padding: 10px 22px; border-radius: 10px; border: 1px solid #e5e7eb;
-    text-decoration: none; color: #6b7280; font-weight: 500;
-  }
-  .form-error, ul.form-error {
-    color: #ef4444; font-size: 0.78rem; margin-top: 4px; list-style: none; padding: 0;
-  }
-</style>
+{# =============================================
+   JavaScript Dependencies
+   ============================================= #}
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="/js/sb-admin-2.min.js"></script>
 
 <script>
   const symbolInput = document.getElementById('symbol-input');
@@ -282,4 +415,6 @@
     });
   }
 </script>
+
+</body>
 {% endblock %}
