@@ -6,10 +6,12 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use App\Repository\UtilisateurRepository;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 #[ORM\Table(name: 'utilisateur')]
-class Utilisateur
+class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -133,4 +135,29 @@ class Utilisateur
     public function getProducts(): Collection { return $this->products; }
     public function getProjets(): Collection { return $this->projets; }
     public function getWallets(): Collection { return $this->wallets; }
+
+
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+{
+    $map = [
+        'CLIENT'      => 'ROLE_CLIENT',
+        'ADMIN'       => 'ROLE_ADMIN',
+        'COMMERCANT'  => 'ROLE_COMMERCANT',
+        'INVESTISSEUR'=> 'ROLE_INVESTISSEUR',
+    ];
+
+    return [$map[$this->role] ?? 'ROLE_USER'];
+}
+
+    public function eraseCredentials(): void {}
+
+    public function getPassword(): string
+    {
+        return $this->motDePasse;
+    }
 }
