@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\backOffice;
+namespace App\Controller\frontOffice;
 
 use App\Entity\Trade;
 use App\Form\TradeType;
@@ -11,10 +11,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/trade', name: 'app_backoffice_trade_')]
+#[Route('/trade', name: 'app_frontoffice_trade_')]
 class TradeController extends AbstractController
 {
-    // ── Récupère les assets actifs via SQL brut (pas de dépendance backoffice) ──
     private function getAssetChoices(EntityManagerInterface $em): array
     {
         $rows = $em->getConnection()->fetchAllAssociative(
@@ -39,22 +38,27 @@ class TradeController extends AbstractController
         return $map;
     }
 
-    // ─────────────────────────────────────────
-    // LIST
-    // ─────────────────────────────────────────
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(TradeRepository $tradeRepo, EntityManagerInterface $em): Response
     {
+        $trades = $tradeRepo->findBy([], ['createdAt' => 'DESC']);
+
+        // Calcul des stats directement en PHP
+        $stats = [
+            'total'     => count($trades),
+            'pending'   => count(array_filter($trades, fn($t) => $t->getStatus() === 'PENDING')),
+            'executed'  => count(array_filter($trades, fn($t) => $t->getStatus() === 'EXECUTED')),
+            'cancelled' => count(array_filter($trades, fn($t) => $t->getStatus() === 'CANCELLED')),
+        ];
+
         return $this->render('trade/index.html.twig', [
-            'trades' => $tradeRepo->findBy([], ['createdAt' => 'DESC']),
+            'trades' => $trades,
             'assets' => $this->getAssetMap($em),
+            'stats'  => $stats,
             'mode'   => 'index',
         ]);
     }
 
-    // ─────────────────────────────────────────
-    // NEW
-    // ─────────────────────────────────────────
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $em): Response
     {
@@ -64,21 +68,19 @@ class TradeController extends AbstractController
 
         $form = $this->createForm(TradeType::class, $trade, [
             'asset_choices' => $this->getAssetChoices($em),
-            'is_edit'       => false,  // création : EXECUTED interdit
+            'is_edit'       => false,
         ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Règle métier : ordre MARKET → forcer prix à null
             if ($trade->getOrderMode() === 'MARKET') {
                 $trade->setPrice(null);
             }
-
             $em->persist($trade);
             $em->flush();
 
             $this->addFlash('success', 'Trade created successfully.');
-            return $this->redirectToRoute('app_backoffice_trade_index');
+            return $this->redirectToRoute('app_frontoffice_trade_index');
         }
 
         return $this->render('trade/index.html.twig', [
@@ -88,9 +90,6 @@ class TradeController extends AbstractController
         ]);
     }
 
-    // ─────────────────────────────────────────
-    // SHOW
-    // ─────────────────────────────────────────
     #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(Trade $trade, EntityManagerInterface $em): Response
     {
@@ -104,39 +103,31 @@ class TradeController extends AbstractController
         ]);
     }
 
-    // ─────────────────────────────────────────
-    // EDIT
-    // ─────────────────────────────────────────
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Trade $trade, EntityManagerInterface $em): Response
     {
-        // Règle métier : un trade EXECUTED ne peut plus être modifié
         if ($trade->getStatus() === 'EXECUTED') {
             $this->addFlash('warning', 'Executed trades cannot be modified.');
-            return $this->redirectToRoute('app_backoffice_trade_show', ['id' => $trade->getId()]);
+            return $this->redirectToRoute('app_frontoffice_trade_show', ['id' => $trade->getId()]);
         }
 
         $form = $this->createForm(TradeType::class, $trade, [
             'asset_choices' => $this->getAssetChoices($em),
-            'is_edit'       => true,  // édition : tous les statuts disponibles
+            'is_edit'       => true,
         ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Règle métier : ordre MARKET → forcer prix à null
             if ($trade->getOrderMode() === 'MARKET') {
                 $trade->setPrice(null);
             }
-
-            // Règle métier : passage à EXECUTED → enregistrer la date d'exécution
             if ($trade->getStatus() === 'EXECUTED' && $trade->getExecutedAt() === null) {
                 $trade->setExecutedAt(new \DateTime());
             }
-
             $em->flush();
 
             $this->addFlash('success', 'Trade updated successfully.');
-            return $this->redirectToRoute('app_backoffice_trade_index');
+            return $this->redirectToRoute('app_frontoffice_trade_index');
         }
 
         return $this->render('trade/index.html.twig', [
@@ -146,16 +137,12 @@ class TradeController extends AbstractController
         ]);
     }
 
-    // ─────────────────────────────────────────
-    // DELETE
-    // ─────────────────────────────────────────
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Trade $trade, EntityManagerInterface $em): Response
     {
-        // Règle métier : un trade EXECUTED ne peut pas être supprimé
         if ($trade->getStatus() === 'EXECUTED') {
             $this->addFlash('danger', 'Executed trades cannot be deleted.');
-            return $this->redirectToRoute('app_backoffice_trade_index');
+            return $this->redirectToRoute('app_frontoffice_trade_index');
         }
 
         if ($this->isCsrfTokenValid('delete' . $trade->getId(), $request->request->get('_token'))) {
@@ -166,6 +153,6 @@ class TradeController extends AbstractController
             $this->addFlash('danger', 'Invalid CSRF token.');
         }
 
-        return $this->redirectToRoute('app_backoffice_trade_index');
+        return $this->redirectToRoute('app_frontoffice_trade_index');
     }
 }
