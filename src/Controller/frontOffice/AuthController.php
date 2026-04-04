@@ -27,15 +27,25 @@ final class AuthController extends AbstractController
    #[Route('/login', name: 'app_login')]
 public function login(AuthenticationUtils $authenticationUtils, Request $request): Response
 {
-    $error     = $authenticationUtils->getLastAuthenticationError();
+     $error     = $authenticationUtils->getLastAuthenticationError();
     $lastEmail = $authenticationUtils->getLastUsername();
 
     $loginForm    = $this->createForm(LoginType::class);
     $registerForm = $this->createForm(GeneralInfoType::class);
     $kycForm      = $this->createForm(KYCInfoType::class, new Utilisateur());
 
-    // Read step from URL: ?step=2 or ?step=signup1
     $initialStep = $request->query->get('step', 'login');
+
+    // If login failed because account is pending → show pending screen
+    if ($error && $error->getMessage() === 'ACCOUNT_PENDING') {
+        $initialStep = 'pending';
+        $error = null; // don't show the raw error message
+    }
+
+    // If login failed because account is banned → keep on login with message
+    if ($error && $error->getMessage() === 'ACCOUNT_BANNED') {
+        // error will display normally in the login error block
+    }
 
     return $this->render('auth/index.html.twig', [
         'loginForm'    => $loginForm->createView(),

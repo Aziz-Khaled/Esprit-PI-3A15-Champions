@@ -516,7 +516,11 @@
         color: #FF4D6A;
         font-size: 13px;
     ">
-        ⚠ {{ error.messageKey | trans(error.messageData, 'security') }}
+        {% if error.message == 'ACCOUNT_BANNED' %}
+            🚫 Your account has been suspended. Please contact support.
+        {% else %}
+            ⚠ {{ error.messageKey | trans(error.messageData, 'security') }}
+        {% endif %}
     </div>
 {% endif %}
 
