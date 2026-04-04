@@ -11,6 +11,8 @@ use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use App\Form\AdminEditUserType;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
 
 #[Route('/admin')]
 final class AdminPanelController extends AbstractController
@@ -129,5 +131,24 @@ public function deleteUser(
     $this->addFlash('success', 'User has been deleted.');
     return $this->redirectToRoute('app_admin_users_list');
 }
+
+
+    #[Route('/admin/search', name: 'app_admin_search', methods: ['GET'])]
+    public function search(Request $request, UtilisateurRepository $repo): Response
+    {
+        $q     = trim($request->query->get('q', ''));
+        $users = strlen($q) >= 2 ? $repo->searchByKeyword($q) : [];
+
+        // Split into active vs pending
+        $active  = array_filter($users, fn($u) => $u->getStatut() !== 'pending');
+        $pending = array_filter($users, fn($u) => $u->getStatut() === 'pending');
+
+       return $this->render('admin_panel/search.html.twig', [
+            'q'       => $q,
+            'active'  => array_values($active),
+            'pending' => array_values($pending),
+            'total'   => count($users),
+        ]);
+    }
 
 }
