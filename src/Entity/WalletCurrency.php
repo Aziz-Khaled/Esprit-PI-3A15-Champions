@@ -2,10 +2,8 @@
 
 namespace App\Entity;
 
-use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
-
 use App\Repository\WalletCurrencyRepository;
+use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: WalletCurrencyRepository::class)]
 #[ORM\Table(name: 'wallet_currency')]
@@ -17,17 +15,18 @@ class WalletCurrency
     private ?int $idWalletCurrency = null;
 
     #[ORM\ManyToOne(targetEntity: Wallet::class, inversedBy: 'walletCurrencys')]
-    #[ORM\JoinColumn(name: 'id_wallet', referencedColumnName: 'id_wallet')]
+    #[ORM\JoinColumn(name: 'id_wallet', referencedColumnName: 'id_wallet', nullable: false)]
     private ?Wallet $wallet = null;
 
     #[ORM\ManyToOne(targetEntity: Currency::class, inversedBy: 'walletCurrencys')]
-    #[ORM\JoinColumn(name: 'id_currency', referencedColumnName: 'id_currency')]
+    #[ORM\JoinColumn(name: 'id_currency', referencedColumnName: 'id_currency', nullable: false)]
     private ?Currency $currency = null;
 
-    #[ORM\Column(type: 'float', precision: 18, scale: 8, nullable: true)]
-    private ?float $solde = null;
+    // Initialisé à 0.0 par défaut pour ta logique FinTech
+    #[ORM\Column(type: 'float', options: ['default' => 0])]
+    private ?float $solde = 0.0;
 
-    #[ORM\Column(name: 'nom_currency', type: 'string', nullable: false)]
+    #[ORM\Column(name: 'nom_currency', type: 'string', length: 255, nullable: false)]
     private ?string $nomCurrency = null;
 
     // --- Getters & Setters ---
@@ -37,11 +36,7 @@ class WalletCurrency
         return $this->idWalletCurrency;
     }
 
-    public function setIdWalletCurrency(int $idWalletCurrency): self
-    {
-        $this->idWalletCurrency = $idWalletCurrency;
-        return $this;
-    }
+    // Le setIdWalletCurrency a été supprimé car l'ID est auto-généré
 
     public function getWallet(): ?Wallet
     {
@@ -62,6 +57,10 @@ class WalletCurrency
     public function setCurrency(?Currency $currency): self
     {
         $this->currency = $currency;
+        // Optionnel : on peut auto-remplir le nomCurrency ici si besoin
+        if ($currency) {
+            $this->nomCurrency = $currency->getNom();
+        }
         return $this;
     }
 
@@ -70,7 +69,7 @@ class WalletCurrency
         return $this->solde;
     }
 
-    public function setSolde(?float $solde): self
+    public function setSolde(float $solde): self
     {
         $this->solde = $solde;
         return $this;
