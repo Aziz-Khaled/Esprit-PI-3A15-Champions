@@ -72,7 +72,7 @@ public function rejectUser(
     return $this->redirectToRoute('app_admin_pending_users');
 }
 
-#[Route('/admin/users/list', name: 'app_admin_users_list')]
+#[Route('/users/list', name: 'app_admin_users_list')]
 public function usersList(UtilisateurRepository $repo): Response
 {
     $users = $repo->findAll();
@@ -82,7 +82,7 @@ public function usersList(UtilisateurRepository $repo): Response
     ]);
 }
 
-#[Route('/admin/users/edit/{id}', name: 'app_admin_edit_user', methods: ['GET', 'POST'])]
+#[Route('/users/edit/{id}', name: 'app_admin_edit_user', methods: ['GET', 'POST'])]
 public function editUser(
     Utilisateur $user,
     Request $request,
@@ -103,7 +103,7 @@ public function editUser(
     ]);
 }
 
-#[Route('/admin/users/delete/{id}', name: 'app_admin_delete_user', methods: ['POST'])]
+#[Route('/users/delete/{id}', name: 'app_admin_delete_user', methods: ['POST'])]
 public function deleteUser(
     Utilisateur $user,
     EntityManagerInterface $em,
