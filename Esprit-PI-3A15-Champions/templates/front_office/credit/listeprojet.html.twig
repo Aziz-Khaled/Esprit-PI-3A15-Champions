@@ -1,0 +1,139 @@
+{# templates/front_office/credit/listeprojet.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de Bord - Champions{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Importation de FontAwesome au cas où elle manquerait dans base.html.twig #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    {# Header #}
+    <div class="row align-items-center mb-5">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold" style="color: #1e293b;">Mes Projets 🚀</h1>
+            <p class="text-muted fs-5">Gérez et suivez vos initiatives de financement.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{{ path('app_projet_new') }}" class="btn btn-primary btn-lg shadow-lg px-4 py-3" 
+               style="border-radius: 16px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border: none;">
+                <i class="fas fa-plus-circle me-2"></i> Lancer un Projet
+            </a>
+        </div>
+    </div>
+
+    {# Grille des projets #}
+    <div class="row g-4">
+        {% for projet in projets %}
+            <div class="col-xl-4 col-md-6 d-flex">
+                <div class="card border-0 shadow-sm w-100 project-card" style="border-radius: 24px; overflow: hidden; background: #ffffff;">
+                    
+                    {# Image avec Badge Status #}
+                    <div class="position-relative" style="height: 200px; background-color: #f8fafc;">
+                        <img src="{{ projet.imageUrl ?: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=800' }}" 
+                             class="w-100 h-100" style="object-fit: cover;" alt="Projet">
+                        
+                        <div class="position-absolute top-0 end-0 m-3">
+                            <span class="badge py-2 px-3 shadow-sm bg-white text-dark" style="border-radius: 10px; opacity: 0.9;">
+                                <i class="fas fa-tag me-1 text-primary"></i> {{ projet.secteur ?: 'Autre' }}
+                            </span>
+                        </div>
+
+                        <div class="position-absolute bottom-0 start-0 m-3">
+                            <span class="badge {% if projet.status == 'DRAFT' %}bg-warning text-dark{% else %}bg-success text-white{% endif %} py-2 px-3 shadow">
+                                {{ projet.status }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-4 d-flex flex-column">
+                        <h4 class="card-title fw-bold text-dark mb-2 text-truncate">{{ projet.title }}</h4>
+                        <p class="text-muted small mb-4" style="height: 3em; overflow: hidden;">
+                            {{ projet.description|slice(0, 80) }}...
+                        </p>
+
+                        {# Barre de progression #}
+                        <div class="p-3 mb-4" style="background: #f8fafc; border-radius: 16px; border: 1px solid #edf2f7;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="text-secondary small fw-bold">Objectif</span>
+                                <span class="text-primary fw-bold">{{ projet.targetAmount|number_format(0, '.', ' ') }} DT</span>
+                            </div>
+                            <div class="progress" style="height: 8px; border-radius: 10px; background-color: #e2e8f0;">
+                                <div class="progress-bar" role="progressbar" style="width: 45%; background: #6366f1;"></div>
+                            </div>
+                        </div>
+
+                        {# Dates #}
+                        <div class="d-flex justify-content-between text-muted small mb-4 px-1">
+                            <span><i class="far fa-calendar-alt me-1 text-primary"></i> {{ projet.startDate|date('d/m/Y') }}</span>
+                            <span><i class="far fa-calendar-check me-1 text-danger"></i> {{ projet.endDate|date('d/m/Y') }}</span>
+                        </div>
+
+                        {# Actions : Modifier & Supprimer #}
+                        <div class="row g-2 mt-auto align-items-center">
+                            <div class="col">
+                                <a href="{{ path('app_projet_edit', {'id': projet.idProjet}) }}" 
+                                   class="btn btn-outline-primary w-100 fw-bold py-2 btn-modifier" 
+                                   style="border-radius: 12px; border-width: 2px;">
+                                    Modifier
+                                </a>
+                            </div>
+                            <div class="col-auto">
+                                <form method="post" action="{{ path('app_projet_delete', {'id': projet.idProjet}) }}" 
+                                      onsubmit="return confirm('Voulez-vous vraiment supprimer ce projet ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ projet.idProjet) }}">
+                                    <button type="submit" class="btn btn-supprimer shadow-sm">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    body { background-color: #f1f5f9; }
+    
+    .project-card { transition: transform 0.3s ease; }
+    .project-card:hover { transform: translateY(-8px); }
+
+    .btn-modifier:hover {
+        background-color: #6366f1;
+        border-color: #6366f1;
+        color: white;
+    }
+
+    /* Style du bouton supprimer corrigé */
+    .btn-supprimer {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        border: 2px solid #ef4444;
+        color: #ef4444;
+        background-color: white;
+        transition: all 0.2s ease;
+        padding: 0;
+    }
+
+    .btn-supprimer:hover {
+        background-color: #ef4444;
+        color: white;
+    }
+
+    /* Force l'icône à être visible */
+    .btn-supprimer i {
+        font-size: 1.2rem;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
