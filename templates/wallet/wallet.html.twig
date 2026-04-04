@@ -5,315 +5,242 @@
 {% block stylesheets %}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            --sidebar-dark: #1e293b;
-            --bg-light: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
+            --fiat-grad: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            --trading-grad: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --crypto-grad: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --sidebar-dark: #0f172a;
+            --bg-light: #f1f5f9;
         }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-main);
-            margin: 0;
-            overflow-x: hidden;
-        }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-light); margin: 0; overflow-x: hidden; }
 
-        /* --- Sidebar Navigation (Left) --- */
         .sidebar {
-            width: 240px;
-            background: var(--sidebar-dark);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            padding: 30px 15px;
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            z-index: 1000;
+            width: 260px; background: var(--sidebar-dark); color: white;
+            display: flex; flex-direction: column; padding: 30px 20px;
+            position: fixed; left: 0; top: 0; height: 100vh; z-index: 1000;
         }
-
-        .sidebar h2 {
-            font-size: 1.3rem;
-            margin-bottom: 35px;
-            font-weight: 700;
-            text-align: center;
-            letter-spacing: 1px;
-            color: white;
-        }
-
         .nav-btn {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            margin-bottom: 5px;
-            text-decoration: none;
-            color: #94a3b8;
-            border-radius: 10px;
-            transition: all 0.3s;
-            font-size: 0.9rem;
+            display: flex; align-items: center; padding: 14px 18px; margin-bottom: 8px;
+            text-decoration: none; color: #94a3b8; border-radius: 12px; transition: 0.3s;
         }
+        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-btn.active { background: var(--primary-gradient); color: white; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); }
 
-        .nav-btn:hover, .nav-btn.active {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
+        .main-content { margin-left: 260px; padding: 40px; width: calc(100% - 260px); min-height: 100vh; }
 
-        .nav-btn.active {
-            background: var(--primary-gradient);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-        }
+        .wallet-column { background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.8); height: 100%; }
+        .column-header { font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; color: #1e293b; margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid rgba(0,0,0,0.05); }
 
-        .nav-btn i { width: 25px; font-size: 1rem; }
+        .bank-card { background: white; border-radius: 20px; padding: 22px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 20px; position: relative; overflow: hidden; transition: all 0.3s ease; }
+        .bank-card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px -10px rgba(0,0,0,0.1); }
+        
+        .card-type-indicator { position: absolute; top: 0; right: 0; width: 4px; height: 100%; }
+        .type-fiat { background: var(--fiat-grad); }
+        .type-trading { background: var(--trading-grad); }
+        .type-crypto { background: var(--crypto-grad); }
 
-        .sign-out { margin-top: auto; color: #ef4444; }
+        .card-rib { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #1e293b; font-weight: 600; }
+        
+        .balance-item { background: #f8fafc; border-radius: 12px; padding: 8px 12px; margin-bottom: 6px; border: 1px solid #f1f5f9; }
 
-        /* --- Right Sidebar (Form) --- */
-        .right-form-panel {
-            width: 320px;
-            background: white;
-            border-left: 1px solid #e2e8f0;
-            padding: 30px 20px;
-            position: fixed;
-            right: 0;
-            top: 0;
-            height: 100vh;
-            z-index: 900;
-        }
+        .btn-mini { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: none; transition: 0.2s; }
+        .btn-mini-edit { background: #eef2ff; color: #6366f1; }
+        .btn-mini-edit:hover { background: #6366f1; color: white; }
+        .btn-mini-delete { background: #fff1f2; color: #f43f5e; }
+        .btn-mini-delete:hover { background: #f43f5e; color: white; }
 
-        /* --- Main Content Area --- */
-        .main-content {
-            margin-left: 240px; /* Space for left sidebar */
-            margin-right: 320px; /* Space for right form panel */
-            padding: 40px;
-            min-height: 100vh;
-        }
-
-        /* --- Form Styling --- */
-        .form-label-custom {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .form-control-custom {
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 12px;
-            font-size: 0.9rem;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        .btn-create {
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            font-weight: 600;
-            width: 100%;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .btn-create:hover { transform: translateY(-2px); opacity: 0.9; }
-
-        /* --- Modern Bank Cards --- */
-        .wallet-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-        }
-
-        .bank-card {
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 25px;
-            position: relative;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
-            border: 1px solid #eef2ff;
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-
-        .bank-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-
-        .bank-card::after {
-            content: '';
-            position: absolute;
-            top: -20px;
-            right: -20px;
-            width: 100px;
-            height: 100px;
-            background: var(--primary-gradient);
-            opacity: 0.05;
-            border-radius: 50%;
-        }
-
-        .card-rib {
-            font-family: 'Courier New', monospace;
-            font-size: 0.95rem;
-            color: var(--text-main);
-            letter-spacing: 1px;
-            margin: 15px 0;
-            display: block;
-        }
-
-        .card-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .balance-box {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-
-        .balance-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            font-size: 0.9rem;
-        }
-
-        .btn-action-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 20px;
-        }
-
-        .btn-action {
-            flex: 1;
-            padding: 8px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            text-align: center;
-            text-decoration: none;
-            font-weight: 500;
-            border: 1px solid transparent;
-        }
-
-        .btn-edit { background: #eff6ff; color: #3b82f6; border-color: #dbeafe; }
-        .btn-delete { background: #fef2f2; color: #ef4444; border-color: #fee2e2; }
+        .form-control-custom { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 15px; width: 100%; }
     </style>
 {% endblock %}
 
-{% block body %}
-<div class="d-flex">
-    {# Left Sidebar: Navigation #}
-    <aside class="sidebar">
-        <h2>CHAMPIONS</h2>
-        <nav>
-            <a href="#" class="nav-btn"><i class="fas fa-th-large"></i> Dashboard</a>
-            <a href="#" class="nav-btn"><i class="fas fa-shield-alt"></i> Security</a>
-            <a href="{{ path('app_wallet_index') }}" class="nav-btn active"><i class="fas fa-wallet"></i> My Wallets</a>
-            <a href="#" class="nav-btn"><i class="fas fa-chart-line"></i> Trades</a>
-            <a href="#" class="nav-btn"><i class="fas fa-graduation-cap"></i> Training</a>
-            <a href="#" class="nav-btn"><i class="fas fa-shopping-cart"></i> Marketplace</a>
-            <a href="#" class="nav-btn"><i class="fas fa-hand-holding-usd"></i> Credit</a>
-            <a href="#" class="nav-btn"><i class="fas fa-cog"></i> Settings</a>
-        </nav>
-
-        <a href="#" class="nav-btn sign-out mt-auto"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
-    </aside>
-
-    {# Central Content: Wallet Cards #}
-    <main class="main-content">
-        <header class="mb-5">
-            <h1 class="fw-bold">My Wallets</h1>
-            <p class="text-muted small">Overview of your secure digital accounts.</p>
-        </header>
-
-        <div class="wallet-grid">
-            {% for wallet in wallets %}
-                <div class="bank-card">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <span class="card-label">Account Number</span>
-                            <span class="card-rib">{{ wallet.rib }}</span>
-                        </div>
-                        <span class="badge {{ wallet.statut == 'actif' ? 'bg-success' : 'bg-danger' }} bg-opacity-10 {{ wallet.statut == 'actif' ? 'text-success' : 'text-danger' }} border-0 px-2 py-1 small">
-                            {{ wallet.statut|upper }}
-                        </span>
-                    </div>
-
-                    <div class="mt-2">
-                        <span class="card-label">Wallet Type</span>
-                        <h6 class="fw-bold">{{ wallet.typeWallet }} Account</h6>
-                    </div>
-
-                    <div class="balance-box">
-                        {% for wc in wallet.walletCurrencys %}
-                            <div class="balance-row">
-                                <span class="text-muted">{{ wc.nomCurrency }}</span>
-                                <span class="fw-600 text-primary">{{ wc.solde|number_format(2) }}</span>
-                            </div>
-                        {% else %}
-                            <div class="text-center text-muted small">No currency set</div>
-                        {% endfor %}
-                    </div>
-
-                    <div class="btn-action-group">
-                        <a href="{{ path('app_wallet_edit', {'idWallet': wallet.idWallet}) }}" class="btn-action btn-edit">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        <form method="post" action="{{ path('app_wallet_delete', {'idWallet': wallet.idWallet}) }}" onsubmit="return confirm('Delete this wallet?');" class="flex-grow-1">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ wallet.idWallet) }}">
-                            <button class="btn-action btn-delete w-100">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </form>
-                    </div>
+{% macro render_wallet(wallet, typeClass) %}
+    <div class="bank-card">
+        <div class="card-type-indicator {{ typeClass }}"></div>
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Account Number</small>
+                <div class="card-rib">{{ wallet.rib }}</div>
+            </div>
+            <span class="badge {{ wallet.statut == 'actif' ? 'bg-success' : 'bg-danger' }} rounded-pill" style="font-size: 0.6rem; padding: 5px 10px;">
+                {{ wallet.statut|upper }}
+            </span>
+        </div>
+        
+        <div class="mb-3">
+            {% for wc in wallet.walletCurrencys %}
+                <div class="balance-item d-flex justify-content-between align-items-center">
+                    <span class="text-muted small fw-medium">{{ wc.nomCurrency }}</span>
+                    <span class="fw-bold text-dark">{{ wc.solde|number_format(2) }}</span>
                 </div>
             {% else %}
-                <div class="text-center py-5 w-100">
-                    <p class="text-muted">No wallets available.</p>
+                <div class="text-center py-2 bg-light rounded-3">
+                    <small class="text-muted italic">No assets configured</small>
                 </div>
             {% endfor %}
         </div>
-    </main>
 
-    {# Right Panel: Creation Form #}
-    <aside class="right-form-panel">
-        <h5 class="fw-bold mb-4">Add Wallet</h5>
-        <p class="text-muted small mb-4">Fill in the details to create a new secure wallet.</p>
-        
-        {{ form_start(form) }}
-            <div>
-                <label class="form-label-custom">Wallet Type</label>
-                {{ form_widget(form.typeWallet, {'attr': {'class': 'form-control-custom'}}) }}
-            </div>
-            
-            <div>
-                <label class="form-label-custom">Status</label>
-                {{ form_widget(form.statut, {'attr': {'class': 'form-control-custom'}}) }}
-            </div>
-
-            <button type="submit" class="btn-create mt-3">
-                <i class="fas fa-plus-circle me-2"></i> Create Wallet
+        <div class="btn-action-group d-flex gap-2">
+            <button class="btn-mini btn-mini-edit" data-bs-toggle="modal" data-bs-target="#editModal"
+                    data-id="{{ wallet.idWallet }}" data-type="{{ wallet.typeWallet }}" data-statut="{{ wallet.statut }}">
+                <i class="fas fa-pen"></i>
             </button>
-        {{ form_end(form) }}
-
-        <div class="mt-5 p-3 rounded-4 bg-light border-0">
-            <p class="small text-muted mb-0">
-                <i class="fas fa-info-circle text-primary me-2"></i>
-                Wallets are protected by end-to-end encryption.
-            </p>
+            <form method="post" action="{{ path('app_wallet_delete', {'idWallet': wallet.idWallet}) }}" class="m-0">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ wallet.idWallet) }}">
+                <button type="submit" class="btn-mini btn-mini-delete" {% if wallet.walletCurrencys is not empty %}disabled style="opacity:0.3; cursor:not-allowed;"{% endif %}>
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
         </div>
+    </div>
+{% endmacro %}
+
+{% block body %}
+{% import _self as ui %}
+
+<div class="d-flex">
+    <aside class="sidebar">
+        <div class="text-center mb-5">
+            <h3 class="fw-bold tracking-tight">CHAMPIONS</h3>
+            <div style="height: 3px; width: 40px; background: var(--primary-gradient); margin: 10px auto;"></div>
+        </div>
+        <nav>
+            <a href="#" class="nav-btn"><i class="fas fa-th-large me-3"></i> Dashboard</a>
+            <a href="{{ path('app_wallet_index') }}" class="nav-btn active"><i class="fas fa-wallet me-3"></i> My Wallets</a>
+            <a href="#" class="nav-btn"><i class="fas fa-exchange-alt me-3"></i> Transactions</a>
+            <a href="#" class="nav-btn"><i class="fas fa-chart-line me-3"></i> Trading</a>
+        </nav>
+        <a href="#" class="nav-btn text-danger mt-auto"><i class="fas fa-sign-out-alt me-3"></i> Logout</a>
     </aside>
+
+    <main class="main-content">
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label == 'error' ? 'danger' : 'success' }} alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4">
+                    <i class="fas {{ label == 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle' }} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="fw-bold mb-1">My Wallets</h2>
+                <p class="text-muted">Monitor and manage your digital assets across multiple platforms.</p>
+            </div>
+            <button class="btn btn-primary px-4 py-2 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#addModal" style="background: var(--primary-gradient); border: none;">
+                <i class="fas fa-plus me-2"></i> New Wallet
+            </button>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="wallet-column">
+                    <div class="column-header text-primary"><i class="fas fa-university me-2"></i> Fiat Accounts</div>
+                    {% for wallet in wallets|filter(w => w.typeWallet|lower == 'fiat') %}
+                        {{ ui.render_wallet(wallet, 'type-fiat') }}
+                    {% else %}
+                        <div class="text-center py-5 text-muted small">No fiat wallets found</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="wallet-column">
+                    <div class="column-header text-success"><i class="fas fa-bolt me-2"></i> Trading Desk</div>
+                    {% for wallet in wallets|filter(w => w.typeWallet|lower == 'trading') %}
+                        {{ ui.render_wallet(wallet, 'type-trading') }}
+                    {% else %}
+                        <div class="text-center py-5 text-muted small">No trading wallets found</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="wallet-column">
+                    <div class="column-header text-warning"><i class="fab fa-bitcoin me-2"></i> Crypto Assets</div>
+                    {% for wallet in wallets|filter(w => w.typeWallet|lower == 'crypto') %}
+                        {{ ui.render_wallet(wallet, 'type-crypto') }}
+                    {% else %}
+                        <div class="text-center py-5 text-muted small">No crypto wallets found</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
+
+{# --- MODALE ADD --- #}
+<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <h5 class="fw-bold">Add New Wallet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                {{ form_start(form) }}
+                    <label class="small fw-bold text-muted mb-2">ACCOUNT TYPE</label>
+                    {{ form_widget(form.typeWallet, {'attr': {'class': 'form-control-custom'}}) }}
+                    <label class="small fw-bold text-muted mb-2">INITIAL STATUS</label>
+                    {{ form_widget(form.statut, {'attr': {'class': 'form-control-custom'}}) }}
+                    <button type="submit" class="btn w-100 py-3 mt-3 text-white fw-bold rounded-3" style="background: var(--primary-gradient); border: none;">Create Account</button>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# --- MODALE EDIT --- #}
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4">
+                <h6 class="fw-bold mb-4">Update Wallet Status</h6>
+                <form id="edit-form" method="POST">
+                    <label class="small fw-bold text-muted mb-2">TYPE (NON-EDITABLE)</label>
+                    <select id="modal-type" class="form-control-custom" disabled style="background-color: #e9ecef; cursor: not-allowed;">
+                        <option value="fiat">Fiat</option>
+                        <option value="trading">Trading</option>
+                        <option value="crypto">Crypto</option>
+                    </select>
+
+                    <label class="small fw-bold text-muted mb-2">STATUS</label>
+                    <select name="statut" id="modal-statut" class="form-control-custom">
+                        <option value="actif">ACTIF</option>
+                        <option value="bloque">BLOQUÉ</option>
+                    </select>
+                    
+                    <button type="submit" class="btn w-100 py-2 text-white fw-bold rounded-3 mt-2" style="background: var(--primary-gradient); border: none;">
+                        Save Status
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const editModal = document.getElementById('editModal');
+    editModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        
+        // On récupère les data attributes
+        const id = button.getAttribute('data-id');
+        const type = button.getAttribute('data-type').toLowerCase();
+        const statut = button.getAttribute('data-statut');
+
+        // On pré-remplit les champs
+        document.getElementById('modal-type').value = type;
+        document.getElementById('modal-statut').value = statut;
+        
+        // On met à jour l'URL d'action de façon relative
+        document.getElementById('edit-form').action = id + '/edit';
+    });
+</script>
 {% endblock %}

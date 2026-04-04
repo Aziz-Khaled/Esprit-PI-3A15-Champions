@@ -25,8 +25,7 @@ class WalletType extends AbstractType
                     'Actif' => 'actif',
                     'Bloqué' => 'bloque',
                 ],
-            ])
-        ;
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
