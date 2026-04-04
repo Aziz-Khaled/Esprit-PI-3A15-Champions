@@ -15,30 +15,22 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/wallet')]
 class WalletController extends AbstractController
 {
-    /**
-     * Affiche la liste et gère l'ajout d'un wallet
-     */
     #[Route('/', name: 'app_wallet_index', methods: ['GET', 'POST'])]
     public function index(WalletRepository $walletRepository, Request $request, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
-        
-        // Initialisation pour le formulaire d'ajout
         $newWallet = new Wallet();
         $form = $this->createForm(WalletType::class, $newWallet);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            
-            // Sécurité : Forcer un utilisateur si non connecté pour le développement
             if (!$user) {
                 $user = $entityManager->getRepository(Utilisateur::class)->find(1);
             }
             
             $newWallet->setUtilisateur($user);
-            $newWallet->setSolde('0.00'); // Solde initial par défaut
+            $newWallet->setSolde('0.00'); 
             
-            // Génération d'un RIB unique
             do {
                 $rib = (string)random_int(10000000, 99999999);
                 $exists = $walletRepository->findOneBy(['rib' => $rib]);
@@ -50,11 +42,10 @@ class WalletController extends AbstractController
             $entityManager->persist($newWallet);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Nouveau wallet créé avec succès ! RIB : ' . $rib);
+            $this->addFlash('success', 'New wallet created successfully! RIB: ' . $rib);
             return $this->redirectToRoute('app_wallet_index');
         }
 
-        // Récupération de la liste (Filtrée par user ou globale pour test)
         $walletsList = $user ? $walletRepository->findBy(['utilisateur' => $user]) : $walletRepository->findAll();
 
         return $this->render('wallet/wallet.html.twig', [
@@ -63,42 +54,29 @@ class WalletController extends AbstractController
         ]);
     }
 
-    /**
-     * Gère la modification d'un wallet existant
-     */
-    #[Route('/{idWallet}/edit', name: 'app_wallet_edit', methods: ['GET', 'POST'])]
+    #[Route('/{idWallet}/edit', name: 'app_wallet_edit', methods: ['POST'])]
     public function edit(Request $request, Wallet $wallet, EntityManagerInterface $entityManager): Response
     {
-        // On utilise le même WalletType pour la modification
-        $form = $this->createForm(WalletType::class, $wallet);
-        $form->handleRequest($request);
+        $statut = $request->request->get('statut');
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($statut) {
+            // On ne change QUE le statut
+            $wallet->setStatut($statut);
             $wallet->setDateDerniereModification(new \DateTime());
             
             $entityManager->flush();
-
-            $this->addFlash('success', 'Le wallet #' . $wallet->getIdWallet() . ' a été mis à jour.');
-            return $this->redirectToRoute('app_wallet_index');
+            $this->addFlash('success', 'Status of Wallet #' . $wallet->getRib() . ' updated.');
+        } else {
+            $this->addFlash('error', 'Update failed: Status is missing.');
         }
 
-        return $this->render('wallet/edit.html.twig', [
-            'wallet' => $wallet,
-            'form' => $form->createView(),
-        ]);
+        return $this->redirectToRoute('app_wallet_index');
     }
-
-    /**
-     * Supprime un wallet si les conditions de solde sont respectées
-     */
     #[Route('/{idWallet}/delete', name: 'app_wallet_delete', methods: ['POST'])]
     public function delete(Request $request, Wallet $wallet, EntityManagerInterface $entityManager): Response
     {
-        // Vérification du token CSRF pour la sécurité
         if ($this->isCsrfTokenValid('delete'.$wallet->getIdWallet(), $request->request->get('_token'))) {
-            
             $totalSolde = 0;
-            // Vérification des devises associées (Logique métier de ton projet FinTech)
             if ($wallet->getWalletCurrencys()) {
                 foreach ($wallet->getWalletCurrencys() as $wc) {
                     $totalSolde += (float)$wc->getSolde();
@@ -106,14 +84,13 @@ class WalletController extends AbstractController
             }
 
             if ($totalSolde > 0) {
-                $this->addFlash('error', 'Action refusée : le solde de ce portefeuille n\'est pas vide.');
+                $this->addFlash('error', 'Action denied: This wallet balance is not empty.');
             } else {
                 $entityManager->remove($wallet);
                 $entityManager->flush();
-                $this->addFlash('success', 'Le portefeuille a été supprimé définitivement.');
+                $this->addFlash('success', 'Wallet has been permanently deleted.');
             }
         }
-
         return $this->redirectToRoute('app_wallet_index');
     }
 }
