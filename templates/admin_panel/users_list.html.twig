@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>All Users — Admin</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+    <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+    <style>
+        .user-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%; object-fit: cover;
+            border: 2px solid #e3e6f0;
+        }
+        .status-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+        .status-active  { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-banned  { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body id="page-top">
+<div id="wrapper">
+
+    {# ── SIDEBAR ── #}
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ path('app_admin_panel') }}">
+            <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-laugh-wink"></i></div>
+            <div class="sidebar-brand-text mx-3">SB Admin <sup>2</sup></div>
+        </a>
+        <hr class="sidebar-divider my-0">
+        <li class="nav-item">
+            <a class="nav-link" href="{{ path('app_admin_panel') }}">
+                <i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span>
+            </a>
+        </li>
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">User Management</div>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ path('app_admin_pending_users') }}">
+                <i class="fas fa-fw fa-user-clock"></i><span>Pending Approvals</span>
+            </a>
+        </li>
+        <li class="nav-item active">
+            <a class="nav-link" href="{{ path('app_admin_users_list') }}">
+                <i class="fas fa-fw fa-users"></i><span>All Users</span>
+            </a>
+        </li>
+        <hr class="sidebar-divider d-none d-md-block">
+        <div class="text-center d-none d-md-inline">
+            <button class="rounded-circle border-0" id="sidebarToggle"></button>
+        </div>
+    </ul>
+
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+
+            {# ── TOPBAR ── #}
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <ul class="navbar-nav ml-auto">
+                    <div class="topbar-divider d-none d-sm-block"></div>
+                    <li class="nav-item dropdown no-arrow">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                            <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                                {{ app.user.prenom }} {{ app.user.nom }}
+                            </span>
+                            <img class="img-profile rounded-circle"
+                                 src="/uploads/users/selfies/{{ app.user.userImage }}"
+                                 style="width:32px;height:32px;object-fit:cover;">
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="{{ path('app_logout') }}">
+                                <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>Logout
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="container-fluid">
+
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="fas fa-users mr-2 text-primary"></i>All Users
+                    </h1>
+                    <span class="badge badge-primary badge-pill" style="font-size:1rem;padding:8px 16px;">
+                        {{ users|length }} total
+                    </span>
+                </div>
+
+                {# Flash Messages #}
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ label == 'success' ? 'success' : 'warning' }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Registered Users</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th style="width:48px"></th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Registered</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <td class="align-middle text-center">
+                                            <img class="user-avatar"
+                                                 src="/uploads/users/selfies/{{ user.userImage }}"
+                                                 alt="{{ user.prenom }}">
+                                        </td>
+                                        <td class="align-middle font-weight-bold text-gray-800">
+                                            {{ user.prenom }} {{ user.nom }}
+                                        </td>
+                                        <td class="align-middle">
+                                            <a href="mailto:{{ user.email }}" class="text-primary">{{ user.email }}</a>
+                                        </td>
+                                        <td class="align-middle small text-gray-600">{{ user.telephone }}</td>
+                                        <td class="align-middle">
+                                            {% set roleColors = {'CLIENT': 'primary', 'INVESTISSEUR': 'success', 'COMMERCANT': 'info', 'ADMIN': 'danger'} %}
+                                            <span class="badge badge-{{ roleColors[user.role] ?? 'secondary' }}">
+                                                {{ user.role }}
+                                            </span>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span class="status-badge status-{{ user.statut|lower }}">
+                                                {{ user.statut|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td class="align-middle small text-gray-600">
+                                            {{ user.dateCreation|date('d M Y') }}
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            {# Edit #}
+                                            <a href="{{ path('app_admin_edit_user', {id: user.idUser}) }}"
+                                               class="btn btn-primary btn-sm px-3 mr-1">
+                                                <i class="fas fa-edit mr-1"></i> Edit
+                                            </a>
+                                            {# Delete #}
+                                            <form method="POST"
+                                                  action="{{ path('app_admin_delete_user', {id: user.idUser}) }}"
+                                                  style="display:inline"
+                                                  onsubmit="return confirm('Delete {{ user.prenom }} {{ user.nom }}? This cannot be undone.')">
+                                                <input type="hidden" name="_token"
+                                                       value="{{ csrf_token('delete_' ~ user.idUser) }}">
+                                                <button type="submit" class="btn btn-danger btn-sm px-3">
+                                                    <i class="fas fa-trash mr-1"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="sticky-footer bg-white">
+            <div class="container my-auto">
+                <div class="copyright text-center my-auto">
+                    <span>Copyright &copy; NexVault {{ "now"|date("Y") }}</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="/js/sb-admin-2.min.js"></script>
+</body>
+</html>
