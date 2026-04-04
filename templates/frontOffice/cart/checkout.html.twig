@@ -1,0 +1,96 @@
+{% extends 'frontOffice/front_base.html.twig' %}
+
+{% block title %}Checkout - Fintech Marketplace{% endblock %}
+
+{% block body %}
+<div class="row align-items-center mb-5 mt-n4">
+    <div class="col-md-7">
+        <h1 class="display-4 fw-black text-gray-900 mb-2">Checkout <span class="text-primary">Details</span> 📋</h1>
+        <p class="text-muted lead">Provide your shipping details and select your preferred crypto.</p>
+    </div>
+</div>
+
+<div class="row g-5 justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white border border-light">
+            <div class="card-header bg-primary py-4 px-5 border-0">
+                <h5 class="mb-0 text-white fw-black"><i class="fas fa-truck me-2"></i> Shipping & Payment Information</h5>
+            </div>
+            <div class="card-body p-5">
+                <form action="{{ path('app_cart_checkout') }}" method="post">
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-12">
+                            <label class="form-label text-muted fw-bold small text-uppercase letter-spacing-1">Full Shipping Address</label>
+                            <textarea name="address" class="form-control rounded-4 p-3 border-light-2 bg-soft shadow-sm" rows="3" placeholder="Street, City, Postal Code, Country..." required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold small text-uppercase letter-spacing-1">Phone Number</label>
+                            <input type="text" name="phone" class="form-control rounded-pill p-3 border-light-2 bg-soft shadow-sm" placeholder="+216 ... " required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold small text-uppercase letter-spacing-1">Select Payment Currency</label>
+                            <select name="payment_method" class="form-select rounded-pill p-3 border-light-2 bg-soft shadow-sm" required>
+                                <option value="" disabled selected>Choose a Crypto...</option>
+                                {% for currency in currencies %}
+                                    <option value="{{ currency.code }}">{{ currency.nom }} ({{ currency.code }})</option>
+                                {% endfor %}
+                                <option value="BTC">Bitcoin (BTC)</option>
+                                <option value="ETH">Ethereum (ETH)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-light rounded-4 mb-5 border border-light shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-0">
+                            <div>
+                                <h6 class="fw-black text-dark mb-0">Order Total</h6>
+                                <p class="text-muted small mb-0 font-weight-bold">Guaranteed by smart contract</p>
+                            </div>
+                            <div class="text-end">
+                                <h3 class="h2 fw-black text-primary mb-0">{{ total }} BTC</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ path('app_cart_index') }}" class="btn btn-white border rounded-pill px-4 font-weight-bold shadow-sm">
+                            <i class="fas fa-arrow-left me-2 text-danger"></i> Back to Cart
+                        </a>
+                        <button type="submit" class="btn btn-primary px-5 py-3 rounded-pill fw-black shadow-lg shadow-primary-light">
+                            Place Order & Pay <i class="fas fa-chevron-right ms-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="mt-5 text-center px-4">
+            <div class="row g-3 opacity-50">
+                <div class="col-md-4">
+                    <i class="fas fa-shield-check fa-2x mb-2"></i>
+                    <p class="x-small font-weight-bold mb-0">Secure 256-bit SSL</p>
+                </div>
+                <div class="col-md-4 border-start border-end border-light">
+                    <i class="fas fa-cube fa-2x mb-2"></i>
+                    <p class="x-small font-weight-bold mb-0">Blockchain Powered</p>
+                </div>
+                <div class="col-md-4">
+                    <i class="fas fa-user-shield fa-2x mb-2"></i>
+                    <p class="x-small font-weight-bold mb-0">Verified Merchants</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-black { font-weight: 800; }
+    .bg-soft { background-color: #fcfdfe; }
+    .border-light-2 { border: 1.5px solid #edf2f7; }
+    .border-light-2:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.1); }
+    .letter-spacing-1 { letter-spacing: 0.1rem; }
+    .shadow-primary-light { box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.45); }
+    .x-small { font-size: 0.7rem; }
+    .bg-white { background: white !important; }
+</style>
+{% endblock %}
