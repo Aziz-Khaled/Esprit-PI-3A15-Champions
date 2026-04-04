@@ -499,17 +499,43 @@
       <div class="screen-subtitle">Sign in to your trading account</div>
 
    
-    {{ form_start(loginForm, {
+  {{ form_start(loginForm, {
     'action': path('app_login'),
     'method': 'POST',
     'attr': {'id': 'login-form'}
 }) }}
 
+{# Global auth error (wrong password / user not found) #}
+{% if error %}
+    <div style="
+        background: rgba(255,77,106,0.1);
+        border: 1px solid rgba(255,77,106,0.3);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        color: #FF4D6A;
+        font-size: 13px;
+    ">
+        ⚠ {{ error.messageKey | trans(error.messageData, 'security') }}
+    </div>
+{% endif %}
+
 <div class="field">
     {{ form_row(loginForm.email) }}
+    {% if loginForm.email.vars.errors|length %}
+        <div style="color:#FF4D6A; font-size:11.5px; margin-top:4px;">
+            {{ loginForm.email.vars.errors[0].message }}
+        </div>
+    {% endif %}
 </div>
+
 <div class="field">
     {{ form_row(loginForm.motDePasse) }}
+    {% if loginForm.motDePasse.vars.errors|length %}
+        <div style="color:#FF4D6A; font-size:11.5px; margin-top:4px;">
+            {{ loginForm.motDePasse.vars.errors[0].message }}
+        </div>
+    {% endif %}
 </div>
 
 <button type="submit" class="btn-primary">Sign In</button>
@@ -542,166 +568,236 @@
         </div>
       </div>
 
-      <div class="screen-title">Create Account</div>
-      <div class="screen-subtitle">General information — Step 1 of 2</div>
+  <div class="screen-title">Create Account</div>
+  <div class="screen-subtitle">General information — Step 1 of 2</div>
 
-      <div class="card-body">
-        <form method="POST" action="{{ register_step1_path | default('/register/step1') }}" id="signup1-form">
-        {% if csrf_token is defined %}
-        <input type="hidden" name="_token" value="{{ csrf_token('register') }}" />
+  <div class="card-body">
+
+    {{ form_start(registerForm, {
+        'action': path('app_register_step1'),
+        'method': 'POST',
+        'attr': {'id': 'signup1-form'}
+    }) }}
+
+    <div class="field-row">
+      <div class="field">
+        {{ form_label(registerForm.prenom) }}
+        <div class="input-wrap">
+          {{ form_widget(registerForm.prenom) }}
+          <span class="ico">👤</span>
+        </div>
+        {% if registerForm.prenom.vars.errors|length %}
+          <div style="color:#FF4D6A;font-size:11.5px;margin-top:4px;">
+            {{ registerForm.prenom.vars.errors[0].message }}
+          </div>
         {% endif %}
-
-        <div class="field-row">
-          <div class="field">
-            <label>First Name</label>
-            <div class="input-wrap">
-              <input type="text" name="first_name" placeholder="Alex" required />
-              <span class="ico">👤</span>
-            </div>
-          </div>
-          <div class="field">
-            <label>Last Name</label>
-            <div class="input-wrap no-icon">
-              <input type="text" name="last_name" placeholder="Morgan" style="padding-left:14px" required />
-            </div>
-          </div>
+      </div>
+      <div class="field">
+        {{ form_label(registerForm.nom) }}
+        <div class="input-wrap">
+          {{ form_widget(registerForm.nom) }}
         </div>
-
-        <div class="field">
-          <label>Phone Number</label>
-          <div class="input-wrap">
-            <input type="tel" name="phone" placeholder="+1 (555) 000-0000" required />
-            <span class="ico">📱</span>
+        {% if registerForm.nom.vars.errors|length %}
+          <div style="color:#FF4D6A;font-size:11.5px;margin-top:4px;">
+            {{ registerForm.nom.vars.errors[0].message }}
           </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="field">
+      {{ form_label(registerForm.telephone) }}
+      <div class="input-wrap">
+        {{ form_widget(registerForm.telephone) }}
+        <span class="ico">📱</span>
+      </div>
+      {% if registerForm.telephone.vars.errors|length %}
+        <div style="color:#FF4D6A;font-size:11.5px;margin-top:4px;">
+          {{ registerForm.telephone.vars.errors[0].message }}
         </div>
+      {% endif %}
+    </div>
 
-        <div class="field">
-          <label>Email Address</label>
-          <div class="input-wrap">
-            <input type="email" name="email" placeholder="you@{{ app_name | default('nexvault') | lower }}.io" required />
-            <span class="ico">✉</span>
-          </div>
+    <div class="field">
+      {{ form_label(registerForm.email) }}
+      <div class="input-wrap">
+        {{ form_widget(registerForm.email) }}
+        <span class="ico">✉</span>
+      </div>
+      {% if registerForm.email.vars.errors|length %}
+        <div style="color:#FF4D6A;font-size:11.5px;margin-top:4px;">
+          {{ registerForm.email.vars.errors[0].message }}
         </div>
+      {% endif %}
+    </div>
 
-        <div class="field">
-          <label>Password</label>
-          <div class="input-wrap">
-            <input type="password" id="signup-pw" name="password" placeholder="Min. 8 characters" oninput="checkStrength(this)" required />
-            <span class="ico">🔒</span>
-            <button type="button" class="pw-toggle" onclick="togglePw('signup-pw',this)">👁</button>
-          </div>
-          <div class="pw-strength">
-            <div class="pw-bars">
-              <div class="pw-bar" id="bar1"></div>
-              <div class="pw-bar" id="bar2"></div>
-              <div class="pw-bar" id="bar3"></div>
-              <div class="pw-bar" id="bar4"></div>
-            </div>
-            <div class="pw-label" id="pw-label">Enter a password</div>
-          </div>
-        </div>
+    <div class="field">
+  {{ form_label(registerForm.motDePasse) }}
+  <div class="input-wrap">
+    {{ form_widget(registerForm.motDePasse, {'attr': {
+        'id': 'signup-pw',
+        'oninput': 'checkStrength(this)'
+    }}) }}
+    <span class="ico">🔒</span>
+    <button type="button" class="pw-toggle" onclick="togglePw('signup-pw', this)">👁</button>
+  </div>
+  <div class="pw-strength">
+  <div class="pw-bars">
+    <div class="pw-bar" id="bar1"></div>
+    <div class="pw-bar" id="bar2"></div>
+    <div class="pw-bar" id="bar3"></div>
+  </div>
+  <div class="pw-label" id="pw-label">Enter a password</div>
+</div>
+  {% if registerForm.motDePasse.vars.errors|length %}
+    <div style="color:#FF4D6A;font-size:11.5px;margin-top:4px;">
+      {{ registerForm.motDePasse.vars.errors[0].message }}
+    </div>
+  {% endif %}
+</div>
 
-        <label class="check-row">
-          <input type="checkbox" name="agree_terms" required />
-          I agree to the <a href="{{ terms_path | default('/terms') }}">Terms of Service</a>&nbsp;and&nbsp;<a href="{{ privacy_path | default('/privacy') }}">Privacy Policy</a>
+    <button type="submit" class="btn-primary">Continue to KYC →</button>
+
+    {{ form_end(registerForm) }}
+
+    <div class="auth-link">Already have an account? <a onclick="goto('s-login')">Sign In</a></div>
+    </div>
+    
+    </div>
+
+<!-- ─── SCREEN 3 : SIGNUP STEP 2 KYC ─── -->
+<div class="screen" id="s-signup2">
+  <div class="step-track">
+    <div class="step-wrapper">
+      <div class="step-node done">✓</div>
+      <span class="step-label">Profile</span>
+    </div>
+    <div class="step-line active"></div>
+    <div class="step-wrapper">
+      <div class="step-node active">2</div>
+      <span class="step-label active">KYC</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-wrapper">
+      <div class="step-node">3</div>
+      <span class="step-label">Review</span>
+    </div>
+  </div>
+
+  <div class="screen-title">Identity Verification</div>
+  <div class="screen-subtitle">KYC required for regulatory compliance — Step 2 of 2</div>
+
+  <div class="card-body">
+
+    {{ form_start(kycForm, {
+        'action': path('app_register_step2'),
+        'method': 'POST',
+        'attr': {'id': 'kyc-form', 'enctype': 'multipart/form-data'}
+    }) }}
+
+    {# ── File Uploads ── #}
+    <div class="field-row" style="margin-bottom:16px">
+
+      {# Selfie #}
+      <div>
+        <label style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px">
+          Profile Photo
         </label>
-
-        <button type="submit" class="btn-primary" onclick="goto('s-signup2');return false;">Continue to KYC →</button>
-        </form>
-        <div class="auth-link">Already have an account? <a onclick="goto('s-login')">Sign In</a></div>
-      </div>
-    </div>
-
-    <!-- ─── SCREEN 3 : SIGNUP STEP 2 KYC ─── -->
-    <div class="screen" id="s-signup2">
-      <div class="step-track">
-        <div class="step-wrapper">
-          <div class="step-node done">✓</div>
-          <span class="step-label">Profile</span>
+        <div class="upload-zone" id="zone-selfie">
+          {# Hide the default file input visually but keep it in the DOM #}
+          <div style="position:absolute;inset:0;opacity:0;cursor:pointer;" onclick="document.getElementById('{{ kycForm.selfie.vars.id }}').click()"></div>
+          {{ form_widget(kycForm.selfie, {'attr': {
+              'id': kycForm.selfie.vars.id,
+              'style': 'position:absolute;inset:0;opacity:0;cursor:pointer;',
+              'onchange': "handleFile(this,'zone-selfie','prev-selfie')"
+          }}) }}
+          <img class="upload-preview" id="prev-selfie" />
+          <span class="upload-icon">🤳</span>
+          <div class="upload-label"><span>Upload</span> selfie</div>
         </div>
-        <div class="step-line active"></div>
-        <div class="step-wrapper">
-          <div class="step-node active">2</div>
-          <span class="step-label active">KYC</span>
-        </div>
-        <div class="step-line" id="kyc-line2"></div>
-        <div class="step-wrapper">
-          <div class="step-node" id="kyc-step3">3</div>
-          <span class="step-label">Review</span>
-        </div>
-      </div>
-
-      <div class="screen-title">Identity Verification</div>
-      <div class="screen-subtitle">KYC required for regulatory compliance — Step 2 of 2</div>
-
-      <div class="card-body">
-        <form method="POST" action="{{ register_step2_path | default('/register/step2') }}" id="kyc-form" enctype="multipart/form-data">
-        {% if csrf_token is defined %}
-        <input type="hidden" name="_token" value="{{ csrf_token('kyc') }}" />
+        {% if kycForm.selfie.vars.errors|length %}
+          <div style="color:#FF4D6A;font-size:11.5px;margin-top:4px;">
+            {{ kycForm.selfie.vars.errors[0].message }}
+          </div>
         {% endif %}
+      </div>
 
-        <div class="field-row" style="margin-bottom:16px">
-          <div>
-            <label style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px">Profile Photo</label>
-            <div class="upload-zone" id="zone-selfie" onclick="triggerUpload('up-selfie','zone-selfie','prev-selfie')">
-              <input type="file" id="up-selfie" name="selfie" accept="image/*" onchange="handleFile(this,'zone-selfie','prev-selfie')" />
-              <img class="upload-preview" id="prev-selfie" />
-              <span class="upload-icon">🤳</span>
-              <div class="upload-label"><span>Upload</span> selfie</div>
-            </div>
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px">ID Document</label>
-            <div class="upload-zone" id="zone-id" onclick="triggerUpload('up-id','zone-id','prev-id')">
-              <input type="file" id="up-id" name="id_document" accept="image/*" onchange="handleFile(this,'zone-id','prev-id')" />
-              <img class="upload-preview" id="prev-id" />
-              <span class="upload-icon">🪪</span>
-              <div class="upload-label"><span>Upload</span> ID card</div>
-            </div>
-          </div>
+      {# ID Document #}
+      <div>
+        <label style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px">
+          ID Document
+        </label>
+        <div class="upload-zone" id="zone-id">
+          <div style="position:absolute;inset:0;opacity:0;cursor:pointer;" onclick="document.getElementById('{{ kycForm.pieceIdentiteFile.vars.id }}').click()"></div>
+          {{ form_widget(kycForm.pieceIdentiteFile, {'attr': {
+              'id': kycForm.pieceIdentiteFile.vars.id,
+              'style': 'position:absolute;inset:0;opacity:0;cursor:pointer;',
+              'onchange': "handleFile(this,'zone-id','prev-id')"
+          }}) }}
+          <img class="upload-preview" id="prev-id" />
+          <span class="upload-icon">🪪</span>
+          <div class="upload-label"><span>Upload</span> ID card</div>
         </div>
+        {% if kycForm.pieceIdentiteFile.vars.errors|length %}
+          <div style="color:#FF4D6A;font-size:11.5px;margin-top:4px;">
+            {{ kycForm.pieceIdentiteFile.vars.errors[0].message }}
+          </div>
+        {% endif %}
+      </div>
 
-        <div class="field">
-          <label>How will you use {{ app_name | default('NexVault') }}?</label>
-          <div class="role-grid">
-            <label class="role-card" onclick="selectRole(this)">
-              <input type="radio" name="role" value="trader" required />
-              <div class="role-check"></div>
-              <div class="role-icon">📈</div>
-              <div class="role-name">Trader</div>
-              <div class="role-desc">Active crypto & asset trading</div>
-            </label>
-            <label class="role-card" onclick="selectRole(this)">
-              <input type="radio" name="role" value="investor" />
-              <div class="role-check"></div>
-              <div class="role-icon">💼</div>
-              <div class="role-name">Investor</div>
-              <div class="role-desc">Long-term portfolio growth</div>
-            </label>
-            <label class="role-card" onclick="selectRole(this)">
-              <input type="radio" name="role" value="business" />
-              <div class="role-check"></div>
-              <div class="role-icon">🏢</div>
-              <div class="role-name">Business</div>
-              <div class="role-desc">Corporate treasury & payments</div>
-            </label>
-            <label class="role-card" onclick="selectRole(this)">
-              <input type="radio" name="role" value="developer" />
-              <div class="role-check"></div>
-              <div class="role-icon">⚡</div>
-              <div class="role-name">Developer</div>
-              <div class="role-desc">API access & integration</div>
-            </label>
-          </div>
-        </div>
+    </div>
 
-        <div class="btn-row">
-          <button type="button" class="btn-back" onclick="goto('s-signup1','left')">←</button>
-          <button type="submit" class="btn-primary" onclick="goto('s-pending');return false;">Submit Application →</button>
+    {# ── Role Selection — styled cards, Symfony radios hidden underneath ── #}
+    <div class="field">
+      <label style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px">
+        Your Role
+      </label>
+
+      {# Symfony renders real radio inputs — hide them, sync via JS #}
+      <div style="display:none">
+        {{ form_widget(kycForm.role) }}
+      </div>
+
+      {% set roleIcons = {'CLIENT': '👤', 'INVESTISSEUR': '💼', 'COMMERCANT': '🏢', 'ADMIN': '⚡'} %}
+      {% set roleDescs = {
+          'CLIENT':       'Standard account access',
+          'INVESTISSEUR': 'Long-term portfolio growth',
+          'COMMERCANT':   'Business & payments',
+          'ADMIN':        'Full platform access'
+      } %}
+
+      <div class="role-grid">
+        {% for choice in kycForm.role.vars.choices %}
+          <div class="role-card" onclick="selectRole(this, '{{ choice.value }}')">
+            <div class="role-check"></div>
+            <div class="role-icon">{{ roleIcons[choice.value] ?? '👤' }}</div>
+            <div class="role-name">{{ choice.label }}</div>
+            <div class="role-desc">{{ roleDescs[choice.value] ?? '' }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if kycForm.role.vars.errors|length %}
+        <div style="color:#FF4D6A;font-size:11.5px;margin-top:4px;">
+          {{ kycForm.role.vars.errors[0].message }}
         </div>
-        </form>
+      {% endif %}
+      <div id="role-error" style="display:none;color:#FF4D6A;font-size:11.5px;margin-bottom:10px;">
+        Please select a role to continue.
       </div>
     </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn-back" onclick="goto('s-signup1','left')">←</button>
+      <button type="submit" class="btn-primary" onclick="return validateKyc()">
+        Submit Application →
+      </button>
+    </div>
+
+    {{ form_end(kycForm) }}
+
+  </div>
+</div>
 
     <!-- ─── SCREEN 4 : PENDING ─── -->
     <div class="screen" id="s-pending">
@@ -765,22 +861,51 @@ function togglePw(id, btn) {
 }
 
 /* ── PASSWORD STRENGTH ── */
+
 function checkStrength(inp) {
   const v = inp.value;
-  const bars = [1,2,3,4].map(i => document.getElementById('bar'+i));
   const label = document.getElementById('pw-label');
+  const bars  = [1,2,3].map(i => document.getElementById('bar'+i));
+
+  // Reset
   bars.forEach(b => b.className = 'pw-bar');
-  if (!v) { label.textContent = 'Enter a password'; return; }
-  let score = 0;
-  if (v.length >= 8) score++;
-  if (/[A-Z]/.test(v)) score++;
-  if (/[0-9]/.test(v)) score++;
-  if (/[^A-Za-z0-9]/.test(v)) score++;
-  const cls = score <= 1 ? 'weak' : score <= 2 ? 'fair' : 'strong';
-  const txt = score <= 1 ? 'Weak' : score <= 2 ? 'Fair' : score <= 3 ? 'Good' : 'Strong';
-  const col = score <= 1 ? '#FF4D6A' : score <= 2 ? '#F0B429' : '#00E5A0';
-  for (let i = 0; i < score; i++) bars[i].className = 'pw-bar ' + cls;
-  label.textContent = txt; label.style.color = col;
+  label.textContent = '';
+
+  if (!v) { label.textContent = 'Enter a password'; label.style.color = 'var(--muted)'; return; }
+
+  // Your exact 3 constraints from GeneralInfoType
+  const rules = [
+    { pass: v.length >= 8,      bar: 'bar1', text: '8+ characters' },
+    { pass: /[A-Z]/.test(v),    bar: 'bar2', text: 'uppercase letter' },
+    { pass: /[0-9]/.test(v),    bar: 'bar3', text: 'number' },
+  ];
+
+  const passed = rules.filter(r => r.pass).length;
+
+  // Color per score
+  const config = {
+    1: { cls: 'weak',   col: '#FF4D6A', txt: 'Weak'   },
+    2: { cls: 'fair',   col: '#F0B429', txt: 'Fair'   },
+    3: { cls: 'strong', col: '#00E5A0', txt: 'Strong' },
+  };
+
+  if (passed === 0) {
+    label.textContent = 'Too short';
+    label.style.color = 'var(--muted)';
+    return;
+  }
+
+  const { cls, col, txt } = config[passed];
+
+  // Light up only bars for passed rules
+  rules.forEach(r => {
+    if (r.pass) document.getElementById(r.bar).className = 'pw-bar ' + cls;
+  });
+
+  // Show which rule is still missing
+  const missing = rules.find(r => !r.pass);
+  label.textContent = missing ? `${txt} — missing: ${missing.text}` : '✓ All requirements met';
+  label.style.color = col;
 }
 
 /* ── FILE UPLOAD ── */
@@ -799,9 +924,14 @@ document.querySelectorAll('.upload-zone input').forEach(inp => {
 });
 
 /* ── ROLE SELECTION ── */
-function selectRole(card) {
+function selectRole(card, value) {
   document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
   card.classList.add('selected');
+
+  // Find Symfony's generated radio input by value and check it
+  document.querySelectorAll('#kyc-form input[type="radio"]').forEach(r => {
+    r.checked = (r.value === value);
+  });
 }
 
 /* ── TICKER DATA ── */
@@ -817,6 +947,12 @@ const ticks = [
   { sym:'LINK/USD', price:'14.72', chg:'+1.23%', up:true },
   { sym:'MATIC/USD', price:'0.8840', chg:'-0.48%', up:false },
 ];
+
+const initialStep = "{{ initial_step | default('login') }}";
+if (initialStep === 'signup1') goto('s-signup1');
+else if (initialStep === '2')  goto('s-signup2');
+else if (initialStep === 'pending') goto('s-pending');
+
 const ticker = document.getElementById('ticker-inner');
 const html = [...ticks,...ticks].map(t =>
   `<span class="tick-item">
@@ -825,6 +961,20 @@ const html = [...ticks,...ticks].map(t =>
     <span class="tick-chg ${t.up?'up':'dn'}">${t.chg}</span>
    </span>`).join('');
 ticker.innerHTML = html;
+
+function validateKyc() {
+  const roleSelected = document.querySelector('#kyc-form input[type="radio"]:checked');
+  const roleError    = document.getElementById('role-error');
+
+  if (!roleSelected) {
+    roleError.style.display = 'block';
+    return false;
+  }
+  roleError.style.display = 'none';
+  return true;
+}
+
+
 </script>
 </body>
 </html>
