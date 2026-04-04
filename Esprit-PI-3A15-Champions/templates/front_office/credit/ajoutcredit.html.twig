@@ -1,0 +1,177 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle Demande de Crédit{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+<section class="credit-form-section py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                
+                {# 1. Alertes Flash (Succès/Erreur) #}
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ label == 'danger' ? 'danger' : 'success' }} border-0 shadow-sm alert-dismissible fade show mb-4 animate__animated animate__fadeIn" style="border-radius: 12px;" role="alert">
+                            <i class="fas {{ label == 'danger' ? 'fa-exclamation-circle' : 'fa-check-circle' }} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+
+                <div class="card border-0 shadow-lg animate__animated animate__fadeInUp" style="border-radius: 20px;">
+                    
+                    {# 2. Header #}
+                    <div class="card-header bg-dark text-white p-4" style="border-radius: 20px 20px 0 0;">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box bg-violet rounded-circle me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px;">
+                                <i class="fas fa-hand-holding-usd fa-lg text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0 fw-bold text-white">Demande de Financement</h3>
+                                <p class="text-white-50 mb-0 small">Complétez les informations pour votre projet "Champions"</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-4 p-md-5 bg-white" style="border-radius: 0 0 20px 20px;">
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'class': 'modern-form'}}) }}
+                            
+                        {# 3. Bloc de Diagnostic des Erreurs (Corrigé pour éviter le bug RuntimeError) #}
+                        {% if not form.vars.valid %}
+                            <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-4 animate__animated animate__shakeX" style="border-radius: 12px; background-color: #fdf2f2;">
+                                <div class="fw-bold mb-2"><i class="fas fa-times-circle me-2"></i> Erreurs de validation détectées :</div>
+                                <ul class="mb-0 small">
+                                    {# Erreurs globales #}
+                                    {% for error in form.vars.errors %}
+                                        <li>{{ error.message }}</li>
+                                    {% endfor %}
+
+                                    {# Erreurs par champ (Sécurité ajoutée avec 'is defined') #}
+                                    {% for child in form.children %}
+                                        {% if child.vars.errors is defined %}
+                                            {% for error in child.vars.errors %}
+                                                <li>
+                                                    <strong>{{ child.vars.label|default(child.vars.name)|capitalize }} :</strong> 
+                                                    {{ error.message }}
+                                                </li>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <div class="row g-4">
+                            {# Sélection du Projet #}
+                            <div class="col-12">
+                                <label class="form-label fw-bold"><i class="fas fa-rocket me-2 text-violet"></i>{{ form_label(form.projet) }}</label>
+                                {{ form_widget(form.projet, {'attr': {'class': 'form-select form-select-lg border-custom'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(form.projet) }}</div>
+                            </div>
+
+                            {# Montant et Devise #}
+                            <div class="col-md-7">
+                                <label class="form-label fw-bold"><i class="fas fa-coins me-2 text-violet"></i>{{ form_label(form.montant) }}</label>
+                                {{ form_widget(form.montant, {'attr': {'class': 'form-control border-custom', 'placeholder': 'Ex: 50000'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(form.montant) }}</div>
+                            </div>
+
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold"><i class="fas fa-globe me-2 text-violet"></i>{{ form_label(form.devise) }}</label>
+                                {{ form_widget(form.devise, {'attr': {'class': 'form-select form-select-lg border-custom'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(form.devise) }}</div>
+                            </div>
+
+                            {# Taux d'intérêt et Durée #}
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="fas fa-percentage me-2 text-violet"></i>{{ form_label(form.taux) }}</label>
+                                {{ form_widget(form.taux, {'attr': {'class': 'form-control form-control-lg border-custom', 'placeholder': 'Ex: 2.5'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(form.taux) }}</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="fas fa-calendar-alt me-2 text-violet"></i>{{ form_label(form.duree) }}</label>
+                                {{ form_widget(form.duree, {'attr': {'class': 'form-control form-control-lg border-custom', 'placeholder': 'Nombre de mois'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(form.duree) }}</div>
+                            </div>
+
+                            {# Description #}
+                            <div class="col-12">
+                                <label class="form-label fw-bold"><i class="fas fa-align-left me-2 text-violet"></i>{{ form_label(form.description) }}</label>
+                                {{ form_widget(form.description, {'attr': {'class': 'form-control border-custom', 'rows': '4', 'placeholder': 'Détails...'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(form.description) }}</div>
+                            </div>
+                        </div>
+
+                        {# 4. Actions #}
+                        <div class="mt-5 d-flex flex-column flex-md-row gap-3">
+                            <button type="submit" class="btn-submit-violet shadow-sm flex-grow-1 py-3">
+                                <i class="fas fa-paper-plane me-2"></i>ENVOYER LA DEMANDE
+                            </button>
+                            
+                            <a href="{{ path('app_credit_index') }}" class="btn-cancel shadow-sm py-3 text-center d-flex align-items-center justify-content-center">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                        </div>
+
+                        {# IMPORTANT : form_end sans render_rest:false pour inclure le jeton CSRF #}
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    :root {
+        --primary-violet: #8353E2;
+        --hover-violet: #6d3ec9;
+        --border-color: #edeff2;
+        --text-muted: #67748e;
+    }
+    body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+    .bg-violet { background-color: var(--primary-violet) !important; }
+    .text-violet { color: var(--primary-violet) !important; }
+    .border-custom {
+        border: 2px solid var(--border-color) !important;
+        border-radius: 12px !important;
+        padding: 12px 18px;
+        transition: all 0.3s ease;
+    }
+    .border-custom:focus {
+        border-color: var(--primary-violet) !important;
+        box-shadow: 0 0 0 4px rgba(131, 83, 226, 0.1) !important;
+        outline: none;
+    }
+    .btn-submit-violet {
+        background-color: var(--primary-violet) !important;
+        color: #fff !important;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.2s ease-in-out;
+    }
+    .btn-submit-violet:hover {
+        background-color: var(--hover-violet) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(131, 83, 226, 0.3) !important;
+    }
+    .btn-cancel {
+        background-color: #f8f9fa;
+        color: var(--text-muted);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        min-width: 160px;
+        transition: all 0.2s ease;
+    }
+</style>
+{% endblock %}
