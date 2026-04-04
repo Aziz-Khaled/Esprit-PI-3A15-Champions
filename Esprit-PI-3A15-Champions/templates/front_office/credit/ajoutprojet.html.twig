@@ -1,0 +1,110 @@
+{# templates/front_office/credit/ajoutprojet.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter un Projet - Champions{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="mb-4">
+        <a href="{{ path('app_front_credit') }}" class="text-decoration-none fw-bold" style="color: #6366f1;">
+            <i class="fas fa-arrow-left"></i> Retour au Dashboard
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm p-4" style="border-radius: 20px;">
+                
+                <div class="card-header bg-white border-0 ps-0">
+                    <h2 class="fw-bold" style="color: #1e293b;">Nouveau Projet 🚀</h2>
+                    <p class="text-muted">Configurez votre projet avant de passer à la simulation de crédit.</p>
+                </div>
+
+                <div class="card-body">
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                        
+                        <div class="row">
+                            {# Section 1 : Identité du projet #}
+                            <div class="col-md-6 mb-4">
+                                <h5 class="mb-3 text-secondary border-bottom pb-2">Informations Générales</h5>
+                                
+                                <div class="mb-3">
+                                    {{ form_label(form.title, 'Titre du projet', {'label_attr': {'class': 'fw-bold mb-1'}}) }}
+                                    {{ form_widget(form.title, {'attr': {'class': 'form-control', 'placeholder': 'Nom de votre entreprise ou idée'}}) }}
+                                    <div class="text-danger small">{{ form_errors(form.title) }}</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form_label(form.description, 'Description', {'label_attr': {'class': 'fw-bold mb-1'}}) }}
+                                    {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': '4'}}) }}
+                                    <div class="text-danger small">{{ form_errors(form.description) }}</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form_label(form.secteur, 'Secteur', {'label_attr': {'class': 'fw-bold mb-1'}}) }}
+                                    {{ form_widget(form.secteur, {'attr': {'class': 'form-select'}}) }}
+                                </div>
+                            </div>
+
+                            {# Section 2 : Paramètres financiers #}
+                            <div class="col-md-6 mb-4">
+                                <h5 class="mb-3 text-secondary border-bottom pb-2">Besoin de Financement</h5>
+                                
+                                <div class="mb-3">
+                                    {{ form_label(form.targetAmount, 'Montant souhaité (DT)', {'label_attr': {'class': 'fw-bold mb-1'}}) }}
+                                    <div class="input-group">
+                                        {{ form_widget(form.targetAmount, {'attr': {'class': 'form-control form-control-lg'}}) }}
+                                        <span class="input-group-text bg-light fw-bold">DT</span>
+                                    </div>
+                                    <div class="text-danger small">{{ form_errors(form.targetAmount) }}</div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6 mb-3">
+                                        {{ form_label(form.startDate, 'Date de début', {'label_attr': {'class': 'fw-bold mb-1'}}) }}
+                                        {{ form_widget(form.startDate, {'attr': {'class': 'form-control'}}) }}
+                                        <div class="text-danger small">{{ form_errors(form.startDate) }}</div>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        {{ form_label(form.endDate, 'Échéance', {'label_attr': {'class': 'fw-bold mb-1'}}) }}
+                                        {{ form_widget(form.endDate, {'attr': {'class': 'form-control'}}) }}
+                                        <div class="text-danger small">{{ form_errors(form.endDate) }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form_label(form.imageUrl, 'Image du projet (URL)', {'label_attr': {'class': 'fw-bold mb-1'}}) }}
+                                    {{ form_widget(form.imageUrl, {'attr': {'class': 'form-control', 'placeholder': 'https://...'}}) }}
+                                </div>
+
+                                <div class="p-3 rounded-3" style="background-color: #f8fafc; border: 1px dashed #cbd5e1;">
+                                    <p class="small text-muted mb-0">
+                                        <i class="fas fa-lock me-1"></i> Le statut sera défini sur <strong>DRAFT</strong> par défaut.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-lg w-100 fw-bold text-white shadow-sm" 
+                                    style="background-color: #8b5cf6; border-radius: 12px; padding: 15px;">
+                                Créer le projet et simuler le crédit
+                            </button>
+                        </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body { background-color: #f8fafc; }
+    .form-control:focus, .form-select:focus {
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+    .card { border: none !important; }
+</style>
+{% endblock %}
