@@ -115,7 +115,6 @@
                 <i class="fas fa-pen"></i>
             </button>
 
-            {# CORRECTION ICI : 'idWallet' changé en 'id' #}
             <form method="post" action="{{ path('app_wallet_delete', {'id': wallet.idWallet}) }}" class="m-0" onsubmit="return confirm('Are you sure?');">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ wallet.idWallet) }}">
                 <button type="submit" class="btn-mini btn-mini-delete" {% if wallet.walletCurrencys is not empty %}disabled style="opacity:0.3; cursor:not-allowed;"{% endif %}>
@@ -159,9 +158,16 @@
                 <h2 class="fw-bold mb-1">My Wallets</h2>
                 <p class="text-muted">Monitor and manage your digital assets across multiple platforms.</p>
             </div>
-            <button class="btn btn-primary px-4 py-2 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#addModal" style="background: var(--primary-gradient); border: none;">
-                <i class="fas fa-plus me-2"></i> New Wallet
-            </button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary px-4 py-2 rounded-3 fw-bold shadow-sm" 
+                        data-bs-toggle="modal" data-bs-target="#transactionModal">
+                    <i class="fas fa-exchange-alt me-2"></i> Transfer
+                </button>
+                
+                <button class="btn btn-primary px-4 py-2 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#addModal" style="background: var(--primary-gradient); border: none;">
+                    <i class="fas fa-plus me-2"></i> New Wallet
+                </button>
+            </div>
         </div>
 
         <div class="row g-4">
@@ -191,6 +197,64 @@
             </div>
         </div>
     </main>
+</div>
+
+{# TRANSACTION MODAL - SYMFONY VERSION #}
+<div class="modal fade" id="transactionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0">New Transfer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                {{ form_start(transactionForm, {'action': path('app_transaction_execute')}) }}
+                    
+                    {{ form_widget(transactionForm.type) }}
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1">SOURCE RIB</label>
+                        {{ form_widget(transactionForm.ribSource, {
+                            'attr': {'class': 'form-control-custom', 'placeholder': 'Enter Source RIB'}
+                        }) }}
+                        <div class="text-danger small">{{ form_errors(transactionForm.ribSource) }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1">DESTINATION RIB</label>
+                        {{ form_widget(transactionForm.ribDestination, {
+                            'attr': {'class': 'form-control-custom', 'placeholder': 'Enter Destination RIB'}
+                        }) }}
+                        <div class="text-danger small">{{ form_errors(transactionForm.ribDestination) }}</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="small fw-bold text-muted mb-1">AMOUNT</label>
+                            {{ form_widget(transactionForm.montant, {
+                                'attr': {'class': 'form-control-custom', 'placeholder': '0.00'}
+                            }) }}
+                            <div class="text-danger small">{{ form_errors(transactionForm.montant) }}</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="small fw-bold text-muted mb-1">CURRENCY</label>
+                            {{ form_widget(transactionForm.currency, {
+                                'attr': {'class': 'form-control-custom'}
+                            }) }}
+                            <div class="text-danger small">{{ form_errors(transactionForm.currency) }}</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn w-100 py-3 text-white fw-bold rounded-3 mt-2" 
+                            style="background: var(--primary-gradient); border: none;">
+                        <i class="fas fa-paper-plane me-2"></i> Confirm Transfer
+                    </button>
+
+                {{ form_end(transactionForm) }}
+            </div>
+        </div>
+    </div>
 </div>
 
 {# MODALE AJOUT WALLET #}
@@ -237,7 +301,7 @@
     </div>
 </div>
 
-{# MODALE EDIT STATUT : Mise à jour des options pour correspondre à WalletType #}
+{# MODALE EDIT STATUT #}
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">

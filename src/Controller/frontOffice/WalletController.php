@@ -7,6 +7,7 @@ use App\Entity\WalletCurrency;
 use App\Entity\Utilisateur;
 use App\Entity\Currency;
 use App\Form\WalletType;
+use App\Form\TransactionType; // Import important pour la modale
 use App\Repository\WalletRepository;
 use App\Repository\CurrencyRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,9 +24,11 @@ class WalletController extends AbstractController
     {
         $user = $this->getUser();
         if (!$user) {
+            // Simulation d'utilisateur pour le projet académique
             $user = $entityManager->getRepository(Utilisateur::class)->find(1);
         }
 
+        // --- Gestion du formulaire de création de Wallet ---
         $newWallet = new Wallet();
         $form = $this->createForm(WalletType::class, $newWallet);
         $form->handleRequest($request);
@@ -46,9 +49,12 @@ class WalletController extends AbstractController
             $entityManager->persist($newWallet);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Nouveau wallet créé avec succès ! RIB: ' . $rib);
+            $this->addFlash('success', 'New wallet created successfully! RIB: ' . $rib);
             return $this->redirectToRoute('app_wallet_index');
         }
+
+        // --- Préparation du formulaire de Transaction pour la Modale ---
+        $transactionForm = $this->createForm(TransactionType::class);
 
         $walletsList = $walletRepository->findBy(['utilisateur' => $user]);
         $allCurrencies = $currencyRepo->findAll();
@@ -57,10 +63,10 @@ class WalletController extends AbstractController
             'wallets' => $walletsList,
             'form' => $form->createView(),
             'all_available_currencies' => $allCurrencies,
+            'transactionForm' => $transactionForm->createView(), // Envoie la variable à Twig
         ]);
     }
 
-    // CORRECTION : {id} au lieu de {id_wallet} pour l'autowiring
     #[Route('/{id}/add-currency', name: 'app_wallet_add_currency', methods: ['POST'])]
     public function addCurrency(Request $request, Wallet $wallet, CurrencyRepository $currencyRepo, EntityManagerInterface $entityManager): Response
     {
@@ -69,14 +75,14 @@ class WalletController extends AbstractController
 
         foreach ($wallet->getWalletCurrencys() as $existingWc) {
             if ($existingWc->getCurrency() && $existingWc->getCurrency()->getId() == $idCurrency) {
-                $this->addFlash('error', 'Cette devise existe déjà dans ce wallet !');
+                $this->addFlash('error', 'This currency already exists in this wallet!');
                 return $this->redirectToRoute('app_wallet_index');
             }
         }
 
         $currency = $currencyRepo->find($idCurrency);
         if (!$currency) {
-            $this->addFlash('error', 'Devise introuvable.');
+            $this->addFlash('error', 'Currency not found.');
             return $this->redirectToRoute('app_wallet_index');
         }
 
@@ -91,7 +97,7 @@ class WalletController extends AbstractController
         $entityManager->persist($wc);
         $entityManager->flush();
 
-        $this->addFlash('success', "Devise " . $wc->getNomCurrency() . " ajoutée.");
+        $this->addFlash('success', "Currency " . $wc->getNomCurrency() . " added.");
         return $this->redirectToRoute('app_wallet_index');
     }
 
@@ -103,7 +109,7 @@ class WalletController extends AbstractController
             $wallet->setStatut($statut);
             $wallet->setDateDerniereModification(new \DateTime());
             $entityManager->flush();
-            $this->addFlash('success', 'Statut mis à jour.');
+            $this->addFlash('success', 'Status updated.');
         }
         return $this->redirectToRoute('app_wallet_index');
     }
@@ -113,30 +119,26 @@ class WalletController extends AbstractController
     {
         if ($this->isCsrfTokenValid('delete'.$wallet->getIdWallet(), $request->request->get('_token'))) {
             if (!$wallet->getWalletCurrencys()->isEmpty()) {
-                $this->addFlash('error', 'Suppression impossible : le wallet contient des devises.');
+                $this->addFlash('error', 'Cannot delete: wallet contains currencies.');
             } else {
                 $entityManager->remove($wallet);
                 $entityManager->flush();
-                $this->addFlash('success', 'Le wallet a été supprimé.');
+                $this->addFlash('success', 'Wallet deleted.');
             }
         }
         return $this->redirectToRoute('app_wallet_index');
     }
-    /**
- * Supprime une devise spécifique d'un wallet si son solde est à 0
- */
-#[Route('/currency/{id}/delete', name: 'app_wallet_currency_delete', methods: ['GET', 'POST'])]
-public function deleteCurrency(WalletCurrency $wc, EntityManagerInterface $entityManager): Response
-{
-    // Sécurité supplémentaire : on vérifie que le solde est bien à 0
-    if ($wc->getSolde() == 0) {
-        $entityManager->remove($wc);
-        $entityManager->flush();
-        $this->addFlash('success', 'Devise retirée du wallet.');
-    } else {
-        $this->addFlash('error', 'Impossible de retirer une devise avec un solde positif.');
-    }
 
-    return $this->redirectToRoute('app_wallet_index');
-}
+    #[Route('/currency/{id}/delete', name: 'app_wallet_currency_delete', methods: ['GET', 'POST'])]
+    public function deleteCurrency(WalletCurrency $wc, EntityManagerInterface $entityManager): Response
+    {
+        if ($wc->getSolde() == 0) {
+            $entityManager->remove($wc);
+            $entityManager->flush();
+            $this->addFlash('success', 'Currency removed from wallet.');
+        } else {
+            $this->addFlash('error', 'Cannot remove currency with a positive balance.');
+        }
+        return $this->redirectToRoute('app_wallet_index');
+    }
 }
