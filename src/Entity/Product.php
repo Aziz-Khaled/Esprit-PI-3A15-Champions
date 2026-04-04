@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use App\Repository\ProductRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 #[ORM\Table(name: 'product')]
@@ -17,12 +18,18 @@ class Product
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
+    #[Assert\NotBlank(message: "Le nom du produit est obligatoire")]
+    #[Assert\Length(min: 3, max: 255, minMessage: "Le nom doit faire au moins {{ limit }} caractères")]
     #[ORM\Column(type: 'string', nullable: true)]
     private ?string $name = null;
 
+    #[Assert\NotBlank(message: "La description est obligatoire")]
+    #[Assert\Length(min: 10, minMessage: "La description doit être plus détaillée (min {{ limit }} caractères)")]
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
+    #[Assert\NotBlank(message: "Le prix est obligatoire")]
+    #[Assert\Positive(message: "Le prix doit être supérieur à 0")]
    #[ORM\Column(type: 'float', precision: 10, scale: 2, nullable: false)]
     private ?float $price = null;
 
@@ -38,9 +45,12 @@ class Product
     #[ORM\Column(name: 'image_url', type: 'text', nullable: true)]
     private ?string $imageUrl = null;
 
+    #[Assert\NotBlank(message: "Le stock est obligatoire")]
+    #[Assert\GreaterThanOrEqual(value: 0, message: "Le stock ne peut pas être négatif")]
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $stock = null;
 
+    #[Assert\NotBlank(message: "Veuillez choisir une catégorie")]
     #[ORM\Column(type: 'string', nullable: true)]
     private ?string $category = null;
 

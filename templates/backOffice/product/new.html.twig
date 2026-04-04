@@ -1,0 +1,153 @@
+{% extends 'back_base.html.twig' %}
+
+{% block title %}Nouveau Produit - Marketplace Fintech{% endblock %}
+
+{% block body_back %}
+<div class="container-fluid py-4 bg-light-soft">
+    <div class="d-sm-flex align-items-center justify-content-between mb-5">
+        <div>
+            <h1 class="h3 mb-1 text-gray-900 font-weight-bold">Publier un Produit sur le Marketplace</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb bg-transparent p-0 small">
+                    <li class="breadcrumb-item"><a href="{{ path('app_admin_panel') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_back_product_index') }}">Produits</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Nouveau</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{{ path('app_back_product_index') }}" class="btn btn-sm btn-white shadow-sm rounded-pill px-3 border">
+            <i class="fas fa-times mr-2 text-danger"></i> Annuler
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-xl overflow-hidden glass-card">
+                <div class="card-header bg-primary py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-circle bg-white-50 text-white mr-3">
+                            <i class="fas fa-rocket fa-lg"></i>
+                        </div>
+                        <h6 class="m-0 font-weight-bold text-white h5">Configuration du Produit</h6>
+                    </div>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate', 'enctype': 'multipart/form-data'}}) }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="form-group">
+                                <label class="text-primary font-weight-bold small text-uppercase letter-spacing-1">Nom du produit</label>
+                                {{ form_widget(form.name, {'attr': {'class': 'form-control upgraded-input', 'placeholder': 'Ex: Hardware Ledger Nano'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(form.name) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="form-group">
+                                <label class="text-primary font-weight-bold small text-uppercase letter-spacing-1">Marque / Éditeur</label>
+                                {{ form_widget(form.brand, {'attr': {'class': 'form-control upgraded-input', 'placeholder': 'Ex: Ledger, Trezor...'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(form.brand) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="form-group">
+                                <label class="text-primary font-weight-bold small text-uppercase letter-spacing-1">Catégorie</label>
+                                {{ form_widget(form.category, {'attr': {'class': 'form-control custom-select upgraded-input'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(form.category) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="form-group">
+                                <label class="text-primary font-weight-bold small text-uppercase letter-spacing-1">Statut Initial</label>
+                                {{ form_widget(form.status, {'attr': {'class': 'form-control custom-select upgraded-input'}}) }}
+                                <div class="text-danger small mt-1">{{ form_errors(form.status) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="text-primary font-weight-bold small text-uppercase letter-spacing-1">Description Détaillée</label>
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control upgraded-input', 'rows': 4, 'placeholder': 'Décrivez les caractéristiques techniques et les avantages...'}}) }}
+                        <div class="text-danger small mt-1">{{ form_errors(form.description) }}</div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <label class="text-primary font-weight-bold small text-uppercase letter-spacing-1">Tarif Initial (BTC)</label>
+                            {{ form_widget(form.price, {'attr': {'class': 'form-control upgraded-input', 'placeholder': '0.00'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.price) }}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-success font-weight-bold small text-uppercase letter-spacing-1">Tarif Promotionnel (Optionnel)</label>
+                            {{ form_widget(form.discountPrice, {'attr': {'class': 'form-control upgraded-input border-success-light', 'placeholder': '0.00'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.discountPrice) }}</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="text-primary font-weight-bold small text-uppercase letter-spacing-1">Stock Disponible</label>
+                            {{ form_widget(form.stock, {'attr': {'class': 'form-control upgraded-input', 'placeholder': '0'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.stock) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-5">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-primary font-weight-bold small text-uppercase letter-spacing-1">Note de départ (0-5)</label>
+                            {{ form_widget(form.avgRating, {'attr': {'class': 'form-control upgraded-input', 'placeholder': '4.5'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.avgRating) }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-primary font-weight-bold small text-uppercase letter-spacing-1">Image du Produit</label>
+                            <div class="custom-file rounded-pill overflow-hidden border shadow-sm">
+                                {{ form_widget(form.imageFile, {'attr': {'class': 'custom-file-input', 'id': 'customFile'}}) }}
+                                <label class="custom-file-label border-0" for="customFile">Choisir l'image...</label>
+                            </div>
+                            <div class="text-danger small mt-1">{{ form_errors(form.imageFile) }}</div>
+                        </div>
+                    </div>
+
+                    <hr class="mb-5">
+
+                    <div class="d-flex justify-content-end gap-3 align-items-center">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg upgraded-submit">
+                            <i class="fas fa-check-circle mr-2"></i> Enregistrer le Produit
+                        </button>
+                    </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-light-soft { background-color: #f8fbff; }
+    .rounded-xl { border-radius: 1.25rem !important; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
+    .icon-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .bg-white-50 { background-color: rgba(255,255,255,0.2); }
+    
+    .upgraded-input { border-radius: 10px !important; border: 1px solid #e2e8f0 !important; padding: 0.75rem 1rem !important; transition: 0.2s; background-color: #fdfdfd !important; font-weight: 500; color: #4a5568; }
+    .upgraded-input:focus { border-color: #4e73df !important; box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.1) !important; background-color: #fff !important; }
+    
+    .border-success-light { border-color: #d1fae5 !important; }
+    .letter-spacing-1 { letter-spacing: 0.05rem; }
+    
+    .upgraded-submit { transition: 0.3s; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1rem; }
+    .upgraded-submit:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 30px rgba(78, 115, 223, 0.3) !important; }
+    
+    .custom-file-label { padding-top: 0.75rem; height: calc(1.5em + 1.25rem + 2px); background: #fdfdfd; font-weight: 500; color: #718096; }
+    .gap-3 { gap: 1rem; }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        $('.custom-file-input').on('change', function() {
+            var fileName = $(this).val().split('\\').pop();
+            $(this).siblings('.custom-file-label').addClass("selected").html(fileName);
+        });
+    });
+</script>
+{% endblock %}
