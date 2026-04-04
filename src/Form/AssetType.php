@@ -79,6 +79,7 @@ class AssetType extends AbstractType
                 'placeholder' => '-- Select a market --',
                 'required'    => true,
                 'choices'     => [
+                    'Binance'  => Asset::MARKET_BINANCE,
                     'Crypto' => Asset::MARKET_CRYPTO,
                     'NYSE'   => Asset::MARKET_NYSE,
                     'NASDAQ' => Asset::MARKET_NASDAQ,
@@ -86,7 +87,7 @@ class AssetType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'Please select a market.'),
                     new Choice(
-                        choices: [Asset::MARKET_CRYPTO, Asset::MARKET_NYSE, Asset::MARKET_NASDAQ],
+                        choices: [ Asset::MARKET_BINANCE, Asset::MARKET_CRYPTO, Asset::MARKET_NYSE, Asset::MARKET_NASDAQ],
                         message: 'Invalid market selected.'
                     ),
                 ],
@@ -127,11 +128,12 @@ class AssetType extends AbstractType
             }
 
             // Règle métier 1 : un asset Crypto doit être sur le marché Crypto
-            if ($asset->getType() === Asset::TYPE_CRYPTO && $asset->getMarket() !== Asset::MARKET_CRYPTO) {
-                $form->get('market')->addError(
-                    new FormError('A cryptocurrency asset must be on the Crypto market.')
-                );
-            }
+            if ($asset->getType() === Asset::TYPE_CRYPTO 
+    && !in_array($asset->getMarket(), [Asset::MARKET_CRYPTO, Asset::MARKET_BINANCE])) {
+    $form->get('market')->addError(
+        new FormError('A cryptocurrency asset must be on the Crypto or Binance market.')
+    );
+}
 
             // Règle métier 2 : Stock et Forex ne peuvent pas être sur le marché Crypto
             if (in_array($asset->getType(), [Asset::TYPE_STOCK, Asset::TYPE_FOREX]) && $asset->getMarket() === Asset::MARKET_CRYPTO) {

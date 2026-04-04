@@ -13,6 +13,7 @@ class Asset
     public const TYPE_STOCK   = 'stock';
     public const TYPE_FOREX   = 'forex';
 
+    public const MARKET_BINANCE = 'binance';
     public const MARKET_CRYPTO = 'crypto';
     public const MARKET_NYSE   = 'nyse';
     public const MARKET_NASDAQ = 'nasdaq';

@@ -117,7 +117,7 @@
 {# ── SIDEBAR — Front Office only ── #}
 <aside class="sidebar">
     <h2>Trading Panel</h2>
-    <a href="{{ path('app_backoffice_trade_index') }}" class="nav-btn {{ mode is defined ? 'active' : '' }}">
+    <a href="{{ path('app_frontoffice_trade_index') }}" class="nav-btn {{ mode is defined ? 'active' : '' }}">
         <i class="fas fa-chart-line"></i> Trading
     </a>
     <a href="#" class="nav-btn">
@@ -151,7 +151,7 @@
                 <h1>Trade Management</h1>
                 <p>History of buy and sell orders.</p>
             </div>
-            <a href="{{ path('app_backoffice_trade_new') }}" class="btn-primary">
+            <a href="{{ path('app_frontoffice_trade_new') }}" class="btn-primary">
                 <i class="fas fa-plus"></i> New Trade
             </a>
         </div>
@@ -184,7 +184,7 @@
             <table class="trade-table">
                 <thead>
                     <tr>
-                        <th>Asset</th><th>Type</th><th>Mode</th>
+                        <th>#</th><th>Asset</th><th>Type</th><th>Mode</th>
                         <th>Quantity</th><th>Price</th><th>Status</th>
                         <th>Created At</th><th>Actions</th>
                     </tr>
@@ -192,7 +192,7 @@
                 <tbody>
                 {% for trade in trades %}
                     <tr>
-                        
+                        <td style="color:#9ca3af;font-size:0.8rem;">#{{ trade.id }}</td>
                         <td>
                             {% if assets[trade.assetId] is defined %}
                                 <span style="background:#ede9fe;color:#5b21b6;font-weight:700;padding:3px 10px;border-radius:6px;font-size:0.78rem;">
@@ -239,13 +239,13 @@
                         </td>
                         <td>
                             <div style="display:flex;gap:6px;">
-                                <a href="{{ path('app_backoffice_trade_show', {id: trade.id}) }}" class="btn-icon btn-show" title="View">
+                                <a href="{{ path('app_frontoffice_trade_show', {id: trade.id}) }}" class="btn-icon btn-show" title="View">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ path('app_backoffice_trade_edit', {id: trade.id}) }}" class="btn-icon btn-edit" title="Edit">
+                                <a href="{{ path('app_frontoffice_trade_edit', {id: trade.id}) }}" class="btn-icon btn-edit" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form method="post" action="{{ path('app_backoffice_trade_delete', {id: trade.id}) }}"
+                                <form method="post" action="{{ path('app_frontoffice_trade_delete', {id: trade.id}) }}"
                                       onsubmit="return confirm('Delete this trade?');" style="display:inline;">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ trade.id) }}">
                                     <button type="submit" class="btn-icon btn-delete" title="Delete">
@@ -259,7 +259,7 @@
                     <tr>
                         <td colspan="9" class="empty-state">
                             <i class="fas fa-chart-line"></i>
-                            <p>No trades found. <a href="{{ path('app_backoffice_trade_new') }}" style="color:#6366f1;">Create the first one</a>.</p>
+                            <p>No trades found. <a href="{{ path('app_frontoffice_trade_new') }}" style="color:#6366f1;">Create the first one</a>.</p>
                         </td>
                     </tr>
                 {% endfor %}
@@ -270,7 +270,7 @@
     {# ── FORM (new + edit) ── #}
     {% elseif mode == 'form' %}
 
-        <a href="{{ path('app_backoffice_trade_index') }}" class="back-link">
+        <a href="{{ path('app_frontoffice_trade_index') }}" class="back-link">
             <i class="fas fa-arrow-left"></i> Back to list
         </a>
         <div class="page-header" style="margin-top:12px;">
@@ -317,7 +317,7 @@
                     </div>
                 </div>
                 <div class="form-actions">
-                    <a href="{{ path('app_backoffice_trade_index') }}" class="btn-secondary">
+                    <a href="{{ path('app_frontoffice_trade_index') }}" class="btn-secondary">
                         <i class="fas fa-times"></i> Cancel
                     </a>
                     <button type="submit" class="btn-primary">
@@ -331,12 +331,12 @@
     {# ── SHOW ── #}
     {% elseif mode == 'show' %}
 
-        <a href="{{ path('app_backoffice_trade_index') }}" class="back-link">
+        <a href="{{ path('app_frontoffice_trade_index') }}" class="back-link">
             <i class="fas fa-arrow-left"></i> Back to list
         </a>
         <div class="page-header" style="margin-top:12px;">
             <h1>Trade #{{ trade.id }} Details</h1>
-            <a href="{{ path('app_backoffice_trade_edit', {id: trade.id}) }}" class="btn-primary">
+            <a href="{{ path('app_frontoffice_trade_edit', {id: trade.id}) }}" class="btn-primary">
                 <i class="fas fa-edit"></i> Edit
             </a>
         </div>
