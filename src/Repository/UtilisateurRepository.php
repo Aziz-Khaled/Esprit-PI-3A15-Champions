@@ -16,6 +16,18 @@ class UtilisateurRepository extends ServiceEntityRepository
         parent::__construct($registry, Utilisateur::class);
     }
 
+
+    public function searchByKeyword(string $q): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('LOWER(u.nom)    LIKE LOWER(:q)')
+            ->orWhere('LOWER(u.prenom) LIKE LOWER(:q)')
+            ->orWhere('LOWER(u.email)  LIKE LOWER(:q)')
+            ->setParameter('q', '%' . $q . '%')
+            ->orderBy('u.nom', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 //    /**
 //     * @return Utilisateur[] Returns an array of Utilisateur objects
 //     */
