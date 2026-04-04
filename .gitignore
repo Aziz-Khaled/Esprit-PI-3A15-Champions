@@ -18,3 +18,6 @@
 
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+/public/uploads/users/selfies/*
+/public/uploads/users/ids/*

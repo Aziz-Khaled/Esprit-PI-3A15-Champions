@@ -21,12 +21,14 @@ security:
                 check_path: app_login
                 username_parameter: login[email]
                 password_parameter: login[motDePasse]
-                default_target_path: app_projet
+                success_handler: App\Security\LoginSuccessHandler
                 failure_path: app_login
             logout:
                 path: app_logout
                 target: app_login
 
     access_control:
-    - { path: ^/login, roles: PUBLIC_ACCESS }
+    - { path: ^/login,    roles: PUBLIC_ACCESS }
+    - { path: ^/register, roles: PUBLIC_ACCESS }  
+    - { path: ^/admin,    roles: ROLE_ADMIN }
     - { path: ^/, roles: [ROLE_CLIENT, ROLE_ADMIN, ROLE_COMMERCANT, ROLE_INVESTISSEUR] }
