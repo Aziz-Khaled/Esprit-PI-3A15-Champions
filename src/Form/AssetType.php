@@ -8,6 +8,9 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Choice;
 use Symfony\Component\Validator\Constraints\Length;
@@ -113,6 +116,38 @@ class AssetType extends AbstractType
                     ),
                 ],
             ]);
+
+        // ── Règles métier via événement POST_SUBMIT ──
+        $builder->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
+            $form  = $event->getForm();
+            $asset = $event->getData();
+
+            if (!$asset instanceof Asset) {
+                return;
+            }
+
+            // Règle métier 1 : un asset Crypto doit être sur le marché Crypto
+            if ($asset->getType() === Asset::TYPE_CRYPTO && $asset->getMarket() !== Asset::MARKET_CRYPTO) {
+                $form->get('market')->addError(
+                    new FormError('A cryptocurrency asset must be on the Crypto market.')
+                );
+            }
+
+            // Règle métier 2 : Stock et Forex ne peuvent pas être sur le marché Crypto
+            if (in_array($asset->getType(), [Asset::TYPE_STOCK, Asset::TYPE_FOREX]) && $asset->getMarket() === Asset::MARKET_CRYPTO) {
+                $form->get('market')->addError(
+                    new FormError('Stock and Forex assets cannot be on the Crypto market.')
+                );
+            }
+
+            // Règle métier 3 : prix minimum selon le type
+            $price = (float) $asset->getCurrentPrice();
+            if ($asset->getType() === Asset::TYPE_CRYPTO && $price < 0.00000001) {
+                $form->get('currentPrice')->addError(
+                    new FormError('Crypto price must be at least 0.00000001.')
+                );
+            }
+        });
     }
 
     public function configureOptions(OptionsResolver $resolver): void
