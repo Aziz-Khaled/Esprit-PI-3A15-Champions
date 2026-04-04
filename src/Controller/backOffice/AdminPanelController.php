@@ -73,12 +73,21 @@ public function rejectUser(
 }
 
 #[Route('/users/list', name: 'app_admin_users_list')]
-public function usersList(UtilisateurRepository $repo): Response
+public function usersList(UtilisateurRepository $repo, Request $request): Response
 {
-    $users = $repo->findAll();
+    $role   = $request->query->get('role');
+    $statut = $request->query->get('statut');
+
+    $criteria = [];
+    if ($role)   $criteria['role']   = $role;
+    if ($statut) $criteria['statut'] = $statut;
+
+    $users = $criteria ? $repo->findBy($criteria) : $repo->findAll();
 
     return $this->render('admin_panel/users_list.html.twig', [
-        'users' => $users,
+        'users'          => $users,
+        'selectedRole'   => $role,
+        'selectedStatut' => $statut,
     ]);
 }
 
