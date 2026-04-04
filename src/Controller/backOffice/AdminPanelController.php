@@ -1,18 +1,124 @@
 <?php
 
 namespace App\Controller\backOffice;
-
+use App\Entity\Utilisateur;
+use App\Repository\UtilisateurRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use App\Form\AdminEditUserType;
 
+#[Route('/admin')]
 final class AdminPanelController extends AbstractController
 {
-    #[Route('/admin/panel', name: 'app_admin_panel')]
+    #[Route('/panel', name: 'app_admin_panel')]
     public function index(): Response
     {
         return $this->render('admin_panel/index.html.twig', [
             'controller_name' => 'AdminPanelController',
         ]);
     }
+
+    #[Route('/users/pending', name: 'app_admin_pending_users')]
+    public function pendingUsers(UtilisateurRepository $repo): Response
+    {
+        $pendingUsers = $repo->findBy(
+            ['statut' => 'pending'],
+            ['dateCreation' => 'DESC']
+        );
+
+        return $this->render('admin_panel/pending_users.html.twig', [
+            'users' => $pendingUsers,
+        ]);
+    }
+
+    #[Route('/users/approve/{id}', name: 'app_admin_approve_user', methods: ['POST'])]
+    public function approveUser(
+    Utilisateur $user,
+    EntityManagerInterface $em,
+    Request $request,
+    CsrfTokenManagerInterface $csrf
+    ): Response {
+    if (!$csrf->isTokenValid(new CsrfToken('approve_' . $user->getIdUser(), $request->request->get('_token')))) {
+        throw $this->createAccessDeniedException('Invalid CSRF token.');
+    }
+
+    $user->setStatut('ACTIVE');
+    $em->flush();
+
+    $this->addFlash('success', $user->getPrenom() . ' ' . $user->getNom() . ' has been approved.');
+    return $this->redirectToRoute('app_admin_pending_users');
+}
+
+    #[Route('/users/reject/{id}', name: 'app_admin_reject_user', methods: ['POST'])]
+public function rejectUser(
+    Utilisateur $user,
+    EntityManagerInterface $em,
+    Request $request,
+    CsrfTokenManagerInterface $csrf
+): Response {
+    if (!$csrf->isTokenValid(new CsrfToken('reject_' . $user->getIdUser(), $request->request->get('_token')))) {
+        throw $this->createAccessDeniedException('Invalid CSRF token.');
+    }
+
+    $user->setStatut('BANNED');
+    $em->flush();
+
+    $this->addFlash('warning', $user->getPrenom() . ' ' . $user->getNom() . ' has been rejected.');
+    return $this->redirectToRoute('app_admin_pending_users');
+}
+
+#[Route('/admin/users/list', name: 'app_admin_users_list')]
+public function usersList(UtilisateurRepository $repo): Response
+{
+    $users = $repo->findAll();
+
+    return $this->render('admin_panel/users_list.html.twig', [
+        'users' => $users,
+    ]);
+}
+
+#[Route('/admin/users/edit/{id}', name: 'app_admin_edit_user', methods: ['GET', 'POST'])]
+public function editUser(
+    Utilisateur $user,
+    Request $request,
+    EntityManagerInterface $em
+): Response {
+    $form = $this->createForm(AdminEditUserType::class, $user);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $em->flush();
+        $this->addFlash('success', $user->getPrenom() . ' ' . $user->getNom() . ' has been updated.');
+        return $this->redirectToRoute('app_admin_users_list');
+    }
+
+    return $this->render('admin_panel/edit_user.html.twig', [
+        'form' => $form,
+        'user' => $user,
+    ]);
+}
+
+#[Route('/admin/users/delete/{id}', name: 'app_admin_delete_user', methods: ['POST'])]
+public function deleteUser(
+    Utilisateur $user,
+    EntityManagerInterface $em,
+    Request $request,
+    CsrfTokenManagerInterface $csrf
+): Response {
+    if (!$csrf->isTokenValid(new CsrfToken('delete_' . $user->getIdUser(), $request->request->get('_token')))) {
+        throw $this->createAccessDeniedException('Invalid CSRF token.');
+    }
+
+    $em->remove($user);
+    $em->flush();
+
+    $this->addFlash('success', 'User has been deleted.');
+    return $this->redirectToRoute('app_admin_users_list');
+}
+
 }
