@@ -16,29 +16,19 @@ class Currency
     #[ORM\Column(type: 'integer')]
     private ?int $id_currency = null;
 
-    #[ORM\Column(type: 'string', nullable: false)]
+    #[ORM\Column(type: 'string', length: 10, nullable: false)]
     private ?string $code = null;
 
-    #[ORM\Column(type: 'string', nullable: false)]
+    #[ORM\Column(type: 'string', length: 255, nullable: false)]
     private ?string $nom = null;
 
-    #[ORM\Column(type: 'string', nullable: false)]
+    #[ORM\Column(type: 'string', length: 50, nullable: false)]
     private ?string $type_currency = null;
 
     #[ORM\Column(type: 'boolean', nullable: false)]
     private ?bool $is_trading = null;
 
-    #[ORM\OneToMany(targetEntity: Conversion::class, mappedBy: 'currencyFrom')]
-    private Collection $conversionsFrom;
-
-    #[ORM\OneToMany(targetEntity: Conversion::class, mappedBy: 'currencyTo')]
-    private Collection $conversionsTo;
-
-    #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'currency')]
-    private Collection $transactions;
-
-    #[ORM\OneToMany(targetEntity: WalletCurrency::class, mappedBy: 'currency')]
-    private Collection $walletCurrencys;
+    // ... tes collections (OneToMany) ...
 
     public function __construct()
     {
@@ -48,18 +38,36 @@ class Currency
         $this->walletCurrencys = new ArrayCollection();
     }
 
+    // --- GETTERS COMPATIBLES TWIG (IMPORTANTS) ---
+
+    public function getId(): ?int 
+    { 
+        return $this->id_currency; 
+    }
+
+    public function getType(): ?string 
+    { 
+        return $this->type_currency; 
+    }
+
+    public function getIsTrading(): ?bool 
+    { 
+        return $this->is_trading; 
+    }
+
+    // --- TES MÉTHODES EXISTANTES ---
+
     public function getId_currency(): ?int { return $this->id_currency; }
     public function getCode(): ?string { return $this->code; }
     public function setCode(string $code): self { $this->code = $code; return $this; }
     public function getNom(): ?string { return $this->nom; }
     public function setNom(string $nom): self { $this->nom = $nom; return $this; }
+    
     public function getType_currency(): ?string { return $this->type_currency; }
     public function setType_currency(string $type_currency): self { $this->type_currency = $type_currency; return $this; }
+    
     public function is_trading(): ?bool { return $this->is_trading; }
     public function setIs_trading(bool $is_trading): self { $this->is_trading = $is_trading; return $this; }
 
-    public function getConversionsFrom(): Collection { return $this->conversionsFrom; }
-    public function getConversionsTo(): Collection { return $this->conversionsTo; }
-    public function getTransactions(): Collection { return $this->transactions; }
-    public function getWalletCurrencys(): Collection { return $this->walletCurrencys; }
+    // ... tes getters de collections ...
 }
