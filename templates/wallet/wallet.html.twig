@@ -1,0 +1,319 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Champions - Wallet Management{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --sidebar-dark: #1e293b;
+            --bg-light: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* --- Sidebar Navigation (Left) --- */
+        .sidebar {
+            width: 240px;
+            background: var(--sidebar-dark);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 15px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .sidebar h2 {
+            font-size: 1.3rem;
+            margin-bottom: 35px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 1px;
+            color: white;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            text-decoration: none;
+            color: #94a3b8;
+            border-radius: 10px;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-btn.active {
+            background: var(--primary-gradient);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-btn i { width: 25px; font-size: 1rem; }
+
+        .sign-out { margin-top: auto; color: #ef4444; }
+
+        /* --- Right Sidebar (Form) --- */
+        .right-form-panel {
+            width: 320px;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            padding: 30px 20px;
+            position: fixed;
+            right: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 900;
+        }
+
+        /* --- Main Content Area --- */
+        .main-content {
+            margin-left: 240px; /* Space for left sidebar */
+            margin-right: 320px; /* Space for right form panel */
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        /* --- Form Styling --- */
+        .form-label-custom {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-control-custom {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .btn-create {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-create:hover { transform: translateY(-2px); opacity: 0.9; }
+
+        /* --- Modern Bank Cards --- */
+        .wallet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .bank-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 25px;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            border: 1px solid #eef2ff;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .bank-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+
+        .bank-card::after {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 100px;
+            height: 100px;
+            background: var(--primary-gradient);
+            opacity: 0.05;
+            border-radius: 50%;
+        }
+
+        .card-rib {
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            margin: 15px 0;
+            display: block;
+        }
+
+        .card-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .balance-box {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .btn-action-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .btn-edit { background: #eff6ff; color: #3b82f6; border-color: #dbeafe; }
+        .btn-delete { background: #fef2f2; color: #ef4444; border-color: #fee2e2; }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="d-flex">
+    {# Left Sidebar: Navigation #}
+    <aside class="sidebar">
+        <h2>CHAMPIONS</h2>
+        <nav>
+            <a href="#" class="nav-btn"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="#" class="nav-btn"><i class="fas fa-shield-alt"></i> Security</a>
+            <a href="{{ path('app_wallet_index') }}" class="nav-btn active"><i class="fas fa-wallet"></i> My Wallets</a>
+            <a href="#" class="nav-btn"><i class="fas fa-chart-line"></i> Trades</a>
+            <a href="#" class="nav-btn"><i class="fas fa-graduation-cap"></i> Training</a>
+            <a href="#" class="nav-btn"><i class="fas fa-shopping-cart"></i> Marketplace</a>
+            <a href="#" class="nav-btn"><i class="fas fa-hand-holding-usd"></i> Credit</a>
+            <a href="#" class="nav-btn"><i class="fas fa-cog"></i> Settings</a>
+        </nav>
+
+        <a href="#" class="nav-btn sign-out mt-auto"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+    </aside>
+
+    {# Central Content: Wallet Cards #}
+    <main class="main-content">
+        <header class="mb-5">
+            <h1 class="fw-bold">My Wallets</h1>
+            <p class="text-muted small">Overview of your secure digital accounts.</p>
+        </header>
+
+        <div class="wallet-grid">
+            {% for wallet in wallets %}
+                <div class="bank-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="card-label">Account Number</span>
+                            <span class="card-rib">{{ wallet.rib }}</span>
+                        </div>
+                        <span class="badge {{ wallet.statut == 'actif' ? 'bg-success' : 'bg-danger' }} bg-opacity-10 {{ wallet.statut == 'actif' ? 'text-success' : 'text-danger' }} border-0 px-2 py-1 small">
+                            {{ wallet.statut|upper }}
+                        </span>
+                    </div>
+
+                    <div class="mt-2">
+                        <span class="card-label">Wallet Type</span>
+                        <h6 class="fw-bold">{{ wallet.typeWallet }} Account</h6>
+                    </div>
+
+                    <div class="balance-box">
+                        {% for wc in wallet.walletCurrencys %}
+                            <div class="balance-row">
+                                <span class="text-muted">{{ wc.nomCurrency }}</span>
+                                <span class="fw-600 text-primary">{{ wc.solde|number_format(2) }}</span>
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted small">No currency set</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="btn-action-group">
+                        <a href="{{ path('app_wallet_edit', {'idWallet': wallet.idWallet}) }}" class="btn-action btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form method="post" action="{{ path('app_wallet_delete', {'idWallet': wallet.idWallet}) }}" onsubmit="return confirm('Delete this wallet?');" class="flex-grow-1">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ wallet.idWallet) }}">
+                            <button class="btn-action btn-delete w-100">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5 w-100">
+                    <p class="text-muted">No wallets available.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    {# Right Panel: Creation Form #}
+    <aside class="right-form-panel">
+        <h5 class="fw-bold mb-4">Add Wallet</h5>
+        <p class="text-muted small mb-4">Fill in the details to create a new secure wallet.</p>
+        
+        {{ form_start(form) }}
+            <div>
+                <label class="form-label-custom">Wallet Type</label>
+                {{ form_widget(form.typeWallet, {'attr': {'class': 'form-control-custom'}}) }}
+            </div>
+            
+            <div>
+                <label class="form-label-custom">Status</label>
+                {{ form_widget(form.statut, {'attr': {'class': 'form-control-custom'}}) }}
+            </div>
+
+            <button type="submit" class="btn-create mt-3">
+                <i class="fas fa-plus-circle me-2"></i> Create Wallet
+            </button>
+        {{ form_end(form) }}
+
+        <div class="mt-5 p-3 rounded-4 bg-light border-0">
+            <p class="small text-muted mb-0">
+                <i class="fas fa-info-circle text-primary me-2"></i>
+                Wallets are protected by end-to-end encryption.
+            </p>
+        </div>
+    </aside>
+</div>
+{% endblock %}
