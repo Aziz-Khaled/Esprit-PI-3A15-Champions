@@ -103,18 +103,22 @@
 
 <div class="d-flex">
     <aside class="sidebar">
-        <div class="text-center mb-5">
-            <h3 class="fw-bold tracking-tight">CHAMPIONS</h3>
-            <div style="height: 3px; width: 40px; background: var(--primary-gradient); margin: 10px auto;"></div>
-        </div>
+        <h2>CHAMPIONS</h2>
         <nav>
-            <a href="#" class="nav-btn"><i class="fas fa-th-large me-3"></i> Dashboard</a>
-            <a href="{{ path('app_wallet_index') }}" class="nav-btn active"><i class="fas fa-wallet me-3"></i> My Wallets</a>
-            <a href="#" class="nav-btn"><i class="fas fa-exchange-alt me-3"></i> Transactions</a>
-            <a href="#" class="nav-btn"><i class="fas fa-chart-line me-3"></i> Trading</a>
+            <a href="#" class="nav-btn"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="#" class="nav-btn"><i class="fas fa-shield-alt"></i> Security</a>
+            <a href="{{ path('app_wallet_index') }}" class="nav-btn active"><i class="fas fa-wallet"></i> My Wallets</a>
+            <a href="#" class="nav-btn"><i class="fas fa-chart-line"></i> Trades</a>
+            <a href="#" class="nav-btn"><i class="fas fa-graduation-cap"></i> Training</a>
+            <a href="#" class="nav-btn"><i class="fas fa-shopping-cart"></i> Marketplace</a>
+            <a href="#" class="nav-btn"><i class="fas fa-hand-holding-usd"></i> Credit</a>
+            <a href="#" class="nav-btn"><i class="fas fa-cog"></i> Settings</a>
         </nav>
-        <a href="#" class="nav-btn text-danger mt-auto"><i class="fas fa-sign-out-alt me-3"></i> Logout</a>
+
+        <a href="#" class="nav-btn sign-out mt-auto"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
     </aside>
+
+
 
     <main class="main-content">
         {% for label, messages in app.flashes %}
