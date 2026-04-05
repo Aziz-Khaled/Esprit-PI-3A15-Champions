@@ -59,6 +59,12 @@
                     <span>Transactions</span>
                 </a>
             </li>
+            <li class="nav-item {{ app.request.attributes.get('_route') starts with 'app_admin_currency' ? 'active' : '' }}">
+    <a class="nav-link" href="{{ path('app_admin_currency_index') }}">
+        <i class="fas fa-fw fa-coins"></i>
+        <span>Currencies</span>
+    </a>
+</li>
 
             <hr class="sidebar-divider">
 
