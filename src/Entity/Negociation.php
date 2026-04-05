@@ -37,8 +37,8 @@ class Negociation
     public function setUtilisateur(?Utilisateur $utilisateur): self { $this->utilisateur = $utilisateur; return $this; }
     public function getMontant(): ?string { return $this->montant; }
     public function setMontant(string $montant): self { $this->montant = $montant; return $this; }
-    public function getTaux_propose(): ?string { return $this->taux_propose; }
-    public function setTaux_propose(string $taux_propose): self { $this->taux_propose = $taux_propose; return $this; }
+    public function getTauxpropose(): ?string { return $this->taux_propose; }
+    public function setTauxpropose(string $taux_propose): self { $this->taux_propose = $taux_propose; return $this; }
     public function getStatus(): ?string { return $this->status; }
     public function setStatus(string $status): self { $this->status = $status; return $this; }
 }
