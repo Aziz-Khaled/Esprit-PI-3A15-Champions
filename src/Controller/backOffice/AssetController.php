@@ -15,12 +15,16 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/asset', name: 'app_backoffice_asset_')]
 class AssetController extends AbstractController
 {
-    #[Route('/', name: 'index', methods: ['GET'])]
-    public function index(AssetRepository $repo): Response
+      #[Route('/', name: 'index', methods: ['GET'])]
+    public function index(Request $request, AssetRepository $repo): Response
     {
+        $query  = trim($request->query->get('q', ''));
+        $assets = $query ? $repo->search($query) : $repo->findAll();
+ 
         return $this->render('asset/asset.html.twig', [
             'mode'   => 'index',
-            'assets' => $repo->findAll(),
+            'assets' => $assets,
+            'q'      => $query,
         ]);
     }
 
@@ -33,7 +37,7 @@ class AssetController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            // ── Règle métier : symbol unique ──
+         
             $existing = $repo->findOneBy(['symbol' => strtoupper($asset->getSymbol())]);
             if ($existing) {
                 $this->addFlash('danger', 'An asset with symbol "' . $asset->getSymbol() . '" already exists.');
@@ -44,7 +48,7 @@ class AssetController extends AbstractController
                 ]);
             }
 
-            // ── Règle métier : un asset DESACTIVE ne peut pas être créé directement ──
+           
             if ($asset->getStatus() === Asset::STATUS_INACTIVE) {
                 $this->addFlash('danger', 'A new asset cannot be created with Disabled status.');
                 return $this->render('asset/asset.html.twig', [
@@ -74,7 +78,7 @@ class AssetController extends AbstractController
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Asset $asset, EntityManagerInterface $em, AssetRepository $repo): Response
     {
-        // ── Règle métier : un asset DESACTIVE ne peut pas être modifié ──
+        
         if ($asset->getStatus() === Asset::STATUS_INACTIVE) {
             $this->addFlash('danger', 'Disabled assets cannot be edited.');
             return $this->redirectToRoute('app_backoffice_asset_index');
@@ -85,7 +89,7 @@ class AssetController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            // ── Règle métier : symbol unique (hors l'asset courant) ──
+          
             $existing = $repo->findOneBy(['symbol' => strtoupper($asset->getSymbol())]);
             if ($existing && $existing->getId() !== $asset->getId()) {
                 $this->addFlash('danger', 'An asset with symbol "' . $asset->getSymbol() . '" already exists.');
@@ -112,7 +116,7 @@ class AssetController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Asset $asset, EntityManagerInterface $em): Response
     {
-        // ── Règle métier : un asset ACTIVE ne peut pas être supprimé directement ──
+       
         if ($asset->getStatus() === Asset::STATUS_ACTIVE) {
             $this->addFlash('danger', 'Active assets cannot be deleted. Disable it first.');
             return $this->redirectToRoute('app_backoffice_asset_index');
