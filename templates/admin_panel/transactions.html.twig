@@ -111,6 +111,30 @@
                             <h6 class="m-0 font-weight-bold text-primary">Transactions Data Table</h6>
                         </div>
                         <div class="card-body">
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <form id="filterForm" method="get" action="{{ path('app_admin_transactions') }}" class="form-inline bg-light p-3 rounded">
+                                        <div class="form-group mr-3">
+                                            <label for="user_name" class="mr-2">User Name:</label>
+                                            <input type="text" name="user_name" id="user_name" class="form-control" placeholder="Start typing name..." value="{{ app.request.query.get('user_name') }}" autocomplete="off">
+                                        </div>
+                                        <div class="form-group mr-3">
+                                            <label for="type" class="mr-2">Type:</label>
+                                            <select name="type" id="type" class="form-control">
+                                                <option value="">All Types</option>
+                                                <option value="TRANSFERT" {{ app.request.query.get('type') == 'TRANSFERT' ? 'selected' : '' }}>TRANSFERT</option>
+                                                <option value="RECHARGE" {{ app.request.query.get('type') == 'RECHARGE' ? 'selected' : '' }}>RECHARGE</option>
+                                                <option value="RETRAIT" {{ app.request.query.get('type') == 'RETRAIT' ? 'selected' : '' }}>RETRAIT</option>
+                                                <option value="ACHAT" {{ app.request.query.get('type') == 'ACHAT' ? 'selected' : '' }}>ACHAT</option>
+                                                <option value="VENTE" {{ app.request.query.get('type') == 'VENTE' ? 'selected' : '' }}>VENTE</option>
+                                                <option value="CONVERSION" {{ app.request.query.get('type') == 'CONVERSION' ? 'selected' : '' }}>CONVERSION</option>
+                                            </select>
+                                        </div>
+                                        <a href="{{ path('app_admin_transactions') }}" class="btn btn-secondary">Reset</a>
+                                    </form>
+                                </div>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
@@ -151,7 +175,16 @@
                                                     <small>{{ t.currency ? t.currency.code : '' }}</small>
                                                 </td>
                                                 
-                                                <td><span class="text-uppercase small font-weight-bold">{{ t.type }}</span></td>
+                                                <td>
+                                                    {% set badgeColor = 'secondary' %}
+                                                    {% if t.type|upper == 'RECHARGE' %}{% set badgeColor = 'success' %}
+                                                    {% elseif t.type|upper == 'TRANSFERT' %}{% set badgeColor = 'primary' %}
+                                                    {% elseif t.type|upper == 'RETRAIT' %}{% set badgeColor = 'danger' %}
+                                                    {% elseif t.type|upper == 'ACHAT' %}{% set badgeColor = 'info' %}
+                                                    {% elseif t.type|upper == 'VENTE' %}{% set badgeColor = 'dark' %}
+                                                    {% elseif t.type|upper == 'CONVERSION' %}{% set badgeColor = 'warning' %}{% endif %}
+                                                    <span class="badge badge-{{ badgeColor }} text-uppercase">{{ t.type }}</span>
+                                                </td>
                                                 
                                                 <td>{{ t.dateTransaction ? t.dateTransaction|date('M d, Y H:i') : 'N/A' }}</td>
                                             </tr>
@@ -182,5 +215,43 @@
     <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="/js/sb-admin-2.min.js"></script>
+
+    <script>
+    $(document).ready(function() {
+        // Fonction pour mettre à jour le tableau dynamiquement
+        function filterTransactions() {
+            const userName = $('#user_name').val();
+            const type = $('#type').val();
+            const url = "{{ path('app_admin_transactions') }}";
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    user_name: userName,
+                    type: type
+                },
+                success: function(response) {
+                    // On extrait uniquement le contenu du tbody de la réponse HTML
+                    const newTableBody = $(response).find('#dataTable tbody').html();
+                    $('#dataTable tbody').html(newTableBody);
+                },
+                error: function() {
+                    console.error("Erreur lors du filtrage des transactions.");
+                }
+            });
+        }
+
+        // Événement : Frappe au clavier (dynamique dès la première lettre)
+        $('#user_name').on('keyup', function() {
+            filterTransactions();
+        });
+
+        // Événement : Changement de type dans le select
+        $('#type').on('change', function() {
+            filterTransactions();
+        });
+    });
+    </script>
 </body>
 </html>
