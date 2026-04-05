@@ -7,7 +7,7 @@ use App\Entity\WalletCurrency;
 use App\Entity\Utilisateur;
 use App\Entity\Currency;
 use App\Form\WalletType;
-use App\Form\TransactionType; // Import important pour la modale
+use App\Form\TransactionType; 
 use App\Repository\WalletRepository;
 use App\Repository\CurrencyRepository;
 use App\Repository\TransactionRepository;
@@ -29,11 +29,9 @@ class WalletController extends AbstractController
     {
         $user = $this->getUser();
         if (!$user) {
-            // Simulation d'utilisateur pour le projet académique
             $user = $entityManager->getRepository(Utilisateur::class)->find(1);
         }
 
-        // --- Gestion du formulaire de création de Wallet ---
         $newWallet = new Wallet();
         $form = $this->createForm(WalletType::class, $newWallet);
         $form->handleRequest($request);
@@ -58,7 +56,6 @@ class WalletController extends AbstractController
             return $this->redirectToRoute('app_wallet_index');
         }
 
-        // --- Préparation du formulaire de Transaction pour la Modale ---
         $transactionForm = $this->createForm(TransactionType::class);
 
         $walletsList = $walletRepository->findBy(['utilisateur' => $user]);
@@ -155,7 +152,6 @@ class WalletController extends AbstractController
             $user = $entityManager->getRepository(Utilisateur::class)->find(1);
         }
 
-        // Appel de la méthode que nous avons créée dans le Repository
         $data = $wcRepo->sumBalancesByUser($user);
 
         return new JsonResponse($data);
@@ -165,15 +161,12 @@ public function exportStatement(EntityManagerInterface $entityManager): Response
 {
     $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
 
-    // Récupérer tous les wallets de l'utilisateur avec leurs transactions
     $wallets = $entityManager->getRepository(Wallet::class)->findBy(['utilisateur' => $user]);
 
-    // Configurer Dompdf
     $pdfOptions = new Options();
     $pdfOptions->set('defaultFont', 'Arial');
     $dompdf = new Dompdf($pdfOptions);
 
-    // Générer le HTML à partir d'un nouveau template twig
     $html = $this->renderView('wallet/statement_pdf.html.twig', [
         'user' => $user,
         'wallets' => $wallets,
@@ -205,10 +198,8 @@ public function getHistoryJson(int $id, WalletRepository $walletRepository, Tran
 
     $data = [];
     foreach ($transactions as $t) {
-        // Déterminer si c'est un débit (sortie) ou un crédit (entrée)
         $isDebit = ($t->getWalletSource() && $t->getWalletSource()->getIdWallet() === $wallet->getIdWallet());
         
-        // Déterminer la contrepartie
         $counterparty = 'External';
         if ($isDebit) {
             $counterparty = $t->getWalletDestination() ? $t->getWalletDestination()->getRib() : 'N/A';
@@ -222,7 +213,7 @@ public function getHistoryJson(int $id, WalletRepository $walletRepository, Tran
             'amount' => number_format($t->getMontant(), 2),
             'currency' => $t->getCurrency() ? $t->getCurrency()->getNom() : '',
             'counterparty' => $counterparty,
-            'direction' => $isDebit ? 'out' : 'in' // <--- On ajoute cette info
+            'direction' => $isDebit ? 'out' : 'in' 
         ];
     }
     return new JsonResponse($data);

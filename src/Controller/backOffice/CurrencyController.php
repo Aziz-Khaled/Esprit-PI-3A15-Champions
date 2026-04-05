@@ -17,7 +17,6 @@ class CurrencyController extends AbstractController
     #[Route('/', name: 'app_admin_currency_index', methods: ['GET'])]
     public function index(CurrencyRepository $currencyRepository): Response
     {
-        // Form for the "Add New" Modal
         $form = $this->createForm(CurrencyType::class, new Currency());
 
         return $this->render('admin_panel/currency_index.html.twig', [
@@ -48,7 +47,6 @@ class CurrencyController extends AbstractController
     #[Route('/{id}/edit', name: 'app_admin_currency_edit', methods: ['POST'])]
     public function edit(Request $request, Currency $currency, EntityManagerInterface $entityManager): Response
     {
-        // Simple toggle for is_trading from the modal
         $isTrading = $request->request->get('is_trading') === 'on';
 
         if ($currency->getTypeCurrency() === 'crypto') {
@@ -67,7 +65,6 @@ class CurrencyController extends AbstractController
     {
         if ($this->isCsrfTokenValid('delete'.$currency->getId(), $request->request->get('_token'))) {
             
-            // CHECK: Are there any users holding this currency?
             if (!$currency->getWalletCurrencys()->isEmpty()) {
                 $this->addFlash('error', 'Cannot delete: Users currently hold this currency in their wallets.');
                 return $this->redirectToRoute('app_admin_currency_index');
