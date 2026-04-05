@@ -5,6 +5,7 @@ namespace App\Controller\frontOffice\credit;
 use App\Entity\Projet;
 use App\Entity\Utilisateur;
 use App\Form\ProjetType;
+use App\Repository\ProjetRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,19 +15,28 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/front/credit')]
 class ProjetcrController extends AbstractController
 {
-    /**
-     * Liste des projets
-     */
     #[Route('/liste', name: 'app_projet_index')]
-    public function index(EntityManagerInterface $entityManager): Response
-    {
-        // Récupération de tous les projets
-        $projets = $entityManager->getRepository(Projet::class)->findAll();
+public function index(Request $request, ProjetRepository $projetRepository): Response
+{
+    // 1. RÉCUPÉRATION DES PARAMÈTRES DEPUIS L'URL
+    $searchTerm = $request->query->get('q');
+    $status = $request->query->get('status');
+    $secteur = $request->query->get('secteur');
+    $sortBy = $request->query->get('sortBy', 'date_desc');
 
-        return $this->render('front_office/credit/listeprojet.html.twig', [
-            'projets' => $projets,
-        ]);
+    // 2. LOGIQUE DE FILTRAGE ET TRI
+    // On utilise la méthode personnalisée créée dans le ProjetRepository
+    if ($searchTerm || $status || $secteur || $sortBy !== 'date_desc') {
+        $projets = $projetRepository->findProjetsAdvanced($searchTerm, $status, $secteur, $sortBy);
+    } else {
+        // Par défaut : Tri par ID décroissant pour voir les plus récents
+        $projets = $projetRepository->findBy([], ['idProjet' => 'DESC']);
     }
+
+    return $this->render('front_office/credit/listeprojet.html.twig', [
+        'projets' => $projets,
+    ]);
+}
 
     /**
      * Création d'un nouveau projet

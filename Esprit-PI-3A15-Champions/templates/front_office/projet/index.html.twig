@@ -181,16 +181,16 @@
                 <span class="status">Actif</span>
             </div>
 
-            <div class="module-card">
-                <div class="icon-box">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <h3>Analyses AI</h3>
-                <p>Visualisez vos données avec l'IA.</p>
-                <span class="status">Actif</span>
-            </div>
+            <div class="module-card" onclick="window.location.href='{{ path('app_projet_index') }}'">
+    <div class="icon-box">
+        <i class="fas fa-folder-open"></i>
+    </div>
+    <h3>Projets</h3>
+    <p>Gérez et suivez vos initiatives en cours.</p>
+    <span class="status">Actif</span>
+</div>
 
-           <div class="module-card" onclick="window.location.href='{{ path('app_front_credit') }}'">
+           <div class="module-card" onclick="window.location.href='{{ path('app_credit_index') }}'">
     <div class="icon-box">
         <i class="fas fa-credit-card"></i>
     </div>

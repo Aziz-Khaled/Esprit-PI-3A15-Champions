@@ -3,175 +3,289 @@
 {% block title %}Nouvelle Demande de Crédit{% endblock %}
 
 {% block body %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-
-<section class="credit-form-section py-5 bg-light">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                
-                {# 1. Alertes Flash (Succès/Erreur) #}
-                {% for label, messages in app.flashes %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ label == 'danger' ? 'danger' : 'success' }} border-0 shadow-sm alert-dismissible fade show mb-4 animate__animated animate__fadeIn" style="border-radius: 12px;" role="alert">
-                            <i class="fas {{ label == 'danger' ? 'fa-exclamation-circle' : 'fa-check-circle' }} me-2"></i>
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-
-                <div class="card border-0 shadow-lg animate__animated animate__fadeInUp" style="border-radius: 20px;">
-                    
-                    {# 2. Header #}
-                    <div class="card-header bg-dark text-white p-4" style="border-radius: 20px 20px 0 0;">
-                        <div class="d-flex align-items-center">
-                            <div class="icon-box bg-violet rounded-circle me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px;">
-                                <i class="fas fa-hand-holding-usd fa-lg text-white"></i>
-                            </div>
-                            <div>
-                                <h3 class="mb-0 fw-bold text-white">Demande de Financement</h3>
-                                <p class="text-white-50 mb-0 small">Complétez les informations pour votre projet "Champions"</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-body p-4 p-md-5 bg-white" style="border-radius: 0 0 20px 20px;">
-                        {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'class': 'modern-form'}}) }}
-                            
-                        {# 3. Bloc de Diagnostic des Erreurs (Corrigé pour éviter le bug RuntimeError) #}
-                        {% if not form.vars.valid %}
-                            <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-4 animate__animated animate__shakeX" style="border-radius: 12px; background-color: #fdf2f2;">
-                                <div class="fw-bold mb-2"><i class="fas fa-times-circle me-2"></i> Erreurs de validation détectées :</div>
-                                <ul class="mb-0 small">
-                                    {# Erreurs globales #}
-                                    {% for error in form.vars.errors %}
-                                        <li>{{ error.message }}</li>
-                                    {% endfor %}
-
-                                    {# Erreurs par champ (Sécurité ajoutée avec 'is defined') #}
-                                    {% for child in form.children %}
-                                        {% if child.vars.errors is defined %}
-                                            {% for error in child.vars.errors %}
-                                                <li>
-                                                    <strong>{{ child.vars.label|default(child.vars.name)|capitalize }} :</strong> 
-                                                    {{ error.message }}
-                                                </li>
-                                            {% endfor %}
-                                        {% endif %}
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        {% endif %}
-
-                        <div class="row g-4">
-                            {# Sélection du Projet #}
-                            <div class="col-12">
-                                <label class="form-label fw-bold"><i class="fas fa-rocket me-2 text-violet"></i>{{ form_label(form.projet) }}</label>
-                                {{ form_widget(form.projet, {'attr': {'class': 'form-select form-select-lg border-custom'}}) }}
-                                <div class="text-danger small mt-1">{{ form_errors(form.projet) }}</div>
-                            </div>
-
-                            {# Montant et Devise #}
-                            <div class="col-md-7">
-                                <label class="form-label fw-bold"><i class="fas fa-coins me-2 text-violet"></i>{{ form_label(form.montant) }}</label>
-                                {{ form_widget(form.montant, {'attr': {'class': 'form-control border-custom', 'placeholder': 'Ex: 50000'}}) }}
-                                <div class="text-danger small mt-1">{{ form_errors(form.montant) }}</div>
-                            </div>
-
-                            <div class="col-md-5">
-                                <label class="form-label fw-bold"><i class="fas fa-globe me-2 text-violet"></i>{{ form_label(form.devise) }}</label>
-                                {{ form_widget(form.devise, {'attr': {'class': 'form-select form-select-lg border-custom'}}) }}
-                                <div class="text-danger small mt-1">{{ form_errors(form.devise) }}</div>
-                            </div>
-
-                            {# Taux d'intérêt et Durée #}
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold"><i class="fas fa-percentage me-2 text-violet"></i>{{ form_label(form.taux) }}</label>
-                                {{ form_widget(form.taux, {'attr': {'class': 'form-control form-control-lg border-custom', 'placeholder': 'Ex: 2.5'}}) }}
-                                <div class="text-danger small mt-1">{{ form_errors(form.taux) }}</div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold"><i class="fas fa-calendar-alt me-2 text-violet"></i>{{ form_label(form.duree) }}</label>
-                                {{ form_widget(form.duree, {'attr': {'class': 'form-control form-control-lg border-custom', 'placeholder': 'Nombre de mois'}}) }}
-                                <div class="text-danger small mt-1">{{ form_errors(form.duree) }}</div>
-                            </div>
-
-                            {# Description #}
-                            <div class="col-12">
-                                <label class="form-label fw-bold"><i class="fas fa-align-left me-2 text-violet"></i>{{ form_label(form.description) }}</label>
-                                {{ form_widget(form.description, {'attr': {'class': 'form-control border-custom', 'rows': '4', 'placeholder': 'Détails...'}}) }}
-                                <div class="text-danger small mt-1">{{ form_errors(form.description) }}</div>
-                            </div>
-                        </div>
-
-                        {# 4. Actions #}
-                        <div class="mt-5 d-flex flex-column flex-md-row gap-3">
-                            <button type="submit" class="btn-submit-violet shadow-sm flex-grow-1 py-3">
-                                <i class="fas fa-paper-plane me-2"></i>ENVOYER LA DEMANDE
-                            </button>
-                            
-                            <a href="{{ path('app_credit_index') }}" class="btn-cancel shadow-sm py-3 text-center d-flex align-items-center justify-content-center">
-                                <i class="fas fa-times me-2"></i>Annuler
-                            </a>
-                        </div>
-
-                        {# IMPORTANT : form_end sans render_rest:false pour inclure le jeton CSRF #}
-                        {{ form_end(form) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <style>
-    :root {
-        --primary-violet: #8353E2;
-        --hover-violet: #6d3ec9;
-        --border-color: #edeff2;
-        --text-muted: #67748e;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    :root { --violet: #8353E2; --violet-light: #a77af5; --violet-glow: rgba(131,83,226,0.35); }
+
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); min-height: 100vh; }
+
+    /* ── NAV ── */
+    .cf-nav { background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .cf-nav-brand { display: flex; align-items: center; gap: 12px; }
+    .cf-nav-logo { width: 36px; height: 36px; border-radius: 12px; background: linear-gradient(135deg, var(--violet), var(--violet-light)); display: flex; align-items: center; justify-content: center; }
+    .cf-nav-title { font-weight: 800; color: #fff; font-size: 1.05rem; }
+    .cf-nav-links { display: flex; align-items: center; gap: 24px; }
+    .cf-nav-links a { color: rgba(255,255,255,0.45); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: color .2s; }
+    .cf-nav-links a:hover { color: #fff; }
+    .cf-nav-links a.active { color: var(--violet-light); font-weight: 700; }
+    .cf-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--violet), var(--violet-light)); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: #fff; }
+
+    /* ── LAYOUT ── */
+    .cf-container { max-width: 760px; margin: 0 auto; padding: 40px 24px; }
+
+    /* ── BADGE ── */
+    .cf-badge-label { display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; background: rgba(131,83,226,0.2); color: var(--violet-light); border: 1px solid rgba(131,83,226,0.3); border-radius: 50px; padding: 4px 12px; margin-bottom: 12px; }
+    .cf-page-title { font-size: 1.9rem; font-weight: 800; color: #fff; margin: 0 0 6px; letter-spacing: -0.5px; }
+    .cf-page-subtitle { color: rgba(255,255,255,0.45); font-size: 0.875rem; margin: 0 0 32px; }
+
+    /* ── FLASH ALERTS ── */
+    .cf-alert { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 16px; font-size: 0.875rem; font-weight: 500; margin-bottom: 18px; }
+    .cf-alert-success { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); color: #4ade80; }
+    .cf-alert-danger  { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.22); color: #f87171; }
+    .cf-alert-close { margin-left: auto; background: none; border: none; color: inherit; opacity: .5; cursor: pointer; font-size: 1rem; line-height: 1; transition: opacity .15s; }
+    .cf-alert-close:hover { opacity: 1; }
+
+    /* ── ERROR BLOCK ── */
+    .cf-errors-block { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 16px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); margin-bottom: 22px; }
+    .cf-errors-title { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; color: #f87171; margin-bottom: 6px; }
+    .cf-errors-block ul { margin: 0; padding-left: 20px; }
+    .cf-errors-block li { font-size: 0.78rem; color: rgba(248,113,113,0.85); margin-bottom: 2px; }
+
+    /* ── FORM CARD ── */
+    .cf-form-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; overflow: hidden; backdrop-filter: blur(24px); }
+    .cf-form-card-header { padding: 20px 32px; display: flex; align-items: center; gap: 14px; background: rgba(131,83,226,0.1); border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .cf-form-card-icon { width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, var(--violet), var(--violet-light)); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(131,83,226,0.45); flex-shrink: 0; }
+    .cf-form-card-title { font-weight: 700; color: #fff; font-size: 1rem; margin: 0; }
+    .cf-form-card-sub   { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin: 2px 0 0; }
+    .cf-form-card-body  { padding: 32px; }
+
+    /* ── FIELDS ── */
+    .cf-field { margin-bottom: 20px; }
+    .cf-label { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+    .cf-label svg { color: var(--violet-light); }
+    .cf-input, .cf-textarea, .cf-select {
+        width: 100%; padding: 12px 16px; border-radius: 14px;
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+        color: #fff; font-size: 0.875rem; font-family: 'Inter', sans-serif;
+        outline: none; transition: border-color .2s, background .2s; box-sizing: border-box;
     }
-    body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
-    .bg-violet { background-color: var(--primary-violet) !important; }
-    .text-violet { color: var(--primary-violet) !important; }
-    .border-custom {
-        border: 2px solid var(--border-color) !important;
-        border-radius: 12px !important;
-        padding: 12px 18px;
-        transition: all 0.3s ease;
+    .cf-input::placeholder, .cf-textarea::placeholder { color: rgba(255,255,255,0.22); }
+    .cf-input:focus, .cf-textarea:focus, .cf-select:focus { border-color: var(--violet); background: rgba(131,83,226,0.06); }
+    .cf-textarea { resize: none; }
+    .cf-select { appearance: none; -webkit-appearance: none; }
+    .cf-select option { background: #1e1a3a; }
+    .cf-select-wrap { position: relative; }
+    .cf-select-arrow { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: rgba(255,255,255,0.3); }
+
+    /* input with icon/suffix */
+    .cf-input-wrap { position: relative; }
+    .cf-input-prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: rgba(255,255,255,0.25); }
+    .cf-input-wrap .cf-input.has-prefix { padding-left: 38px; }
+    .cf-input-suffix-tag { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; font-weight: 700; pointer-events: none; }
+
+    /* 2-col grid */
+    .cf-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .cf-grid-7-5 { display: grid; grid-template-columns: 7fr 5fr; gap: 16px; }
+    @media (max-width: 600px) { .cf-grid-2, .cf-grid-7-5 { grid-template-columns: 1fr; } }
+
+    /* error */
+    .cf-error { font-size: 0.72rem; color: #f87171; margin-top: 5px; }
+
+    /* divider */
+    .cf-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.06); margin: 28px 0; }
+
+    /* actions */
+    .cf-actions { display: flex; flex-direction: column; gap: 12px; }
+    @media (min-width: 640px) { .cf-actions { flex-direction: row; } }
+    .cf-btn-submit {
+        flex: 1; padding: 15px; border-radius: 20px; border: none; cursor: pointer;
+        font-weight: 700; font-size: 0.9rem; color: #fff; letter-spacing: .06em;
+        background: linear-gradient(135deg, var(--violet), var(--violet-light));
+        box-shadow: 0 8px 32px rgba(131,83,226,0.4);
+        transition: transform .2s, box-shadow .2s;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .border-custom:focus {
-        border-color: var(--primary-violet) !important;
-        box-shadow: 0 0 0 4px rgba(131, 83, 226, 0.1) !important;
-        outline: none;
+    .cf-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(131,83,226,0.55); }
+    .cf-btn-cancel {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 15px 28px; border-radius: 20px; font-weight: 600; font-size: 0.875rem;
+        text-decoration: none; background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.55);
+        transition: background .15s;
     }
-    .btn-submit-violet {
-        background-color: var(--primary-violet) !important;
-        color: #fff !important;
-        border: none;
-        border-radius: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: all 0.2s ease-in-out;
-    }
-    .btn-submit-violet:hover {
-        background-color: var(--hover-violet) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 15px rgba(131, 83, 226, 0.3) !important;
-    }
-    .btn-cancel {
-        background-color: #f8f9fa;
-        color: var(--text-muted);
-        border: 2px solid var(--border-color);
-        border-radius: 12px;
-        font-weight: 600;
-        text-decoration: none;
-        min-width: 160px;
-        transition: all 0.2s ease;
-    }
+    .cf-btn-cancel:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); }
 </style>
+
+{# ── NAV ── #}
+<nav class="cf-nav">
+    <div class="cf-nav-brand">
+        <div class="cf-nav-logo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+        <span class="cf-nav-title">ChampionsFinance</span>
+    </div>
+    <div class="cf-nav-links">
+        <a href="#">Tableau de bord</a>
+        <a href="{{ path('app_credit_index') }}" class="active">Mes Demandes</a>
+        <a href="#">Simulation</a>
+        <a href="#">Support</a>
+    </div>
+    <div class="cf-avatar">{{ app.user ? app.user.firstName|first ~ app.user.lastName|first : 'JD' }}</div>
+</nav>
+
+<div class="cf-container">
+
+    {# ── FLASH MESSAGES ── #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="cf-alert cf-alert-{{ label == 'danger' ? 'danger' : 'success' }}">
+                {% if label == 'danger' %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {% else %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {% endif %}
+                {{ message }}
+                <button class="cf-alert-close" onclick="this.parentElement.remove()">✕</button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# ── HEADER ── #}
+    <span class="cf-badge-label">Espace Financement</span>
+    <h1 class="cf-page-title">Nouvelle Demande de Crédit</h1>
+    <p class="cf-page-subtitle">Complétez les informations pour votre projet "Champions"</p>
+
+    {# ── FORM CARD ── #}
+    <div class="cf-form-card">
+
+        <div class="cf-form-card-header">
+            <div class="cf-form-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <div>
+                <p class="cf-form-card-title">Demande de Financement</p>
+                <p class="cf-form-card-sub">Complétez les informations pour votre projet "Champions"</p>
+            </div>
+        </div>
+
+        <div class="cf-form-card-body">
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+            {# ── BLOC ERREURS ── #}
+            {% if not form.vars.valid %}
+            <div class="cf-errors-block">
+                <div class="cf-errors-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Erreurs de validation détectées :
+                </div>
+                <ul>
+                    {% for error in form.vars.errors %}
+                        <li>{{ error.message }}</li>
+                    {% endfor %}
+                    {% for child in form.children %}
+                        {% if child.vars.errors is defined %}
+                            {% for error in child.vars.errors %}
+                                <li><strong>{{ child.vars.label|default(child.vars.name)|capitalize }} :</strong> {{ error.message }}</li>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {# ── PROJET ── #}
+            <div class="cf-field">
+                <label class="cf-label">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
+                    {{ form_label(form.projet) }}
+                </label>
+                <div class="cf-select-wrap">
+                    {{ form_widget(form.projet, {'attr': {'class': 'cf-select'}}) }}
+                    <svg class="cf-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="cf-error">{{ form_errors(form.projet) }}</div>
+            </div>
+
+            {# ── MONTANT + DEVISE ── #}
+            <div class="cf-grid-7-5">
+                <div class="cf-field">
+                    <label class="cf-label">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        {{ form_label(form.montant) }}
+                    </label>
+                    <div class="cf-input-wrap">
+                        <svg class="cf-input-prefix" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        {{ form_widget(form.montant, {'attr': {'class': 'cf-input has-prefix', 'placeholder': 'Ex: 50 000'}}) }}
+                    </div>
+                    <div class="cf-error">{{ form_errors(form.montant) }}</div>
+                </div>
+                <div class="cf-field">
+                    <label class="cf-label">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        {{ form_label(form.devise) }}
+                    </label>
+                    <div class="cf-select-wrap">
+                        {{ form_widget(form.devise, {'attr': {'class': 'cf-select'}}) }}
+                        <svg class="cf-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="cf-error">{{ form_errors(form.devise) }}</div>
+                </div>
+            </div>
+
+            {# ── TAUX + DURÉE ── #}
+            <div class="cf-grid-2">
+                <div class="cf-field">
+                    <label class="cf-label">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                        {{ form_label(form.taux) }}
+                    </label>
+                    <div class="cf-input-wrap">
+                        {{ form_widget(form.taux, {'attr': {'class': 'cf-input', 'placeholder': 'Ex: 2.5', 'style': 'padding-right: 38px;'}}) }}
+                        <span class="cf-input-suffix-tag" style="color:#a77af5;">%</span>
+                    </div>
+                    <div class="cf-error">{{ form_errors(form.taux) }}</div>
+                </div>
+                <div class="cf-field">
+                    <label class="cf-label">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        {{ form_label(form.duree) }}
+                    </label>
+                    <div class="cf-input-wrap">
+                        {{ form_widget(form.duree, {'attr': {'class': 'cf-input', 'placeholder': 'Nombre de mois', 'style': 'padding-right: 52px;'}}) }}
+                        <span class="cf-input-suffix-tag" style="color:rgba(255,255,255,0.3);font-size:0.7rem;">mois</span>
+                    </div>
+                    <div class="cf-error">{{ form_errors(form.duree) }}</div>
+                </div>
+            </div>
+
+            {# ── DESCRIPTION ── #}
+            <div class="cf-field">
+                <label class="cf-label">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+                    {{ form_label(form.description) }}
+                </label>
+                {{ form_widget(form.description, {'attr': {'class': 'cf-textarea', 'rows': '4', 'placeholder': 'Détails sur votre projet de financement...'}}) }}
+                <div class="cf-error">{{ form_errors(form.description) }}</div>
+            </div>
+
+            <div class="cf-divider"></div>
+
+            {# ── ACTIONS ── #}
+            <div class="cf-actions">
+                <button type="submit" class="cf-btn-submit">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                    ENVOYER LA DEMANDE
+                </button>
+                <a href="{{ path('app_credit_index') }}" class="cf-btn-cancel">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    Annuler
+                </a>
+            </div>
+
+            {{ form_end(form) }}
+        </div>
+    </div>
+
+</div>
+
 {% endblock %}
