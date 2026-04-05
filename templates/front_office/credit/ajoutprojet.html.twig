@@ -1,0 +1,276 @@
+{# templates/front_office/credit/ajoutprojet.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter un Projet - Champions{% endblock %}
+
+{% block body %}
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    :root { --violet: #8353E2; --violet-light: #a77af5; --violet-glow: rgba(131,83,226,0.35); }
+
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); min-height: 100vh; }
+
+    /* ── NAV ── */
+    .cf-nav { background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .cf-nav-brand { display: flex; align-items: center; gap: 12px; }
+    .cf-nav-logo { width: 36px; height: 36px; border-radius: 12px; background: linear-gradient(135deg, var(--violet), var(--violet-light)); display: flex; align-items: center; justify-content: center; }
+    .cf-nav-title { font-weight: 800; color: #fff; font-size: 1.05rem; }
+    .cf-nav-links { display: flex; align-items: center; gap: 24px; }
+    .cf-nav-links a { color: rgba(255,255,255,0.45); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: color .2s; }
+    .cf-nav-links a:hover { color: #fff; }
+    .cf-nav-links a.active { color: var(--violet-light); font-weight: 700; }
+    .cf-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--violet), var(--violet-light)); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: #fff; }
+
+    /* ── LAYOUT ── */
+    .cf-container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+
+    /* ── BREADCRUMB ── */
+    .cf-back { display: inline-flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 600; color: var(--violet-light); text-decoration: none; margin-bottom: 32px; transition: color .2s; }
+    .cf-back:hover { color: #fff; }
+
+    /* ── PAGE HEADER ── */
+    .cf-badge-label { display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; background: rgba(131,83,226,0.2); color: var(--violet-light); border: 1px solid rgba(131,83,226,0.3); border-radius: 50px; padding: 4px 12px; margin-bottom: 12px; }
+    .cf-page-title { font-size: 1.9rem; font-weight: 800; color: #fff; margin: 0 0 6px; letter-spacing: -0.5px; }
+    .cf-page-subtitle { color: rgba(255,255,255,0.45); font-size: 0.875rem; margin: 0 0 32px; }
+
+    /* ── FORM CARD ── */
+    .cf-form-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; overflow: hidden; backdrop-filter: blur(24px); }
+    .cf-form-card-header { padding: 20px 32px; display: flex; align-items: center; gap: 14px; background: rgba(131,83,226,0.1); border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .cf-form-card-icon { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--violet), var(--violet-light)); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(131,83,226,0.4); flex-shrink: 0; }
+    .cf-form-card-title { font-weight: 700; color: #fff; font-size: 0.95rem; margin: 0; }
+    .cf-form-card-sub   { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin: 0; }
+    .cf-form-card-body  { padding: 32px; }
+
+    /* ── FORM GRID ── */
+    .cf-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    @media (max-width: 768px) { .cf-form-grid { grid-template-columns: 1fr; } }
+
+    /* ── SECTION TITLE ── */
+    .cf-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .cf-section-num { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .cf-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #fff; margin: 0; }
+    .cf-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.07); margin-bottom: 24px; }
+
+    /* ── FIELDS ── */
+    .cf-field { margin-bottom: 20px; }
+    .cf-label { display: block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+    .cf-input, .cf-textarea, .cf-select {
+        width: 100%; padding: 12px 16px; border-radius: 14px;
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+        color: #fff; font-size: 0.875rem; font-family: 'Inter', sans-serif;
+        outline: none; transition: border-color .2s, background .2s; box-sizing: border-box;
+    }
+    .cf-input::placeholder, .cf-textarea::placeholder { color: rgba(255,255,255,0.22); }
+    .cf-input:focus, .cf-textarea:focus, .cf-select:focus { border-color: var(--violet); background: rgba(131,83,226,0.06); }
+    .cf-textarea { resize: none; }
+    .cf-select { appearance: none; -webkit-appearance: none; }
+    .cf-select option { background: #1e1a3a; }
+    .cf-select-wrap { position: relative; }
+    .cf-select-arrow { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: rgba(255,255,255,0.3); }
+
+    /* input group with suffix */
+    .cf-input-group { display: flex; }
+    .cf-input-group .cf-input { border-radius: 14px 0 0 14px; border-right: none; flex: 1; }
+    .cf-input-suffix { display: flex; align-items: center; padding: 0 16px; border-radius: 0 14px 14px 0; font-weight: 700; font-size: 0.875rem; background: rgba(131,83,226,0.2); border: 1px solid rgba(131,83,226,0.3); color: var(--violet-light); white-space: nowrap; }
+
+    /* input with icon */
+    .cf-input-icon-wrap { position: relative; }
+    .cf-input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: rgba(255,255,255,0.3); }
+    .cf-input-icon-wrap .cf-input { padding-left: 38px; }
+
+    /* dates grid */
+    .cf-dates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* info box */
+    .cf-info-box { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 16px; background: rgba(131,83,226,0.08); border: 1px dashed rgba(131,83,226,0.3); }
+    .cf-info-icon { color: var(--violet-light); flex-shrink: 0; margin-top: 1px; }
+    .cf-info-text { font-size: 0.78rem; color: rgba(255,255,255,0.45); margin: 0; line-height: 1.5; }
+    .cf-info-text strong { color: #facc15; }
+
+    /* error */
+    .cf-error { font-size: 0.72rem; color: #f87171; margin-top: 5px; }
+
+    /* submit */
+    .cf-submit-wrap { margin-top: 36px; }
+    .cf-divider-bottom { width: 100%; height: 1px; background: rgba(255,255,255,0.06); margin-bottom: 28px; }
+    .cf-btn-submit {
+        width: 100%; padding: 16px; border-radius: 20px; border: none; cursor: pointer;
+        font-weight: 700; font-size: 1rem; color: #fff;
+        background: linear-gradient(135deg, var(--violet) 0%, var(--violet-light) 100%);
+        box-shadow: 0 8px 40px rgba(131,83,226,0.4);
+        transition: transform .2s, box-shadow .2s;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .cf-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 48px rgba(131,83,226,0.55); }
+
+    /* date input dark */
+    input[type="date"] { color-scheme: dark; }
+</style>
+
+{# ── NAV ── #}
+<nav class="cf-nav">
+    <div class="cf-nav-brand">
+        <div class="cf-nav-logo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+        <span class="cf-nav-title">ChampionsFinance</span>
+    </div>
+    <div class="cf-nav-links">
+        <a href="#">Tableau de bord</a>
+        <a href="{{ path('app_projet_index') }}" class="active">Mes Projets</a>
+        <a href="#">Financement</a>
+        <a href="#">Support</a>
+    </div>
+    <div class="cf-avatar">{{ app.user ? app.user.firstName|first ~ app.user.lastName|first : 'JD' }}</div>
+</nav>
+
+<div class="cf-container">
+
+    {# Breadcrumb #}
+    <a href="{{ path('app_projet') }}" class="cf-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Retour au Dashboard
+    </a>
+
+    {# Page Header #}
+    <span class="cf-badge-label">Nouveau Dossier</span>
+    <h1 class="cf-page-title">Ajouter un Projet</h1>
+    <p class="cf-page-subtitle">Configurez votre projet avant de passer à la simulation de crédit.</p>
+
+    {# Form Card #}
+    <div class="cf-form-card">
+
+        {# Card Header #}
+        <div class="cf-form-card-header">
+            <div class="cf-form-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+                    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="cf-form-card-title">Nouveau Projet</p>
+                <p class="cf-form-card-sub">Remplissez les informations ci-dessous</p>
+            </div>
+        </div>
+
+        {# Form Body #}
+        <div class="cf-form-card-body">
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+            <div class="cf-form-grid">
+
+                {# ── Section 1 : Informations Générales ── #}
+                <div>
+                    <div class="cf-section-head">
+                        <div class="cf-section-num" style="background: linear-gradient(135deg, #8353E2, #a77af5);">1</div>
+                        <h5 class="cf-section-title">Informations Générales</h5>
+                    </div>
+                    <div class="cf-divider"></div>
+
+                    <div class="cf-field">
+                        {{ form_label(form.title, 'Titre du projet', {'label_attr': {'class': 'cf-label'}}) }}
+                        {{ form_widget(form.title, {'attr': {'class': 'cf-input', 'placeholder': 'Nom de votre entreprise ou idée'}}) }}
+                        <div class="cf-error">{{ form_errors(form.title) }}</div>
+                    </div>
+
+                    <div class="cf-field">
+                        {{ form_label(form.description, 'Description', {'label_attr': {'class': 'cf-label'}}) }}
+                        {{ form_widget(form.description, {'attr': {'class': 'cf-textarea', 'rows': '5', 'placeholder': 'Décrivez votre projet...'}}) }}
+                        <div class="cf-error">{{ form_errors(form.description) }}</div>
+                    </div>
+
+                    <div class="cf-field">
+                        {{ form_label(form.secteur, 'Secteur', {'label_attr': {'class': 'cf-label'}}) }}
+                        <div class="cf-select-wrap">
+                            {{ form_widget(form.secteur, {'attr': {'class': 'cf-select'}}) }}
+                            <svg class="cf-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                {# ── Section 2 : Besoin de Financement ── #}
+                <div>
+                    <div class="cf-section-head">
+                        <div class="cf-section-num" style="background: linear-gradient(135deg, #22d3ee, #06b6d4);">2</div>
+                        <h5 class="cf-section-title">Besoin de Financement</h5>
+                    </div>
+                    <div class="cf-divider"></div>
+
+                    <div class="cf-field">
+                        {{ form_label(form.targetAmount, 'Montant souhaité (DT)', {'label_attr': {'class': 'cf-label'}}) }}
+                        <div class="cf-input-group">
+                            {{ form_widget(form.targetAmount, {'attr': {'class': 'cf-input'}}) }}
+                            <div class="cf-input-suffix">DT</div>
+                        </div>
+                        <div class="cf-error">{{ form_errors(form.targetAmount) }}</div>
+                    </div>
+
+                    <div class="cf-field cf-dates-grid">
+                        <div>
+                            {{ form_label(form.startDate, 'Date de début', {'label_attr': {'class': 'cf-label'}}) }}
+                            <div class="cf-input-icon-wrap">
+                                <svg class="cf-input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                {{ form_widget(form.startDate, {'attr': {'class': 'cf-input'}}) }}
+                            </div>
+                            <div class="cf-error">{{ form_errors(form.startDate) }}</div>
+                        </div>
+                        <div>
+                            {{ form_label(form.endDate, 'Échéance', {'label_attr': {'class': 'cf-label'}}) }}
+                            <div class="cf-input-icon-wrap">
+                                <svg class="cf-input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                {{ form_widget(form.endDate, {'attr': {'class': 'cf-input'}}) }}
+                            </div>
+                            <div class="cf-error">{{ form_errors(form.endDate) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="cf-field">
+                        {{ form_label(form.imageUrl, 'Image du projet (URL)', {'label_attr': {'class': 'cf-label'}}) }}
+                        <div class="cf-input-icon-wrap">
+                            <svg class="cf-input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            {{ form_widget(form.imageUrl, {'attr': {'class': 'cf-input', 'placeholder': 'https://...'}}) }}
+                        </div>
+                    </div>
+
+                    <div class="cf-info-box">
+                        <div class="cf-info-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                        </div>
+                        <p class="cf-info-text">Le statut sera défini sur <strong>DRAFT</strong> par défaut jusqu'à validation.</p>
+                    </div>
+                </div>
+            </div>
+
+            {# Submit #}
+            <div class="cf-submit-wrap">
+                <div class="cf-divider-bottom"></div>
+                <button type="submit" class="cf-btn-submit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+                        <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+                    </svg>
+                    Créer le projet et simuler le crédit
+                </button>
+            </div>
+
+            {{ form_end(form) }}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
