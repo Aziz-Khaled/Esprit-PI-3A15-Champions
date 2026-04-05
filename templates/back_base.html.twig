@@ -18,9 +18,8 @@
 <body id="page-top">
 
     <!-- Page Wrapper -->
-    <div id="wrapper">
-
-       <!-- Sidebar -->
+    <div id="wrapper">        
+        <!-- Sidebar -->
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
@@ -87,7 +86,22 @@
             </li>
 
             <hr class="sidebar-divider">
+            <div class="sidebar-heading">Billing</div>
+                
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_transactions') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>transactions</span>
+                </a>
+            </li>
 
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_currency_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Currencies</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
             <!-- Logout -->
             <li class="nav-item">
                 <a class="nav-link" href="{{ path('app_logout') }}">
@@ -104,8 +118,9 @@
             </div>
 
         </ul>
-        <!-- End of Sidebar -->
         
+        <!-- End of Sidebar -->
+
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
 
