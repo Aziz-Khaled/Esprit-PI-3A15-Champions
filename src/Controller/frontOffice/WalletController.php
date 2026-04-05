@@ -17,6 +17,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 #[Route('/wallet')]
 class WalletController extends AbstractController
@@ -157,4 +159,33 @@ class WalletController extends AbstractController
 
         return new JsonResponse($data);
     }
-}
+#[Route('/export/statement', name: 'app_wallet_export_pdf')]
+public function exportStatement(EntityManagerInterface $entityManager): Response
+{
+    $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
+
+    // Récupérer tous les wallets de l'utilisateur avec leurs transactions
+    $wallets = $entityManager->getRepository(Wallet::class)->findBy(['utilisateur' => $user]);
+
+    // Configurer Dompdf
+    $pdfOptions = new Options();
+    $pdfOptions->set('defaultFont', 'Arial');
+    $dompdf = new Dompdf($pdfOptions);
+
+    // Générer le HTML à partir d'un nouveau template twig
+    $html = $this->renderView('wallet/statement_pdf.html.twig', [
+        'user' => $user,
+        'wallets' => $wallets,
+        'date' => new \DateTime()
+    ]);
+
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    // Envoyer le PDF au navigateur
+    return new Response($dompdf->output(), 200, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'attachment; filename="statement_champions.pdf"'
+    ]);
+}}
