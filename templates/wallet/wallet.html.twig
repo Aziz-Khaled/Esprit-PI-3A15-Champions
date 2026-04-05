@@ -116,6 +116,12 @@
                 <i class="fas fa-plus"></i>
             </button>
 
+            <button class="btn-mini btn-mini-edit bg-info-subtle text-info btn-history" 
+                    data-bs-toggle="modal" data-bs-target="#historyModal"
+                    data-id="{{ wallet.idWallet }}" data-rib="{{ wallet.rib }}">
+                <i class="fas fa-history"></i>
+            </button>
+
             <button class="btn-mini btn-mini-edit" data-bs-toggle="modal" data-bs-target="#editModal"
                     data-id="{{ wallet.idWallet }}" data-type="{{ wallet.typeWallet }}" data-statut="{{ wallet.statut }}">
                 <i class="fas fa-pen"></i>
@@ -308,7 +314,7 @@
     </div>
 </div>
 
-
+{# MODALE AJOUT CURRENCY #}
 <div class="modal fade" id="addCurrencyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -318,10 +324,8 @@
                     <label class="small fw-bold text-muted mb-2">SELECT CURRENCY</label>
                     <select name="id_currency" id="select-currency" class="form-control-custom" onchange="updateNom(this)" required>
                         {% for c in all_available_currencies %}
-{# On utilise .id et .typeCurrency #}
-<option value="{{ c.id }}" data-nom="{{ c.nom }}" data-type="{{ c.typeCurrency|lower }}" data-trading="{{ c.isTrading ? 'true' : 'false' }}">
-    {{ c.nom }} ({{ c.code|upper }})
-</option>                                {{ c.nom }} ({{ c.code|upper }})
+                            <option value="{{ c.id }}" data-nom="{{ c.nom }}" data-type="{{ c.typeCurrency|lower }}" data-trading="{{ c.isTrading ? 'true' : 'false' }}">
+                                {{ c.nom }} ({{ c.code|upper }})
                             </option>
                         {% endfor %}
                     </select>
@@ -350,6 +354,38 @@
                     <button type="submit" class="btn w-100 py-3 text-white fw-bold rounded-3 mt-2" style="background: var(--primary-gradient); border: none;">Save Changes</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+{# MODALE HISTORY (AJOUTÉE) #}
+<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 px-4 pt-4">
+                <h5 class="fw-bold m-0"><i class="fas fa-history me-2 text-info"></i>Transaction History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p id="history-rib-title" class="text-muted small fw-bold mb-3"></p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="border-0">Date</th>
+                                <th class="border-0">Type</th>
+                                <th class="border-0">Counterparty</th>
+                                <th class="border-0 text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body">
+                            </tbody>
+                    </table>
+                </div>
+                <div id="history-loader" class="text-center py-4 d-none">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -404,7 +440,6 @@
                     }
                 });
 
-                // Génération de la légende
                 const legendDiv = document.getElementById('chart-legend');
                 legendDiv.innerHTML = ''; 
                 const colors = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#f43f5e', '#8b5cf6'];
@@ -423,7 +458,56 @@
             .catch(err => console.error("Erreur Fetch Chart :", err));
     });
 
-    // --- LOGIQUE DES MODALES ---
+    // --- LOGIQUE HISTORY MODAL (AJOUTÉE) ---
+const historyModal = document.getElementById('historyModal');
+if (historyModal) {
+    historyModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const walletId = button.getAttribute('data-id');
+        const rib = button.getAttribute('data-rib');
+        
+        const tableBody = document.getElementById('history-table-body');
+        const loader = document.getElementById('history-loader');
+        const ribTitle = document.getElementById('history-rib-title');
+
+        ribTitle.innerText = "Wallet: " + rib;
+        tableBody.innerHTML = '';
+        loader.classList.remove('d-none');
+
+        fetch(`/wallet/${walletId}/history-json`)
+            .then(response => response.json())
+            .then(data => {
+                loader.classList.add('d-none');
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-3">No transactions found.</td></tr>';
+                    return;
+                }
+                data.forEach(tx => {
+                    // --- MODIFICATION ICI ---
+                    // On utilise 'direction' envoyé par le contrôleur PHP
+                    const isOut = tx.direction === 'out'; 
+                    const amountClass = isOut ? 'text-danger' : 'text-success';
+                    const prefix = isOut ? '-' : '+';
+                    // ------------------------
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td class="small">${tx.date}</td>
+                            <td><span class="badge bg-light text-dark text-uppercase" style="font-size:0.7rem;">${tx.type}</span></td>
+                            <td class="small text-muted">${tx.counterparty}</td>
+                            <td class="text-end fw-bold ${amountClass}">${prefix}${tx.amount} ${tx.currency}</td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(() => {
+                loader.classList.add('d-none');
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading history.</td></tr>';
+            });
+    });
+}
+
+    // --- LOGIQUE DES AUTRES MODALES ---
     const addCurrencyModal = document.getElementById('addCurrencyModal');
     if (addCurrencyModal) {
         addCurrencyModal.addEventListener('show.bs.modal', function (event) {
