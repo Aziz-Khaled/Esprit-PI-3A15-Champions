@@ -25,59 +25,57 @@
      SIDEBAR
      ============================================= #}
           <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+  <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
-    <!-- Sidebar - Brand -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ path('app_admin_panel') }}">
-        <div class="sidebar-brand-icon rotate-n-15">
-            <i class="fas fa-laugh-wink"></i>
-        </div>
-        <div class="sidebar-brand-text mx-3">SB Admin <sup>2</sup></div>
-    </a>
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ path('app_admin_panel') }}">
+                <div class="sidebar-brand-text mx-3">NexVault Admin panel</div>
+            </a>
 
-    <hr class="sidebar-divider my-0">
+            <hr class="sidebar-divider my-0">
 
-    <!-- Dashboard -->
-    <li class="nav-item active">
-        <a class="nav-link" href="{{ path('app_admin_panel') }}">
-            <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-        </a>
-    </li>
+            <!-- Dashboard -->
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ path('app_admin_panel') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
 
-    <hr class="sidebar-divider">
-    <div class="sidebar-heading">User Management</div>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">User Management</div>
 
-    <!-- Pending Approvals -->
-    <li class="nav-item">
-        <a class="nav-link" href="{{ path('app_admin_pending_users') }}">
-            <i class="fas fa-fw fa-user-clock"></i>
-            <span>Pending Approvals</span>
-        </a>
-    </li>
+            <!-- Pending Approvals -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_pending_users') }}">
+                    <i class="fas fa-fw fa-user-clock"></i>
+                    <span>Pending Approvals</span>
+                </a>
+            </li>
 
-    <!-- All Users -->
-    <li class="nav-item">
-        <a class="nav-link" href="{{ path('app_admin_users_list') }}">
-            <i class="fas fa-fw fa-users"></i>
-            <span>Users</span>
-        </a>
-    </li>
+            <!-- All Users -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_users_list') }}">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Users</span>
+                </a>
+            </li>
 
-<hr class="sidebar-divider">
-<div class="sidebar-heading">Trading</div>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Trading</div>
 
-<!-- Assets -->
-<li class="nav-item">
-    <a class="nav-link" href="{{ path('app_backoffice_asset_index') }}">
-        <i class="fas fa-fw fa-coins"></i>
-        <span>Assets</span>
-    </a>
-</li>
+            <!-- Assets -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_backoffice_asset_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Assets</span>
+                </a>
+            </li>
 
-     <!-- Marketplace -->
-        <hr class="sidebar-divider">
+            <hr class="sidebar-divider">
             <div class="sidebar-heading">Interface</div>
+
+            <!-- Assets -->
             <li class="nav-item">
                 <a class="nav-link" href="{{ path('app_back_product_index') }}">
                     <i class="fas fa-fw fa-coins"></i>
@@ -85,7 +83,7 @@
                 </a>
             </li>
 
-            <li class="nav-item">
+             <li class="nav-item">
                 <a class="nav-link" href="{{ path('app_back_order_index') }}">
                     <i class="fas fa-fw fa-coins"></i>
                     <span>Commandes</span>
@@ -93,7 +91,39 @@
             </li>
 
             <hr class="sidebar-divider">
+            <div class="sidebar-heading">Billing</div>
+                
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_transactions') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>transactions</span>
+                </a>
+            </li>
 
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_currency_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Currencies</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Formations</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_formation_index') }}">
+                    <i class="fas fa-fw fa-graduation-cap"></i>
+                    <span>Formations</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_certificat_index') }}">
+                    <i class="fas fa-fw fa-certificate"></i>
+                    <span>Certificats</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
             <!-- Logout -->
             <li class="nav-item">
                 <a class="nav-link" href="{{ path('app_logout') }}">
@@ -102,14 +132,16 @@
                 </a>
             </li>
 
-    <hr class="sidebar-divider d-none d-md-block">
+            
 
-    <!-- Sidebar Toggler -->
-    <div class="text-center d-none d-md-inline">
-        <button class="rounded-circle border-0" id="sidebarToggle"></button>
-    </div>
+            <hr class="sidebar-divider d-none d-md-block">
 
-</ul>
+            <!-- Sidebar Toggler -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+
+        </ul>
   {# End of Sidebar #}
 
   {# =============================================
@@ -126,18 +158,22 @@
         </button>
 
         <!-- Search -->
-        <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-          <div class="input-group">
-            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
-              aria-label="Search" aria-describedby="basic-addon2">
-            <div class="input-group-append">
-              <button class="btn btn-primary" type="button">
+          <form method="GET" 
+      action="{{ path('app_backoffice_asset_index') }}"
+      onsubmit="event.preventDefault(); window.location.href='/asset/?q='+encodeURIComponent(this.querySelector('input[name=\'q\']').value); return false;"
+      class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+    <div class="input-group">
+        <input type="text" name="q" value="{{ q ?? '' }}"
+               class="form-control bg-light border-0 small"
+               placeholder="Search by symbol, name, type, market..."
+               aria-label="Search">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="submit">
                 <i class="fas fa-search fa-sm"></i>
-              </button>
-            </div>
-          </div>
-        </form>
-
+            </button>
+        </div>
+    </div>
+</form>
         <!-- Topbar Nav -->
         <ul class="navbar-nav ml-auto">
 
@@ -440,6 +476,22 @@
       this.value = this.value.toUpperCase();
     });
   }
+    $(document).ready(function () {
+
+    // Search
+    $('#search-form').off('submit').on('submit', function (e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      var q = $(this).find('input[name="q"]').val().trim();
+      window.location.href = '{{ path("app_backoffice_asset_index") }}?q=' + encodeURIComponent(q);
+      return false;
+    });
+
+    // Uppercase symbol
+    $('#symbol-input').on('input', function () {
+      this.value = this.value.toUpperCase();
+    });
+
 </script>
 
 </body>

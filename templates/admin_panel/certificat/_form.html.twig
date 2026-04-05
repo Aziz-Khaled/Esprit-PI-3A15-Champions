@@ -1,0 +1,92 @@
+<style>
+    /* Personnalisation du thème Violet Clair */
+    :root {
+        --purple-light: #f3e5f5;
+        --purple-main: #8e24aa;
+        --purple-hover: #7b1fa2;
+    }
+
+    .custom-card-form {
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 25px rgba(142, 36, 170, 0.1);
+        border: 1px solid var(--purple-light);
+    }
+
+    /* Style des labels et inputs générés par Symfony */
+    .custom-card-form label {
+        font-weight: 600;
+        color: #4a148c;
+        margin-bottom: 0.5rem;
+    }
+
+    .custom-card-form input, 
+    .custom-card-form select, 
+    .custom-card-form textarea {
+        border-radius: 8px !important;
+        border: 1px solid #e0e0e0 !important;
+        padding: 0.6rem !important;
+        transition: all 0.3s ease;
+    }
+
+    .custom-card-form input:focus {
+        border-color: var(--purple-main) !important;
+        box-shadow: 0 0 0 0.25rem rgba(142, 36, 170, 0.25) !important;
+    }
+
+    .btn-purple {
+        background-color: var(--purple-main);
+        border: none;
+        color: white;
+        padding: 0.7rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background 0.3s ease;
+    }
+
+    .btn-purple:hover {
+        background-color: var(--purple-hover);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-secondary {
+        border-radius: 8px;
+        padding: 0.7rem 1.5rem;
+    }
+</style>
+
+<div class="custom-card-form">
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="form-group-custom">
+                {{ form_row(form.participation) }}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group-custom">
+                {{ form_row(form.dateEmission) }}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group-custom">
+                {{ form_row(form.mention) }}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group-custom">
+                {{ form_row(form.urlFichier) }}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 d-flex justify-content-between align-items-center">
+        <a href="{{ path('app_admin_certificat_index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+        <button type="submit" class="btn btn-purple shadow-sm">
+            {{ button_label|default('Enregistrer') }}
+        </button>
+    </div>
+</div>
