@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use App\Repository\FormationRepository;
 
 #[ORM\Entity(repositoryClass: FormationRepository::class)]
@@ -15,6 +17,7 @@ class Formation
     private ?int $idFormation = null;
 
     #[ORM\Column(type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: 'Le titre de la formation est requis.')]
     private ?string $titre = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
@@ -24,15 +27,20 @@ class Formation
     private ?string $domaine = null;
 
     #[ORM\Column(name: 'dateDebut', type: 'date', nullable: false)]
+    #[Assert\NotBlank(message: 'La date de début est requise.')]
     private ?\DateTimeInterface $dateDebut = null;
 
     #[ORM\Column(name: 'dateFin', type: 'date', nullable: false)]
+    #[Assert\NotBlank(message: 'La date de fin est requise.')]
     private ?\DateTimeInterface $dateFin = null;
 
     #[ORM\Column(type: 'float', nullable: false)]
+    #[Assert\NotBlank(message: 'Le prix est requis.')]
+    #[Assert\Positive(message: 'Le prix doit être un nombre positif.')]
     private ?float $prix = null;
 
     #[ORM\Column(name: 'capaciteMax', type: 'integer', nullable: false)]
+    #[Assert\NotBlank(message: 'La capacité maximale est requise.')]
     private ?int $capaciteMax = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
@@ -61,4 +69,14 @@ class Formation
     public function setStatut(?string $statut): self { $this->statut = $statut; return $this; }
     public function getUtilisateur(): ?Utilisateur { return $this->utilisateur; }
     public function setUtilisateur(?Utilisateur $utilisateur): self { $this->utilisateur = $utilisateur; return $this; }
+
+    #[Assert\Callback]
+    public function validateDateRange(ExecutionContextInterface $context): void
+    {
+        if ($this->dateDebut && $this->dateFin && $this->dateFin <= $this->dateDebut) {
+            $context->buildViolation('La date de fin doit être postérieure à la date de début.')
+                ->atPath('dateFin')
+                ->addViolation();
+        }
+    }
 }

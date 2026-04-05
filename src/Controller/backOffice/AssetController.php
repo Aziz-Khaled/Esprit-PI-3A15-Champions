@@ -15,12 +15,16 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/asset', name: 'app_backoffice_asset_')]
 class AssetController extends AbstractController
 {
-    #[Route('/', name: 'index', methods: ['GET'])]
-    public function index(AssetRepository $repo): Response
+     #[Route('/', name: 'index', methods: ['GET'])]
+    public function index(Request $request, AssetRepository $repo): Response
     {
+        $query  = trim($request->query->get('q', ''));
+        $assets = $query ? $repo->search($query) : $repo->findAll();
+ 
         return $this->render('asset/asset.html.twig', [
             'mode'   => 'index',
-            'assets' => $repo->findAll(),
+            'assets' => $assets,
+            'q'      => $query,
         ]);
     }
 

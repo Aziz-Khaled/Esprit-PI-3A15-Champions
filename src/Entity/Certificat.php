@@ -4,9 +4,7 @@ namespace App\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-
+use Symfony\Component\Validator\Constraints as Assert;
 use App\Repository\CertificatRepository;
 
 #[ORM\Entity(repositoryClass: CertificatRepository::class)]
@@ -15,23 +13,36 @@ class Certificat
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    // Correction : On force le nom de la colonne pour correspondre à ta base de données
+    #[ORM\Column(name: "idCertificat", type: "integer")]
     private ?int $idCertificat = null;
+
+    #[ORM\ManyToOne(targetEntity: Participation::class, inversedBy: 'certificats')]
+    #[ORM\JoinColumn(name: 'idParticipation', referencedColumnName: 'idParticipation', nullable: false)]
+    #[Assert\NotNull(message: "La participation est obligatoire.")]
+    private ?Participation $participation = null;
+
+    #[ORM\Column(name: "dateEmission", type: 'date', nullable: false)]
+    #[Assert\NotBlank(message: "La date d'émission est requise.")]
+    // Contrôle de saisie : La date d'émission ne peut pas être dans le futur
+    #[Assert\LessThanOrEqual("today", message: "La date d'émission ne peut pas être une date future.")]
+    private ?\DateTimeInterface $dateEmission = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Assert\Length(max: 255, maxMessage: "La mention ne peut pas dépasser 255 caractères.")]
+    private ?string $mention = null;
+
+    #[ORM\Column(name: "urlFichier", type: 'string', length: 255, nullable: true)]
+    private ?string $urlFichier = null;
+
+    // --- GETTERS & SETTERS ---
 
     public function getIdCertificat(): ?int
     {
         return $this->idCertificat;
     }
 
-    public function setIdCertificat(int $idCertificat): self
-    {
-        $this->idCertificat = $idCertificat;
-        return $this;
-    }
-
-    #[ORM\ManyToOne(targetEntity: Participation::class, inversedBy: 'certificats')]
-    #[ORM\JoinColumn(name: 'idParticipation', referencedColumnName: 'idParticipation')]
-    private ?Participation $participation = null;
+    // Pas de setter pour l'ID car il est auto-incrémenté
 
     public function getParticipation(): ?Participation
     {
@@ -44,9 +55,6 @@ class Certificat
         return $this;
     }
 
-    #[ORM\Column(type: 'date', nullable: false)]
-    private ?\DateTimeInterface $dateEmission = null;
-
     public function getDateEmission(): ?\DateTimeInterface
     {
         return $this->dateEmission;
@@ -57,9 +65,6 @@ class Certificat
         $this->dateEmission = $dateEmission;
         return $this;
     }
-
-    #[ORM\Column(type: 'string', nullable: true)]
-    private ?string $mention = null;
 
     public function getMention(): ?string
     {
@@ -72,9 +77,6 @@ class Certificat
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: true)]
-    private ?string $urlFichier = null;
-
     public function getUrlFichier(): ?string
     {
         return $this->urlFichier;
@@ -85,5 +87,4 @@ class Certificat
         $this->urlFichier = $urlFichier;
         return $this;
     }
-
 }
