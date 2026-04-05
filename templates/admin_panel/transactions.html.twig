@@ -115,7 +115,6 @@
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
                                             <th>Sender (User)</th>
                                             <th>Source (RIB / Card)</th>
                                             <th>Destination RIB</th>
@@ -127,8 +126,6 @@
                                     <tbody>
                                         {% for t in transactions %}
                                             <tr>
-                                                <td>{{ t.idTransaction }}</td>
-                                                
                                                 <td>
                                                     {% if t.walletSource and t.walletSource.utilisateur %}
                                                         {{ t.walletSource.utilisateur.prenom }} {{ t.walletSource.utilisateur.nom }}
@@ -139,7 +136,6 @@
                                                     {% endif %}
                                                 </td>
 
-                                                {# SOURCE DISPLAY LOGIC #}
                                                 <td>
                                                     {% if t.type|upper == 'RECHARGE' and t.creditCard %}
                                                         <i class="fas fa-credit-card"></i> **** {{ t.creditCard.last4Digits }}
@@ -161,7 +157,7 @@
                                             </tr>
                                         {% else %}
                                             <tr>
-                                                <td colspan="7" class="text-center">No transactions found.</td>
+                                                <td colspan="6" class="text-center">No transactions found.</td>
                                             </tr>
                                         {% endfor %}
                                     </tbody>
