@@ -10,6 +10,8 @@ use App\Form\WalletType;
 use App\Form\TransactionType; // Import important pour la modale
 use App\Repository\WalletRepository;
 use App\Repository\CurrencyRepository;
+use App\Repository\WalletCurrencyRepository; 
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -140,5 +142,19 @@ class WalletController extends AbstractController
             $this->addFlash('error', 'Cannot remove currency with a positive balance.');
         }
         return $this->redirectToRoute('app_wallet_index');
+    }
+
+#[Route('/stats/chart-data', name: 'app_wallet_chart_data', methods: ['GET'])]
+    public function getChartData(WalletCurrencyRepository $wcRepo, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            $user = $entityManager->getRepository(Utilisateur::class)->find(1);
+        }
+
+        // Appel de la méthode que nous avons créée dans le Repository
+        $data = $wcRepo->sumBalancesByUser($user);
+
+        return new JsonResponse($data);
     }
 }

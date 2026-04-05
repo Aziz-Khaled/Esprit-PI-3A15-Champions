@@ -22,28 +22,23 @@ class WalletCurrency
     #[ORM\JoinColumn(name: 'id_currency', referencedColumnName: 'id_currency', nullable: false)]
     private ?Currency $currency = null;
 
-    // Initialisé à 0.0 par défaut pour ta logique FinTech
     #[ORM\Column(type: 'float', options: ['default' => 0])]
     private ?float $solde = 0.0;
 
     #[ORM\Column(name: 'nom_currency', type: 'string', length: 255, nullable: false)]
     private ?string $nomCurrency = null;
 
-    // --- Getters & Setters ---
-
     public function getIdWalletCurrency(): ?int
     {
         return $this->idWalletCurrency;
     }
-
-    // Le setIdWalletCurrency a été supprimé car l'ID est auto-généré
 
     public function getWallet(): ?Wallet
     {
         return $this->wallet;
     }
 
-    public function setWallet(?Wallet $wallet): self
+    public function setWallet(?Wallet $wallet): static
     {
         $this->wallet = $wallet;
         return $this;
@@ -54,10 +49,9 @@ class WalletCurrency
         return $this->currency;
     }
 
-    public function setCurrency(?Currency $currency): self
+    public function setCurrency(?Currency $currency): static
     {
         $this->currency = $currency;
-        // Optionnel : on peut auto-remplir le nomCurrency ici si besoin
         if ($currency) {
             $this->nomCurrency = $currency->getNom();
         }
@@ -69,7 +63,7 @@ class WalletCurrency
         return $this->solde;
     }
 
-    public function setSolde(float $solde): self
+    public function setSolde(float $solde): static
     {
         $this->solde = $solde;
         return $this;
@@ -80,7 +74,7 @@ class WalletCurrency
         return $this->nomCurrency;
     }
 
-    public function setNomCurrency(string $nomCurrency): self
+    public function setNomCurrency(string $nomCurrency): static
     {
         $this->nomCurrency = $nomCurrency;
         return $this;
