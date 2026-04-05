@@ -1,0 +1,16 @@
+<div class="row g-3">
+    <div class="col-md-6">{{ form_row(form.titre) }}</div>
+    <div class="col-md-6">{{ form_row(form.domaine) }}</div>
+    <div class="col-md-6">{{ form_row(form.dateDebut) }}</div>
+    <div class="col-md-6">{{ form_row(form.dateFin) }}</div>
+    <div class="col-md-4">{{ form_row(form.prix) }}</div>
+    <div class="col-md-4">{{ form_row(form.capaciteMax) }}</div>
+    <div class="col-md-4">{{ form_row(form.statut) }}</div>
+    <div class="col-12">{{ form_row(form.description) }}</div>
+    <div class="col-12">{{ form_row(form.utilisateur) }}</div>
+</div>
+
+<div class="mt-4 d-flex justify-content-between">
+    <a href="{{ path('app_admin_formation_index') }}" class="btn btn-secondary">Retour</a>
+    <button type="submit" class="btn btn-success">{{ button_label|default('Enregistrer') }}</button>
+</div>
