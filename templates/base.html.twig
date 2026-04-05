@@ -1,30 +1,118 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        <link rel="stylesheet" href="{{ asset('/assets/css/bootstrap-5.0.0-alpha-2.min.css') }}" />
-    <link rel="stylesheet" href="{{ asset('/assets/css/LineIcons.2.0.css') }}"/>
-    <link rel="stylesheet" href="{{ asset('/assets/css/tiny-slider.css') }}"/>
-    <link rel="stylesheet" href="{{ asset('/assets/css/glightbox.min.css') }}"/>
-    <link rel="stylesheet" href="{{ asset('/assets/css/animate.css') }}"/>
-    <link rel="stylesheet" href="{{ asset('/assets/css/lindy-uikit.css') }}"/>
-        {% endblock %}
+{% extends 'base.html.twig' %}
 
-        {% block javascripts %}
-            {% block importmap %}{% endblock %}
-        {% endblock %}
+{% block title %}Administration - {{ title|default('Gestion') }}{% endblock %}
 
-        {% set frankenphpHotReload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
-        {% if frankenphpHotReload %}
-        <meta name="frankenphp-hot-reload:url" content="{{ frankenphpHotReload }}">
-        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
-        <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
-        {% endif %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
-</html>
+{% block body %}
+<style>
+    :root {
+        --admin-purple: #8e44ad;
+        --admin-purple-dark: #6c3483;
+        --admin-purple-bg: #f8f7fc;
+    }
+
+    body {
+        background-color: var(--admin-purple-bg);
+    }
+
+    /* Navbar personnalisée */
+    .navbar-admin {
+        background: linear-gradient(135deg, var(--admin-purple-dark) 0%, var(--admin-purple) 100%);
+        box-shadow: 0 4px 12px rgba(108, 52, 131, 0.2);
+        padding: 0.8rem 1rem;
+    }
+
+    .navbar-admin .navbar-brand {
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 1.1rem;
+    }
+
+    .navbar-admin .nav-link {
+        font-weight: 500;
+        transition: opacity 0.2s;
+        margin-right: 10px;
+    }
+
+    .navbar-admin .nav-link:hover {
+        opacity: 0.8;
+    }
+
+    /* Alertes (Flashes) stylisées */
+    .alert-custom {
+        border: none;
+        border-radius: 12px;
+        font-weight: 500;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border-left: 5px solid #28a745;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-left: 5px solid #dc3545;
+    }
+
+    /* Container de contenu */
+    .admin-content-wrapper {
+        min-height: 80vh;
+    }
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-admin">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ path('app_admin_panel') }}">
+            <i class="fas fa-shield-alt me-2"></i>Admin Panel
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="adminNavbar">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_admin_formation_index') }}">
+                        <i class="fas fa-graduation-cap me-1"></i> Formations
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_admin_certificat_index') }}">
+                        <i class="fas fa-certificate me-1"></i> Certificats
+                    </a>
+                </li>
+            </ul>
+            <div class="d-flex">
+                <a href="/" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                    <i class="fas fa-external-link-alt me-1"></i> Voir le site
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-5 admin-content-wrapper">
+    {# Gestion des messages flash #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-custom alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    {% if label == 'success' %}
+                        <i class="fas fa-check-circle me-2"></i>
+                    {% elseif label == 'danger' %}
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                    {% endif %}
+                    {{ message }}
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# Zone d'affichage des vues enfants #}
+    {% block admin_body %}{% endblock %}
+</div>
+{% endblock %}

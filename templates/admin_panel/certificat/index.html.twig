@@ -1,0 +1,195 @@
+{% extends 'admin_panel/base.html.twig' %}
+
+{% block title %}Certificats{% endblock %}
+
+{% block admin_body %}
+<style>
+    :root {
+        --primary-purple: #8e44ad;
+        --light-purple: #f4f0fa;
+        --deep-purple: #4a148c;
+        --soft-shadow: rgba(142, 68, 173, 0.1);
+    }
+
+    /* En-tête */
+    .page-header {
+        border-left: 4px solid var(--primary-purple);
+        padding-left: 1.2rem;
+    }
+
+    .page-title {
+        color: var(--deep-purple);
+        font-weight: 700;
+    }
+
+    /* Table & Card */
+    .custom-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px var(--soft-shadow);
+        overflow: hidden;
+    }
+
+    .table thead {
+        background-color: var(--light-purple);
+    }
+
+    .table thead th {
+        color: var(--deep-purple);
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+        border: none;
+        padding: 1.2rem 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        color: #555;
+        border-bottom: 1px solid #f1eff6;
+    }
+
+    /* Badges & Liens */
+    .id-badge {
+        background-color: var(--light-purple);
+        color: var(--primary-purple);
+        padding: 0.3rem 0.7rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .file-link {
+        color: var(--primary-purple);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .file-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Boutons */
+    .btn-create {
+        background-color: var(--primary-purple);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-create:hover {
+        background-color: var(--deep-purple);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(142, 68, 173, 0.3);
+    }
+
+    .btn-action-custom {
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-view { color: #6c757d; border: 1px solid #dee2e6; }
+    .btn-edit { color: var(--primary-purple); border: 1px solid var(--primary-purple); }
+    .btn-delete { color: #e74c3c; border: 1px solid #e74c3c; }
+
+    .btn-action-custom:hover {
+        transform: scale(1.05);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 page-header">
+    <div>
+        <h1 class="h3 mb-1 page-title">Certificats</h1>
+        <p class="text-muted mb-0">Gestion et suivi des certifications émises.</p>
+    </div>
+    <a class="btn btn-create shadow-sm" href="{{ path('app_admin_certificat_new') }}">
+        <i class="fas fa-plus-circle me-2"></i>Créer un certificat
+    </a>
+</div>
+
+<div class="card custom-card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-4"># ID</th>
+                        <th>Participation</th>
+                        <th>Date d'émission</th>
+                        <th>Mention</th>
+                        <th>Fichier</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for certificat in certificats %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="id-badge">{{ certificat.idCertificat }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-tag me-2 text-muted" style="font-size: 0.8rem;"></i>
+                                    {{ certificat.participation ? ('Réf. #' ~ certificat.participation.idParticipation) : '-' }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-muted">
+                                    <i class="far fa-calendar-alt me-1"></i>
+                                    {{ certificat.dateEmission ? certificat.dateEmission|date('d/m/Y') : '-' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="fw-bold" style="color: var(--deep-purple);">
+                                    {{ certificat.mention ?: '-' }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if certificat.urlFichier %}
+                                    <a href="{{ certificat.urlFichier }}" target="_blank" class="file-link">
+                                        <i class="fas fa-file-pdf me-1"></i> Consulter
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small">Aucun fichier</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-1">
+                                    <a class="btn btn-sm btn-action-custom btn-view" href="{{ path('app_admin_certificat_show', { id: certificat.idCertificat }) }}">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a class="btn btn-sm btn-action-custom btn-edit" href="{{ path('app_admin_certificat_edit', { id: certificat.idCertificat }) }}">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                    <form method="post" action="{{ path('app_admin_certificat_delete', { id: certificat.idCertificat }) }}" class="d-inline-block" onsubmit="return confirm('Voulez-vous vraiment supprimer ce certificat ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-certificat' ~ certificat.idCertificat) }}">
+                                        <button type="submit" class="btn btn-sm btn-action-custom btn-delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-folder-open d-block mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
+                                    Aucun certificat disponible pour le moment.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

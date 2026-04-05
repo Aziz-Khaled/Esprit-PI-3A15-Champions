@@ -1,0 +1,97 @@
+{% extends 'admin_panel/base.html.twig' %}
+
+{% block title %}Modifier certificat{% endblock %}
+
+{% block admin_body %}
+<style>
+    :root {
+        --primary-purple: #8e44ad;
+        --light-purple: #f4f0fa;
+        --deep-purple: #6c3483;
+        --soft-shadow: rgba(142, 68, 173, 0.12);
+    }
+
+    .page-header {
+        border-left: 4px solid var(--primary-purple);
+        padding-left: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        color: var(--deep-purple);
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+        color: #887fa3;
+        font-size: 0.95rem;
+    }
+
+    /* Conteneur de la carte de modification */
+    .custom-card-edit {
+        border: none;
+        border-radius: 16px;
+        background-color: #ffffff;
+        box-shadow: 0 10px 30px var(--soft-shadow);
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Petite barre de rappel d'édition en haut */
+    .edit-indicator {
+        height: 4px;
+        background: linear-gradient(90deg, #bb8fce, var(--primary-purple));
+        width: 100%;
+    }
+
+    .form-wrapper {
+        padding: 2.5rem;
+    }
+
+    /* Style des labels pour Symfony */
+    label {
+        color: var(--deep-purple) !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.6rem !important;
+        display: inline-block;
+    }
+
+    /* Style des champs de formulaire */
+    input, select, textarea {
+        border: 1.5px solid var(--light-purple) !important;
+        border-radius: 10px !important;
+        padding: 0.75rem !important;
+        background-color: #faf9ff !important;
+        transition: all 0.3s ease !important;
+    }
+
+    input:focus, select:focus {
+        background-color: #ffffff !important;
+        border-color: var(--primary-purple) !important;
+        box-shadow: 0 0 0 4px rgba(142, 68, 173, 0.15) !important;
+        outline: none !important;
+    }
+</style>
+
+<div class="mb-4 page-header">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-pen-fancy me-3 text-muted" style="font-size: 1.5rem; color: var(--primary-purple) !important;"></i>
+        <div>
+            <h1 class="h3 mb-1 page-title">Modifier le certificat</h1>
+            <p class="subtitle">Mettez à jour les informations du certificat existant.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card custom-card-edit">
+    <div class="edit-indicator"></div>
+    <div class="card-body form-wrapper">
+        {{ form_start(form) }}
+            {% include 'admin_panel/certificat/_form.html.twig' with { 
+                button_label: 'Mettre à jour le certificat' 
+            } %}
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

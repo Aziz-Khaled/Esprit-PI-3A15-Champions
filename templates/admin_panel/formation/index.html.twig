@@ -1,0 +1,93 @@
+{% extends 'admin_panel/base.html.twig' %}
+
+{% block title %}Formations{% endblock %}
+
+{% block admin_body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Formations</h1>
+        <p class="text-muted mb-0">Rechercher, trier et gérer les formations.</p>
+    </div>
+    <a class="btn btn-primary" href="{{ path('app_admin_formation_new') }}">Créer une formation</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Titre</label>
+                <input id="search" name="q" type="search" value="{{ search }}" class="form-control" placeholder="Recherche par titre">
+            </div>
+            <div class="col-md-3">
+                <label for="domaine" class="form-label">Domaine</label>
+                <select id="domaine" name="domaine" class="form-select">
+                    <option value="">Tous les domaines</option>
+                    {% for domaineItem in domaines %}
+                        <option value="{{ domaineItem }}" {{ domaineItem == domaine ? 'selected' : '' }}>{{ domaineItem }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Trier</label>
+                <select id="sort" name="sort" class="form-select">
+                    <option value="">Date de début</option>
+                    <option value="prix_asc" {{ sort == 'prix_asc' ? 'selected' : '' }}>Prix croissant</option>
+                    <option value="prix_desc" {{ sort == 'prix_desc' ? 'selected' : '' }}>Prix décroissant</option>
+                    <option value="date_desc" {{ sort == 'date_desc' ? 'selected' : '' }}>Date de début décroissante</option>
+                </select>
+            </div>
+            <div class="col-md-2 text-end">
+                <button type="submit" class="btn btn-outline-primary w-100">Filtrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Titre</th>
+                        <th>Domaine</th>
+                        <th>Date début</th>
+                        <th>Date fin</th>
+                        <th>Prix</th>
+                        <th>Capacité</th>
+                        <th>Statut</th>
+                        <th>Responsable</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for formation in formations %}
+                        <tr>
+                            <td>{{ formation.titre }}</td>
+                            <td>{{ formation.domaine ?: '-' }}</td>
+                            <td>{{ formation.dateDebut ? formation.dateDebut|date('Y-m-d') : '-' }}</td>
+                            <td>{{ formation.dateFin ? formation.dateFin|date('Y-m-d') : '-' }}</td>
+                            <td>{{ formation.prix is not null ? formation.prix|number_format(2, ',', ' ') ~ ' €' : '-' }}</td>
+                            <td>{{ formation.capaciteMax }}</td>
+                            <td>{{ formation.statut ?: '-' }}</td>
+                            <td>{{ formation.utilisateur ? formation.utilisateur.email : '-' }}</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-secondary me-1" href="{{ path('app_admin_formation_show', { id: formation.idFormation }) }}">Voir</a>
+                                <a class="btn btn-sm btn-outline-primary me-1" href="{{ path('app_admin_formation_edit', { id: formation.idFormation }) }}">Modifier</a>
+                                <form method="post" action="{{ path('app_admin_formation_delete', { id: formation.idFormation }) }}" class="d-inline-block" onsubmit="return confirm('Voulez-vous supprimer cette formation ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-formation' ~ formation.idFormation) }}">
+                                    <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">Aucune formation trouvée.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
