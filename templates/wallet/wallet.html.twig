@@ -1,0 +1,548 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Champions - Wallet Management{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --fiat-grad: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            --trading-grad: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --crypto-grad: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --sidebar-dark: #0f172a;
+            --bg-light: #f1f5f9;
+        }
+
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-light); margin: 0; overflow-x: hidden; }
+
+        .sidebar {
+            width: 260px; background: var(--sidebar-dark); color: white;
+            display: flex; flex-direction: column; padding: 30px 20px;
+            position: fixed; left: 0; top: 0; height: 100vh; z-index: 1000;
+        }
+        .nav-btn {
+            display: flex; align-items: center; padding: 14px 18px; margin-bottom: 8px;
+            text-decoration: none; color: #94a3b8; border-radius: 12px; transition: 0.3s;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-btn.active { background: var(--primary-gradient); color: white; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); }
+
+        .main-content { margin-left: 260px; padding: 40px; width: calc(100% - 260px); min-height: 100vh; }
+
+        .analytics-card {
+            background: white; border-radius: 24px; padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .wallet-column { background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.8); height: 100%; }
+        .column-header { font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; color: #1e293b; margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid rgba(0,0,0,0.05); }
+
+        .bank-card { background: white; border-radius: 20px; padding: 22px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 20px; position: relative; overflow: hidden; transition: all 0.3s ease; }
+        .card-type-indicator { position: absolute; top: 0; right: 0; width: 4px; height: 100%; }
+        .type-fiat { background: var(--fiat-grad); }
+        .type-trading { background: var(--trading-grad); }
+        .type-crypto { background: var(--crypto-grad); }
+
+        .card-rib { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #1e293b; font-weight: 600; }
+        
+        .balance-item { 
+            background: #f8fafc; border-radius: 12px; padding: 8px 12px; margin-bottom: 6px; 
+            border: 1px solid #f1f5f9; position: relative; transition: all 0.3s ease; overflow: hidden;
+        }
+
+        .balance-item.is-empty:hover { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
+
+        .delete-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(239, 68, 68, 0.9); color: white; display: flex;
+            align-items: center; justify-content: center; font-weight: 700;
+            font-size: 0.75rem; opacity: 0; transition: opacity 0.2s ease;
+            text-decoration: none; z-index: 10;
+        }
+        .balance-item.is-empty:hover .delete-overlay { opacity: 1; }
+
+        .btn-mini { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: none; transition: 0.2s; }
+        .btn-mini-edit { background: #eef2ff; color: #6366f1; }
+        .btn-mini-delete { background: #fff1f2; color: #f43f5e; }
+        .btn-mini-add { background: #ecfdf5; color: #10b981; }
+        .btn-mini-add:hover { background: #10b981; color: white; }
+
+        .form-control-custom { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 15px; width: 100%; }
+    </style>
+{% endblock %}
+
+{% macro render_wallet(wallet, typeClass) %}
+    <div class="bank-card">
+        <div class="card-type-indicator {{ typeClass }}"></div>
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Account Number</small>
+                <div class="card-rib">{{ wallet.rib }}</div>
+            </div>
+            <span class="badge {{ wallet.statut == 'actif' ? 'bg-success' : 'bg-danger' }} rounded-pill" style="font-size: 0.6rem; padding: 5px 10px;">
+                {{ wallet.statut|upper }}
+            </span>
+        </div>
+        
+        <div class="mb-3">
+            {% for wc in wallet.walletCurrencys %}
+                {% set isEmpty = (wc.solde == 0) %}
+                <div class="balance-item d-flex justify-content-between align-items-center {{ isEmpty ? 'is-empty' : '' }}">
+                    <span class="text-muted small fw-medium">{{ wc.nomCurrency }}</span>
+                    <span class="fw-bold text-dark">{{ wc.solde|number_format(2) }}</span>
+                    
+                    {% if isEmpty %}
+                        <a href="{{ path('app_wallet_currency_delete', {'id': wc.idWalletCurrency}) }}" 
+                           class="delete-overlay"
+                           onclick="return confirm('Remove {{ wc.nomCurrency }} from your wallet?')">
+                             <i class="fas fa-trash me-1"></i> DELETE
+                        </a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="text-center py-2 bg-light rounded-3">
+                    <small class="text-muted italic">No assets configured</small>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="btn-action-group d-flex gap-2">
+            <button class="btn-mini btn-mini-add" data-bs-toggle="modal" data-bs-target="#addCurrencyModal"
+                    data-id="{{ wallet.idWallet }}" data-type="{{ wallet.typeWallet|lower }}">
+                <i class="fas fa-plus"></i>
+            </button>
+
+            <button class="btn-mini btn-mini-edit bg-info-subtle text-info btn-history" 
+                    data-bs-toggle="modal" data-bs-target="#historyModal"
+                    data-id="{{ wallet.idWallet }}" data-rib="{{ wallet.rib }}">
+                <i class="fas fa-history"></i>
+            </button>
+
+            <button class="btn-mini btn-mini-edit" data-bs-toggle="modal" data-bs-target="#editModal"
+                    data-id="{{ wallet.idWallet }}" data-type="{{ wallet.typeWallet }}" data-statut="{{ wallet.statut }}">
+                <i class="fas fa-pen"></i>
+            </button>
+
+            <form method="post" action="{{ path('app_wallet_delete', {'id': wallet.idWallet}) }}" class="m-0" onsubmit="return confirm('Are you sure?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ wallet.idWallet) }}">
+                <button type="submit" class="btn-mini btn-mini-delete" {% if wallet.walletCurrencys is not empty %}disabled style="opacity:0.3; cursor:not-allowed;"{% endif %}>
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+{% endmacro %}
+
+{% block body %}
+{% import _self as ui %}
+
+<div class="d-flex">
+    <aside class="sidebar">
+        <h2 class="text-white mb-4">CHAMPIONS</h2>
+        <nav>
+            <a href="#" class="nav-btn"><i class="fas fa-th-large me-2"></i> Dashboard</a>
+            <a href="#" class="nav-btn"><i class="fas fa-shield-alt me-2"></i> Security</a>
+            <a href="{{ path('app_wallet_index') }}" class="nav-btn active"><i class="fas fa-wallet me-2"></i> My Wallets</a>
+            <a href="#" class="nav-btn"><i class="fas fa-chart-line me-2"></i> Trades</a>
+            <a href="#" class="nav-btn"><i class="fas fa-graduation-cap me-2"></i> Training</a>
+            <a href="#" class="nav-btn"><i class="fas fa-shopping-cart me-2"></i> Marketplace</a>
+            <a href="#" class="nav-btn"><i class="fas fa-hand-holding-usd me-2"></i> Credit</a>
+            <a href="#" class="nav-btn"><i class="fas fa-cog me-2"></i> Settings</a>
+        </nav>
+        <a href="#" class="nav-btn sign-out mt-auto"><i class="fas fa-sign-out-alt me-2"></i> Sign Out</a>
+    </aside>
+
+    <main class="main-content">
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label == 'error' ? 'danger' : 'success' }} alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4">
+                    {{ message }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">My Wallets</h2>
+                <p class="text-muted">Monitor and manage your digital assets across multiple platforms.</p>
+            </div>
+            <div class="d-flex gap-2">
+            <a href="{{ path('app_wallet_export_pdf') }}" class="btn btn-outline-dark px-4 py-2 rounded-3 fw-bold shadow-sm">
+        <i class="fas fa-file-pdf me-2"></i> Statement
+    </a>
+                <button class="btn btn-outline-primary px-4 py-2 rounded-3 fw-bold shadow-sm" 
+                        data-bs-toggle="modal" data-bs-target="#transactionModal">
+                    <i class="fas fa-exchange-alt me-2"></i> Transfer
+                </button>
+                
+                <button class="btn btn-primary px-4 py-2 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#addModal" style="background: var(--primary-gradient); border: none;">
+                    <i class="fas fa-plus me-2"></i> New Wallet
+                </button>
+            </div>
+        </div>
+
+        <div class="analytics-card">
+            <div class="d-flex align-items-center mb-3">
+                <div class="btn-mini btn-mini-edit me-3"><i class="fas fa-chart-pie"></i></div>
+                <h5 class="fw-bold m-0">Portfolio Allocation</h5>
+            </div>
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center">
+                    <div style="max-width: 220px; margin: auto; min-height: 220px;">
+                        <canvas id="walletChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="ps-md-4 mt-3 mt-md-0">
+                        <p class="text-muted small">This chart represents the distribution of your total assets across all your wallets, grouped by currency type.</p>
+                        <div id="chart-legend" class="d-flex flex-wrap gap-3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="wallet-column">
+                    <div class="column-header text-primary"><i class="fas fa-university me-2"></i> Fiat Accounts</div>
+                    {% for wallet in wallets|filter(w => w.typeWallet|lower == 'fiat') %}
+                        {{ ui.render_wallet(wallet, 'type-fiat') }}
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="wallet-column">
+                    <div class="column-header text-success"><i class="fas fa-bolt me-2"></i> Trading Desk</div>
+                    {% for wallet in wallets|filter(w => w.typeWallet|lower == 'trading') %}
+                        {{ ui.render_wallet(wallet, 'type-trading') }}
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="wallet-column">
+                    <div class="column-header text-warning"><i class="fab fa-bitcoin me-2"></i> Crypto Assets</div>
+                    {% for wallet in wallets|filter(w => w.typeWallet|lower == 'crypto') %}
+                        {{ ui.render_wallet(wallet, 'type-crypto') }}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+{# TRANSACTION MODAL #}
+<div class="modal fade" id="transactionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0">New Transfer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                {{ form_start(transactionForm, {'action': path('app_transaction_execute')}) }}
+                    
+                    {{ form_widget(transactionForm.type) }}
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1">SOURCE RIB</label>
+                        {{ form_widget(transactionForm.ribSource, {
+                            'attr': {'class': 'form-control-custom', 'placeholder': 'Enter Source RIB'}
+                        }) }}
+                        <div class="text-danger small">{{ form_errors(transactionForm.ribSource) }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1">DESTINATION RIB</label>
+                        {{ form_widget(transactionForm.ribDestination, {
+                            'attr': {'class': 'form-control-custom', 'placeholder': 'Enter Destination RIB'}
+                        }) }}
+                        <div class="text-danger small">{{ form_errors(transactionForm.ribDestination) }}</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="small fw-bold text-muted mb-1">AMOUNT</label>
+                            {{ form_widget(transactionForm.montant, {
+                                'attr': {'class': 'form-control-custom', 'placeholder': '0.00'}
+                            }) }}
+                            <div class="text-danger small">{{ form_errors(transactionForm.montant) }}</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="small fw-bold text-muted mb-1">CURRENCY</label>
+                            {{ form_widget(transactionForm.currency, {
+                                'attr': {'class': 'form-control-custom'}
+                            }) }}
+                            <div class="text-danger small">{{ form_errors(transactionForm.currency) }}</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn w-100 py-3 text-white fw-bold rounded-3 mt-2" 
+                            style="background: var(--primary-gradient); border: none;">
+                        <i class="fas fa-paper-plane me-2"></i> Confirm Transfer
+                    </button>
+
+                {{ form_end(transactionForm) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# MODALE AJOUT WALLET #}
+<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <h5 class="fw-bold">Add New Wallet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                {{ form_start(form) }}
+                    <label class="small fw-bold text-muted mb-2">ACCOUNT TYPE</label>
+                    {{ form_widget(form.typeWallet, {'attr': {'class': 'form-control-custom'}}) }}
+                    <label class="small fw-bold text-muted mb-2">INITIAL STATUS</label>
+                    {{ form_widget(form.statut, {'attr': {'class': 'form-control-custom'}}) }}
+                    <button type="submit" class="btn w-100 py-3 mt-3 text-white fw-bold rounded-3" style="background: var(--primary-gradient); border: none;">Create Account</button>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# MODALE AJOUT CURRENCY #}
+<div class="modal fade" id="addCurrencyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form id="form-add-currency" method="POST">
+                <div class="modal-body p-4">
+                    <h6 class="fw-bold mb-4">Add Asset to Wallet</h6>
+                    <label class="small fw-bold text-muted mb-2">SELECT CURRENCY</label>
+                    <select name="id_currency" id="select-currency" class="form-control-custom" onchange="updateNom(this)" required>
+                        {% for c in all_available_currencies %}
+                            <option value="{{ c.id }}" data-nom="{{ c.nom }}" data-type="{{ c.typeCurrency|lower }}" data-trading="{{ c.isTrading ? 'true' : 'false' }}">
+                                {{ c.nom }} ({{ c.code|upper }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" name="nom_currency" id="hidden-nom-currency">
+                    <button type="submit" class="btn w-100 py-3 text-white fw-bold rounded-3 mt-2" style="background: var(--primary-gradient); border: none;">Confirm Addition</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# MODALE EDIT STATUT #}
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form id="edit-form" method="POST">
+                <div class="modal-body p-4">
+                    <h6 class="fw-bold mb-4">Edit Wallet Settings</h6>
+                    <label class="small fw-bold text-muted mb-2">WALLET TYPE</label>
+                    <input type="text" id="modal-type" class="form-control-custom" readonly disabled>
+                    <label class="small fw-bold text-muted mb-2">STATUS</label>
+                    <select name="statut" id="modal-statut" class="form-control-custom">
+                        <option value="actif">ACTIF</option>
+                        <option value="bloque">BLOQUE</option>
+                    </select>
+                    <button type="submit" class="btn w-100 py-3 text-white fw-bold rounded-3 mt-2" style="background: var(--primary-gradient); border: none;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# MODALE HISTORY (AJOUTÉE) #}
+<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 px-4 pt-4">
+                <h5 class="fw-bold m-0"><i class="fas fa-history me-2 text-info"></i>Transaction History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p id="history-rib-title" class="text-muted small fw-bold mb-3"></p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="border-0">Date</th>
+                                <th class="border-0">Type</th>
+                                <th class="border-0">Counterparty</th>
+                                <th class="border-0 text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body">
+                            </tbody>
+                    </table>
+                </div>
+                <div id="history-loader" class="text-center py-4 d-none">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // --- GESTION DU GRAPHIQUE AVEC DEBUG ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const canvas = document.getElementById('walletChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        
+        fetch('{{ path('app_wallet_chart_data') }}')
+            .then(response => {
+                console.log("Status HTTP :", response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log("Données reçues du serveur :", data);
+
+                if (!data || data.length === 0) {
+                    console.warn("Aucune donnée disponible pour le graphique.");
+                    document.getElementById('chart-legend').innerHTML = '<span class="text-muted small italic">No balance data available yet.</span>';
+                    return;
+                }
+
+                const labels = data.map(item => item.name);
+                const values = data.map(item => item.total);
+                
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: [
+                                '#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#f43f5e', '#8b5cf6'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        cutout: '70%'
+                    }
+                });
+
+                const legendDiv = document.getElementById('chart-legend');
+                legendDiv.innerHTML = ''; 
+                const colors = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#f43f5e', '#8b5cf6'];
+                
+                data.forEach((item, index) => {
+                    const color = colors[index % colors.length];
+                    legendDiv.innerHTML += `
+                        <div class="d-flex align-items-center">
+                            <div style="width: 12px; height: 12px; background: ${color}; border-radius: 3px; margin-right: 8px;"></div>
+                            <span class="small fw-bold">${item.name}</span>
+                            <span class="small text-muted ms-2">${parseFloat(item.total).toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+            })
+            .catch(err => console.error("Erreur Fetch Chart :", err));
+    });
+
+    // --- LOGIQUE HISTORY MODAL (AJOUTÉE) ---
+const historyModal = document.getElementById('historyModal');
+if (historyModal) {
+    historyModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const walletId = button.getAttribute('data-id');
+        const rib = button.getAttribute('data-rib');
+        
+        const tableBody = document.getElementById('history-table-body');
+        const loader = document.getElementById('history-loader');
+        const ribTitle = document.getElementById('history-rib-title');
+
+        ribTitle.innerText = "Wallet: " + rib;
+        tableBody.innerHTML = '';
+        loader.classList.remove('d-none');
+
+        fetch(`/wallet/${walletId}/history-json`)
+            .then(response => response.json())
+            .then(data => {
+                loader.classList.add('d-none');
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-3">No transactions found.</td></tr>';
+                    return;
+                }
+                data.forEach(tx => {
+                    // --- MODIFICATION ICI ---
+                    // On utilise 'direction' envoyé par le contrôleur PHP
+                    const isOut = tx.direction === 'out'; 
+                    const amountClass = isOut ? 'text-danger' : 'text-success';
+                    const prefix = isOut ? '-' : '+';
+                    // ------------------------
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td class="small">${tx.date}</td>
+                            <td><span class="badge bg-light text-dark text-uppercase" style="font-size:0.7rem;">${tx.type}</span></td>
+                            <td class="small text-muted">${tx.counterparty}</td>
+                            <td class="text-end fw-bold ${amountClass}">${prefix}${tx.amount} ${tx.currency}</td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(() => {
+                loader.classList.add('d-none');
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading history.</td></tr>';
+            });
+    });
+}
+
+    // --- LOGIQUE DES AUTRES MODALES ---
+    const addCurrencyModal = document.getElementById('addCurrencyModal');
+    if (addCurrencyModal) {
+        addCurrencyModal.addEventListener('show.bs.modal', function (event) {
+            const btn = event.relatedTarget;
+            const walletId = btn.getAttribute('data-id');
+            const walletType = btn.getAttribute('data-type'); 
+            document.getElementById('form-add-currency').action = '/wallet/' + walletId + '/add-currency';
+            const select = document.getElementById('select-currency');
+            [...select.options].forEach(opt => {
+                const cType = opt.getAttribute('data-type');
+                const isTrading = opt.getAttribute('data-trading');
+                let visible = (walletType === 'trading') ? (cType === 'crypto' && isTrading === 'true') : (cType === walletType);
+                opt.style.display = visible ? 'block' : 'none';
+                opt.disabled = !visible;
+            });
+            const first = [...select.options].find(o => !o.disabled);
+            if (first) { select.value = first.value; updateNom(select); }
+        });
+    }
+
+    function updateNom(select) {
+        const selected = select.options[select.selectedIndex];
+        const input = document.getElementById('hidden-nom-currency');
+        if (input) input.value = selected ? selected.getAttribute('data-nom') : '';
+    }
+
+    const editModal = document.getElementById('editModal');
+    if (editModal) {
+        editModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const id = button.getAttribute('data-id');
+            document.getElementById('modal-type').value = button.getAttribute('data-type').toUpperCase();
+            document.getElementById('modal-statut').value = button.getAttribute('data-statut');
+            document.getElementById('edit-form').action = '/wallet/' + id + '/edit';
+        });
+    }
+</script>
+{% endblock %}

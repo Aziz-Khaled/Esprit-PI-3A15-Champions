@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #1e293b; line-height: 1.5; margin: 0; padding: 0; }
+        .header { text-align: center; border-bottom: 3px solid #6366f1; padding: 30px 0; background-color: #f8fafc; }
+        .header h1 { margin: 0; color: #4338ca; letter-spacing: 2px; font-size: 28px; }
+        .header p { margin: 5px 0 0; color: #64748b; font-weight: bold; text-transform: uppercase; font-size: 12px; }
+        
+        .info-section { padding: 30px 50px; }
+        .info-box { width: 100%; margin-bottom: 20px; }
+        .info-box td { vertical-align: top; }
+        
+        .section-title { font-size: 18px; font-weight: bold; color: #1e293b; border-left: 5px solid #6366f1; padding-left: 10px; margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background-color: #f1f5f9; color: #475569; padding: 12px; text-align: left; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+        
+        .rib { font-family: 'Courier', monospace; color: #6366f1; font-weight: bold; }
+        .status-active { color: #10b981; font-weight: bold; text-transform: uppercase; font-size: 10px; }
+        .status-blocked { color: #ef4444; font-weight: bold; text-transform: uppercase; font-size: 10px; }
+        
+        .currency-tag { display: inline-block; background: #eef2ff; color: #4338ca; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+        
+        .footer { position: fixed; bottom: 30px; width: 100%; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CHAMPIONS FINTECH</h1>
+        <p>Official Bank Statement</p>
+    </div>
+
+    <div class="info-section">
+        <table class="info-box">
+            <tr>
+                <td>
+                    <strong>Customer:</strong> {{ user.prenom|capitalize }} {{ user.nom|upper }}<br>
+                    <strong>Email:</strong> {{ user.email }}<br>
+                    <strong>Phone:</strong> {{ user.telephone }}
+                </td>
+                <td style="text-align: right;">
+                    <strong>Statement Date:</strong> {{ "now"|date('M d, Y H:i') }}<br>
+                    <strong>Report ID:</strong> CHMP-{{ "now"|date('Ymd') }}-{{ user.idUser }}
+                </td>
+            </tr>
+        </table>
+
+        <div class="section-title">Account Summary</div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Account Number (RIB)</th>
+                    <th>Wallet Type</th>
+                    <th>Status</th>
+                    <th>Available Assets</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for wallet in wallets %}
+                    <tr>
+                        <td class="rib">{{ wallet.rib }}</td>
+                        <td>{{ wallet.typeWallet|upper }}</td>
+                        <td>
+                            <span class="{{ wallet.statut == 'actif' ? 'status-active' : 'status-blocked' }}">
+                                {{ wallet.statut == 'actif' ? 'Active' : 'Blocked' }}
+                            </span>
+                        </td>
+                        <td>
+                            {% for wc in wallet.walletCurrencys %}
+                                <strong>{{ wc.solde|number_format(2) }}</strong> <span class="currency-tag">{{ wc.nomCurrency }}</span>{% if not loop.last %}<br>{% endif %}
+                            {% else %}
+                                <span style="color: #cbd5e1; font-style: italic;">No assets found</span>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        This is a digitally generated document. No signature is required.<br>
+        &copy; 2026 Champions Platform - ESPRIT Social Innovation Project.
+    </div>
+</body>
+</html>
