@@ -308,7 +308,7 @@
     </div>
 </div>
 
-{# MODALE AJOUT CURRENCY #}
+
 <div class="modal fade" id="addCurrencyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -318,8 +318,10 @@
                     <label class="small fw-bold text-muted mb-2">SELECT CURRENCY</label>
                     <select name="id_currency" id="select-currency" class="form-control-custom" onchange="updateNom(this)" required>
                         {% for c in all_available_currencies %}
-                            <option value="{{ c.id_currency }}" data-nom="{{ c.nom }}" data-type="{{ c.type|lower }}" data-trading="{{ c.isTrading ? 'true' : 'false' }}">
-                                {{ c.nom }} ({{ c.code|upper }})
+{# On utilise .id et .typeCurrency #}
+<option value="{{ c.id }}" data-nom="{{ c.nom }}" data-type="{{ c.typeCurrency|lower }}" data-trading="{{ c.isTrading ? 'true' : 'false' }}">
+    {{ c.nom }} ({{ c.code|upper }})
+</option>                                {{ c.nom }} ({{ c.code|upper }})
                             </option>
                         {% endfor %}
                     </select>
