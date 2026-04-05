@@ -24,18 +24,14 @@ class Wallet
     #[ORM\Column(type: 'string', length: 8, nullable: false)]
     private ?string $rib = null;
 
-    /**
-     * Correspond à enum('fiat','crypto','trading') dans votre SQL
-     */
+    
     #[ORM\Column(name: 'type_wallet', type: 'string', columnDefinition: "ENUM('fiat', 'crypto', 'trading')", nullable: true)]
     private ?string $typeWallet = null;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private ?string $solde = null;
 
-    /**
-     * Correspond à enum('bloque','actif') dans votre SQL
-     */
+    
     #[ORM\Column(type: 'string', columnDefinition: "ENUM('bloque', 'actif')", nullable: true)]
     private ?string $statut = null;
 

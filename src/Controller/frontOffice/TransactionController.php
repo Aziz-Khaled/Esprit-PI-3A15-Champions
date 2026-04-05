@@ -12,9 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class TransactionController extends AbstractController
 {
-    /**
-     * Action pour exécuter une transaction (Côté Client)
-     */
+    
     #[Route('/transaction/execute', name: 'app_transaction_execute', methods: ['POST'])]
     public function execute(Request $request, TransactionManager $tm): Response
     {
