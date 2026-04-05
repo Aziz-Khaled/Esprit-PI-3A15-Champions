@@ -1,0 +1,200 @@
+{% extends 'back_base.html.twig' %}
+
+{% block title %}Détails Commande #{{ order.id }} - Backoffice Fintech{% endblock %}
+
+{% block body_back %}
+<div class="container-fluid py-4">
+    <div class="d-sm-flex align-items-center justify-content-between mb-5">
+        <div>
+            <h1 class="h3 mb-1 text-gray-900 font-weight-bold">Détails de la Commande #ORD-{{ order.id }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb bg-transparent p-0 small">
+                    <li class="breadcrumb-item"><a href="{{ path('app_admin_panel') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_back_order_index') }}">Commandes</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Détails</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="{{ path('app_back_order_index') }}" class="btn btn-sm btn-white shadow-sm rounded-pill px-4 border text-muted">
+                <i class="fas fa-arrow-left mr-2"></i> Retour à la Liste
+            </a>
+            <button class="btn btn-sm btn-info shadow-sm rounded-pill px-4 text-white font-weight-bold">
+                <i class="fas fa-print mr-2"></i> Imprimer Reçu
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Column: Order Lifecycle & Items -->
+        <div class="col-lg-8">
+            <!-- Lifecycle & Basic Info -->
+            <div class="card shadow-sm border-0 rounded-xl mb-4 overflow-hidden card-hover">
+                <div class="p-4 bg-white border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-circle bg-primary-soft text-primary mr-3 shadow-none border">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div>
+                            <h6 class="m-0 font-weight-bold text-gray-800">Parcours & Chronologie</h6>
+                            <small class="text-muted">Enregistrée le {{ order.orderDate|date('d/m/Y à H:i') }}</small>
+                        </div>
+                    </div>
+                    <span class="badge rounded-pill px-4 py-2 font-weight-bold shadow-sm border
+                        {{ order.status == 'paid' ? 'badge-success-soft' : 
+                           order.status == 'pending_payment' ? 'badge-warning-soft' : 'badge-danger-soft' }}">
+                        {{ order.status|upper }}
+                    </span>
+                </div>
+                <div class="card-body p-4 bg-light-soft">
+                    <div class="row text-center mb-4 p-3 bg-white border rounded shadow-sm mx-1">
+                        <div class="col-md-4 border-right">
+                            <div class="text-xs text-muted text-uppercase mb-1">Montant Total</div>
+                            <div class="h4 font-weight-bold text-dark mb-0">{{ order.totalAmount }} BTC</div>
+                        </div>
+                        <div class="col-md-4 border-right">
+                            <div class="text-xs text-muted text-uppercase mb-1">Items Commandés</div>
+                            <div class="h4 font-weight-bold text-dark mb-0">{{ order.orderItems|length }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-xs text-muted text-uppercase mb-1">Méthode de Paiement</div>
+                            <div class="h5 font-weight-bold text-primary mb-0"><i class="fas fa-wallet mr-1 opacity-50"></i> {{ order.paymentMethod|replace({'_': ' '})|title }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Goods Table -->
+            <div class="card shadow-sm border-0 rounded-xl mb-4 overflow-hidden">
+                <div class="card-header bg-white py-4 d-flex align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-gray-800"><i class="fas fa-shopping-bag mr-2 opacity-25"></i> Panier & Articles</h6>
+                    <div class="badge badge-light border px-2 py-1 small">Total TTC</div>
+                </div>
+                <div class="table-responsive bg-white border-top">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-gray-50 text-gray-700">
+                            <tr>
+                                <th class="pl-4 py-3">Produit & Catégorie</th>
+                                <th class="text-center">Quantité</th>
+                                <th class="text-end">Prix Unit.</th>
+                                <th class="text-end pr-4">Sous-total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.orderItems %}
+                                <tr>
+                                    <td class="pl-4 py-4">
+                                        <div class="d-flex align-items-center">
+                                            {% if item.product and item.product.imageUrl %}
+                                                <img src="{{ asset('uploads/products/' ~ item.product.imageUrl) }}" class="rounded shadow-sm me-3 border p-1" style="width: 45px; height: 45px; object-fit: cover;">
+                                            {% endif %}
+                                            <div>
+                                                <div class="font-weight-bold text-dark mb-0 fs-6">{{ item.product ? item.product.name : 'Produit supprimé' }}</div>
+                                                <small class="badge badge-info-soft font-weight-bold">{{ item.product ? item.product.category|title : 'N/A' }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light shadow-none border text-dark px-3 py-1 font-weight-bold rounded-pill">x {{ item.quantity }}</span>
+                                    </td>
+                                    <td class="text-end text-muted font-weight-bold">{{ item.unitPrice }} BTC</td>
+                                    <td class="text-end pr-4 fw-black text-gray-900">{{ item.subTotal }} BTC</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="border-top-2 bg-gray-50">
+                            <tr>
+                                <td colspan="3" class="text-right font-weight-extrabold pr-4 py-3">TOTAL GENERAL</td>
+                                <td class="text-end pr-4 py-3 h4 font-weight-extrabold text-primary mb-0">{{ order.totalAmount }} BTC</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Client & Logistic Info -->
+        <div class="col-lg-4">
+            <!-- Client Card -->
+            <div class="card shadow-sm border-0 rounded-xl mb-4 overflow-hidden border-top border-4 border-primary">
+                <div class="card-header bg-white py-4 d-flex align-items-center border-0">
+                    <h6 class="m-0 font-weight-bold text-gray-800 text-uppercase letter-spacing-1 small">Informations Client</h6>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light-soft rounded-lg border shadow-sm">
+                        <div class="avatar-order mr-3 bg-primary text-white font-weight-bold shadow-sm">
+                            {{ order.utilisateur ? order.utilisateur.nom|first|upper ~ order.utilisateur.prenom|first|upper : '?' }}
+                        </div>
+                        <div>
+                            <div class="font-weight-extrabold text-gray-900 mb-0 h6">{{ order.utilisateur ? order.utilisateur.prenom ~ ' ' ~ order.utilisateur.nom : 'Admin Centrale' }}</div>
+                            <small class="text-muted"><i class="fas fa-check-circle text-success mr-1"></i> Identité Vérifiée</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logistic Card -->
+            <div class="card shadow-sm border-0 rounded-xl mb-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                    <i class="fas fa-truck-moving text-info mr-2"></i>
+                    <h6 class="m-0 font-weight-bold text-gray-800 small text-uppercase">Expédition & Logistique</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label class="text-uppercase small text-muted font-weight-bold mb-1 d-block letter-spacing-1">Adresse de livraison</label>
+                        <div class="p-3 bg-white border rounded shadow-sm text-dark font-weight-medium">
+                            {{ order.shippingAddress ?: 'Adresse non renseignée' }}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-uppercase small text-muted font-weight-bold mb-1 d-block letter-spacing-1">Coordonnées de Livraison</label>
+                        <div class="p-3 bg-white border rounded shadow-sm text-dark font-weight-bold">
+                            <i class="fas fa-phone mr-2 text-info opacity-75"></i> {{ order.phoneNumber ?: 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Actions Zone -->
+            <div class="card border-0 shadow-sm rounded-xl overflow-hidden mt-5 bg-white border-top border-4 border-danger">
+                <div class="card-body p-4 text-center">
+                    <h6 class="text-danger font-weight-bold small text-uppercase letter-spacing-1 mb-4">Actions de Controle</h6>
+                    <div class="row g-2 px-2">
+                        <div class="col-12 mb-2">
+                            <button class="btn btn-outline-primary btn-block btn-sm rounded-pill font-weight-bold">
+                                Envoyer Notifications
+                            </button>
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-danger btn-block btn-sm rounded-pill font-weight-bold shadow-sm" {{ order.status == 'cancelled' ? 'disabled' : '' }}>
+                                Annuler Commande
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rounded-xl { border-radius: 1.25rem !important; }
+    .bg-light-soft { background-color: #f8fbff; }
+    .bg-primary-soft { background-color: #f0f3ff; }
+    .badge-success-soft { background-color: #dcfce7; color: #166534; }
+    .badge-warning-soft { background-color: #fef9c3; color: #854d0e; }
+    .badge-danger-soft { background-color: #fee2e2; color: #991b1b; }
+    .badge-info-soft { background-color: #e0f2fe; color: #075985; }
+    .icon-circle { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .avatar-order { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .letter-spacing-1 { letter-spacing: 0.1rem; }
+    .font-weight-extrabold { font-weight: 800; }
+    .card-hover { transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important; }
+    .fs-6 { font-size: 0.95rem; }
+    .gap-3 { gap: 1rem; }
+    .g-2 { gap: 0.5rem; }
+    .bg-gray-50 { background-color: #f9fafb; }
+    .pr-4 { padding-right: 1.5rem !important; }
+</style>
+{% endblock %}

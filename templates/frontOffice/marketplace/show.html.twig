@@ -1,0 +1,136 @@
+{% extends 'frontOffice/front_base.html.twig' %}
+
+{% block title %}{{ product.name }} - Détails Produit{% endblock %}
+
+
+
+{% block body %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4 mt-n2">
+  <ol class="breadcrumb bg-transparent p-0 small">
+    <li class="breadcrumb-item"><a href="{{ path('app_marketplace_index') }}" class="text-decoration-none text-muted">Marketplace</a></li>
+    <li class="breadcrumb-item active text-primary font-weight-bold" aria-current="page">{{ product.name }}</li>
+  </ol>
+</nav>
+
+<div class="row g-5">
+    <!-- Image Column -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-light p-4 sticky-top" style="top: 100px;">
+            <div class="d-flex align-items-center justify-content-center bg-white rounded-4 shadow-sm" style="min-height: 450px;">
+                {% if product.imageUrl %}
+                    <img src="{{ asset('uploads/products/' ~ product.imageUrl) }}" class="img-fluid transition-all hover-scale" style="max-height: 400px; object-fit: contain;">
+                {% else %}
+                    <i class="fas fa-box fa-8x text-blue-100 opacity-50"></i>
+                {% endif %}
+            </div>
+            
+            <!-- Gallery Thumbnails (Demo) -->
+            <div class="d-flex gap-3 mt-4 justify-content-center">
+                <div class="rounded-3 border border-primary border-2 p-1 bg-white cursor-pointer" style="width: 70px; height: 70px;">
+                    <div class="bg-gray-100 w-100 h-100 rounded-2"></div>
+                </div>
+                <div class="rounded-3 border border-light p-1 bg-white cursor-pointer opacity-50 hover-opacity-100" style="width: 70px; height: 70px;">
+                    <div class="bg-gray-100 w-100 h-100 rounded-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Column -->
+    <div class="col-lg-6">
+        <div class="ps-lg-4">
+            <div class="mb-5">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="badge bg-primary-soft text-primary rounded-pill px-3 py-2 small me-3 fw-bold">
+                        {{ product.category|replace({'_': ' '})|title }}
+                    </span>
+                    <div class="text-warning small">
+                        {% for i in 1..5 %}
+                            <i class="fas fa-star {{ i <= product.avgRating|round ? 'text-warning' : 'text-gray-200' }}"></i>
+                        {% endfor %}
+                        <span class="ms-2 text-muted x-small font-weight-bold">({{ product.avgRating ?: '4.5' }}/5)</span>
+                    </div>
+                </div>
+                
+                <h1 class="display-5 fw-black text-gray-900 mb-2">{{ product.name }}</h1>
+                <p class="text-primary font-weight-bold h5 letter-spacing-1 mb-4">{{ product.brand ?: 'Fintech Asset' }}</p>
+                
+                <div class="price-section py-4 border-top border-bottom mb-4">
+                    {% if product.discountPrice and product.discountPrice > 0 %}
+                        <div class="d-flex align-items-end">
+                            <span class="h1 fw-black text-success mb-0 me-3">{{ product.discountPrice }} <small class="h6 text-muted">BTC</small></span>
+                            <div class="mb-1">
+                                <del class="text-muted d-block small">{{ product.price }} BTC</del>
+                                <span class="badge bg-danger rounded-pill px-2 py-1 x-small">-{{ (((product.price - product.discountPrice) / product.price) * 100)|round }}% PROMO</span>
+                            </div>
+                        </div>
+                    {% else %}
+                        <span class="h1 fw-black text-primary mb-0">{{ product.price }} <small class="h6 text-muted">BTC</small></span>
+                    {% endif %}
+                </div>
+
+                <div class="description mb-5">
+                    <h5 class="fw-black text-gray-900 h6 mb-3 text-uppercase letter-spacing-1">Description Technique</h5>
+                    <p class="text-muted lead fs-6 opacity-75">{{ product.description }}</p>
+                </div>
+
+                <!-- Features Preview (Demo) -->
+                <div class="row g-4 mb-5 p-4 bg-light rounded-4 border border-light">
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-shipping-fast text-primary me-3 fa-lg"></i>
+                            <div>
+                                <h6 class="mb-0 x-small fw-black text-dark text-uppercase">Expédition Rapide</h6>
+                                <p class="mb-0 text-muted x-small">Délai: 24/48h</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-shield-alt text-success me-3 fa-lg"></i>
+                            <div>
+                                <h6 class="mb-0 x-small fw-black text-dark text-uppercase">Garantie Crypto</h6>
+                                <p class="mb-0 text-muted x-small">Assurance Blockchain</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buying-actions border-top pt-5">
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <a href="{{ path('app_cart_add', {id: product.id}) }}" class="btn btn-primary w-100 py-3 rounded-pill fw-black shadow-lg shadow-primary-light transition-all hov-up">
+                                <i class="fas fa-cart-plus me-2"></i> Ajouter au Panier
+                            </a>
+                        </div>
+                        <div class="col-md-5">
+                            <a href="#" class="btn btn-white border w-100 py-3 rounded-pill fw-black text-dark">
+                                <i class="fas fa-heart me-2 text-danger"></i> Liste de souhaits
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <p class="x-small text-muted font-weight-bold">
+                            <i class="fas fa-lock text-success me-2"></i> Transactions sécurisées par contrats intelligents
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-black { font-weight: 800; }
+    .text-gray-900 { color: #0f172a; }
+    .x-small { font-size: 0.72rem; }
+    .transition-all { transition: 0.3s; }
+    .letter-spacing-1 { letter-spacing: 0.05rem; }
+    .bg-primary-soft { background-color: #f0f7ff; }
+    .hover-scale:hover { transform: scale(1.05); }
+    .shadow-primary-light { box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.45); }
+    .hov-up:hover { transform: translateY(-5px); }
+</style>
+{% endblock %}

@@ -1,0 +1,450 @@
+{% extends 'frontOffice/front_base.html.twig' %}
+
+{% block title %}Marketplace Store - Fintech Asset Shop{% endblock %}
+
+{% block body %}
+<div class="row align-items-center mb-5 mt-n4 px-2">
+    <div class="col-md-7">
+        <h1 class="display-4 fw-black text-gray-900 border-none mb-2 letter-spacing-tight">Marketplace <span class="text-primary position-relative">Premium<span class="title-underline"></span></span></h1>
+        <p class="text-muted lead">Access the most secure crypto-assets and fintech hardware. Pay with your <span class="crypto-tag">BTC / Crypto Wallet</span>.</p>
+    </div>
+    <div class="col-md-5 text-end">
+        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill" id="front-product-count">
+            <i class="fas fa-cube me-1"></i> {{ products|length }} produits
+        </span>
+    </div>
+</div>
+
+<!-- ========== SEARCH + SORT + FILTER BAR ========== -->
+<div class="search-sort-bar mb-5 px-2">
+    <div class="search-card p-4 rounded-5 border-0">
+        <div class="row g-3 align-items-center">
+            <!-- Search Input -->
+            <div class="col-lg-5">
+                <div class="search-wrapper position-relative">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="front-search-input" class="form-control search-field" 
+                           placeholder="Rechercher un produit, une marque, une catégorie..." autocomplete="off">
+                    <button id="front-clear-btn" class="clear-btn" style="display:none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- Sort By -->
+            <div class="col-lg-3 col-md-4">
+                <select id="front-sort-field" class="form-select sort-select">
+                    <option value="name">Trier par : Nom</option>
+                    <option value="price">Trier par : Prix</option>
+                    <option value="stock">Trier par : Stock</option>
+                    <option value="category">Trier par : Catégorie</option>
+                    <option value="brand">Trier par : Marque</option>
+                    <option value="avgRating">Trier par : Note</option>
+                    <option value="createdAt">Trier par : Nouveauté</option>
+                </select>
+            </div>
+            <!-- Sort Direction Buttons -->
+            <div class="col-lg-2 col-md-4">
+                <div class="btn-group w-100 sort-dir-group" role="group">
+                    <button type="button" id="dir-asc-btn" class="btn btn-sort-dir active" data-dir="ASC">
+                        <i class="fas fa-arrow-up me-1"></i> Croissant
+                    </button>
+                    <button type="button" id="dir-desc-btn" class="btn btn-sort-dir" data-dir="DESC">
+                        <i class="fas fa-arrow-down me-1"></i> Décroissant
+                    </button>
+                </div>
+            </div>
+            <!-- Loading indicator -->
+            <div class="col-lg-2 col-md-4 text-center">
+                <span id="front-search-loading" class="search-status" style="display:none;">
+                    <i class="fas fa-circle-notch fa-spin me-1"></i> Recherche...
+                </span>
+                <span id="front-live-badge" class="live-badge">
+                    <i class="fas fa-bolt me-1"></i> Live
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Grid -->
+<div class="row g-5 mt-2 px-2" id="front-products-grid">
+    {% for product in products %}
+    <div class="col-sm-6 col-lg-6 col-xl-4 col-xxl-3 product-card-col">
+        <div class="card h-100 premium-card transition-premium overflow-hidden p-0 border-0 bg-white">
+            <!-- Media Area -->
+            <div class="media-container position-relative overflow-hidden m-3 rounded-5 bg-soft-light d-flex align-items-center justify-content-center">
+                {% if product.imageUrl %}
+                    <img src="{{ asset('uploads/products/' ~ product.imageUrl) }}" class="card-img-top premium-img" alt="{{ product.name }}">
+                {% else %}
+                    <div class="placeholder-icon text-center">
+                        <i class="fas fa-cube fa-6x text-gradient-blue opacity-25"></i>
+                    </div>
+                {% endif %}
+                
+                <div class="category-floating">
+                    <span class="badge badge-premium shadow-sm">
+                        <i class="fas fa-tag me-2"></i> {{ product.category|replace({'_': ' '})|title }}
+                    </span>
+                </div>
+
+                <div class="quick-action-overlay d-flex flex-column gap-2 p-4 justify-content-center align-items-center">
+                    <a href="{{ path('app_marketplace_product_show', {id: product.id}) }}" class="btn btn-glass w-100 rounded-pill fw-bold text-decoration-none">
+                        <i class="fas fa-eye me-2"></i> Details
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Content Area -->
+            <div class="card-body p-4 pt-2 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1 pe-2">
+                        <h3 class="h5 fw-black mb-1 card-title-premium text-gray-900">{{ product.name }}</h3>
+                        <div class="d-flex align-items-center">
+                            <span class="brand-tag text-uppercase letter-spacing-1">{{ product.brand ?: 'Fintech Asset' }}</span>
+                            <span class="dot-separator mx-2"></span>
+                            <div class="rating-stars small text-warning">
+                                <i class="fas fa-star"></i>
+                                <span class="text-muted fw-bold ms-1">{{ product.avgRating ?: '4.5' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center justify-content-between mb-4 mt-2">
+                    <div class="price-stack">
+                        {% if product.discountPrice and product.discountPrice > 0 %}
+                            <div class="price-actual fw-black text-success h4 mb-0">{{ product.discountPrice }}<small class="x-small ms-1">BTC</small></div>
+                            <del class="price-old text-muted x-small font-weight-bold">{{ product.price }} BTC</del>
+                        {% else %}
+                            <div class="price-actual fw-black text-primary h4 mb-0">{{ product.price }}<small class="x-small ms-1">BTC</small></div>
+                            <span class="price-badge-sub">Market Price</span>
+                        {% endif %}
+                    </div>
+                    <div class="stock-panel text-end">
+                        {% if product.stock > 0 %}
+                            <div class="stock-status-active x-small fw-black">
+                                <span class="status-pulse me-1"></span> IN STOCK
+                            </div>
+                            <div class="stock-count text-muted">{{ product.stock }} units</div>
+                        {% else %}
+                            <div class="stock-status-out x-small fw-black">SOLD OUT</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-auto action-block">
+                    {% if product.stock > 0 %}
+                        <a href="{{ path('app_cart_add', {id: product.id}) }}" class="btn btn-primary-premium w-100 py-3 rounded-4 fw-black shadow-glow text-decoration-none d-flex align-items-center justify-content-center">
+                            <i class="fas fa-shopping-bag me-2"></i> ADD TO CART
+                        </a>
+                    {% else %}
+                        <button class="btn btn-disabled w-100 py-3 rounded-4 fw-black border-dashed" disabled>
+                            <i class="fas fa-exclamation-circle me-2"></i> OUT OF STOCK
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    :root {
+        --primary: #3b82f6;
+        --primary-dark: #1d4ed8;
+        --secondary: #64748b;
+        --success: #10b981;
+        --surface: #ffffff;
+        --soft-bg: #f8fafc;
+        --text-heading: #0f172a;
+    }
+
+    .fw-black { font-weight: 900; }
+    .letter-spacing-tight { letter-spacing: -0.025em; }
+    .letter-spacing-1 { letter-spacing: 0.1em; }
+    
+    .title-underline { position: absolute; bottom: 8px; left: 0; width: 100%; height: 8px; background: rgba(59, 130, 246, 0.15); z-index: -1; }
+    .crypto-tag { background: #f1f5f9; padding: 0.2rem 0.6rem; border-radius: 6px; font-family: 'SF Mono', monospace; font-weight: 700; color: var(--text-heading); font-size: 0.9rem; }
+    
+    /* ========== Search & Sort Bar ========== */
+    .search-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+    }
+    .search-wrapper {
+        position: relative;
+    }
+    .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 0.95rem;
+        z-index: 2;
+    }
+    .search-field {
+        padding: 0.85rem 3rem 0.85rem 3rem;
+        border-radius: 50px;
+        border: 2px solid #e2e8f0;
+        font-size: 0.95rem;
+        font-weight: 500;
+        background: white;
+        transition: 0.3s;
+    }
+    .search-field:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+    .search-field::placeholder {
+        color: #cbd5e1;
+        font-weight: 400;
+    }
+    .clear-btn {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #94a3b8;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: 0.2s;
+        z-index: 2;
+    }
+    .clear-btn:hover { color: #ef4444; }
+
+    .sort-select {
+        padding: 0.8rem 1.2rem;
+        border-radius: 14px;
+        border: 2px solid #e2e8f0;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #475569;
+        background: white;
+        transition: 0.3s;
+    }
+    .sort-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .sort-dir-group {
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    .btn-sort-dir {
+        background: white;
+        border: 2px solid #e2e8f0;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.65rem 0.8rem;
+        transition: 0.3s;
+    }
+    .btn-sort-dir:hover {
+        background: #f8fafc;
+        color: var(--primary);
+    }
+    .btn-sort-dir.active {
+        background: var(--primary) !important;
+        border-color: var(--primary) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .search-status {
+        color: var(--primary);
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .live-badge {
+        background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%);
+        color: #166534;
+        font-size: 0.75rem;
+        font-weight: 800;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        letter-spacing: 0.05rem;
+    }
+
+    /* ========== Premium Card Design ========== */
+    .premium-card { 
+        border-radius: 32px !important; 
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+    .premium-card:hover { 
+        transform: translateY(-12px); 
+        box-shadow: 0 40px 80px -20px rgba(0,0,0,0.12) !important; 
+    }
+    
+    .media-container { height: 320px; transition: 0.4s; }
+    .premium-card:hover .media-container { transform: scale(0.98); }
+    .premium-img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .premium-card:hover .premium-img { transform: scale(1.1); }
+    
+    .bg-soft-light { background: #f1f5f9; }
+    .text-gradient-blue { background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .category-floating { position: absolute; top: 20px; left: 20px; z-index: 10; }
+    .badge-premium { background: rgba(255, 255, 255, 0.95); color: var(--text-heading); font-weight: 800; font-size: 0.65rem; text-transform: uppercase; padding: 0.6rem 1rem; border-radius: 50px; letter-spacing: 0.05rem; }
+    
+    .quick-action-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); opacity: 0; transition: 0.3s; z-index: 5; }
+    .premium-card:hover .quick-action-overlay { opacity: 1; }
+    
+    .btn-glass { background: rgba(255, 255, 255, 0.2); color: white; border: 1.5px solid rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); padding: 0.6rem 1.5rem; transition: 0.3s; font-size: 0.85rem; }
+    .btn-glass:hover { background: rgba(255, 255, 255, 1); color: var(--text-heading); border-color: white; }
+    
+    /* Content Styling */
+    .card-title-premium { line-height: 1.3; font-size: 1.2rem; }
+    .brand-tag { font-size: 0.65rem; color: var(--primary); font-weight: 800; border-bottom: 2px solid rgba(59, 130, 246, 0.2); }
+    .dot-separator { width: 4px; height: 4px; background: #cbd5e1; border-radius: 50%; opacity: 0.5; }
+    
+    .price-badge-sub { font-size: 0.65rem; color: var(--secondary); font-weight: 700; background: #f8fafc; padding: 0.1rem 0.4rem; border-radius: 4px; }
+    
+    .stock-status-active { color: var(--success); font-size: 0.7rem; border-radius: 50px; display: inline-flex; align-items: center; }
+    .status-pulse { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: block; animation: pulse 2s infinite; }
+    @keyframes pulse { 
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    
+    .btn-primary-premium { background: var(--primary); color: white; border: none; transition: 0.3s; font-size: 0.85rem; letter-spacing: 0.1rem; }
+    .btn-primary-premium:hover { background: var(--primary-dark); transform: scale(1.02); }
+    .shadow-glow { box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3); }
+    
+    .btn-disabled { background: #f1f5f9; color: #94a3b8; border: 2px dashed #cbd5e1; font-size: 0.8rem; cursor: not-allowed; }
+    .x-small { font-size: 0.7rem; }
+    .stock-count { font-size: 0.6rem; font-weight: 600; opacity: 0.7; }
+
+    /* AJAX fade transition */
+    #front-products-grid {
+        transition: opacity 0.3s ease;
+    }
+    #front-products-grid.loading {
+        opacity: 0.35;
+    }
+
+    /* Card entrance animation */
+    @keyframes cardSlideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .product-card-col {
+        animation: cardSlideIn 0.4s ease forwards;
+    }
+    .product-card-col:nth-child(1) { animation-delay: 0.05s; }
+    .product-card-col:nth-child(2) { animation-delay: 0.1s; }
+    .product-card-col:nth-child(3) { animation-delay: 0.15s; }
+    .product-card-col:nth-child(4) { animation-delay: 0.2s; }
+    .product-card-col:nth-child(5) { animation-delay: 0.25s; }
+    .product-card-col:nth-child(6) { animation-delay: 0.3s; }
+    .product-card-col:nth-child(7) { animation-delay: 0.35s; }
+    .product-card-col:nth-child(8) { animation-delay: 0.4s; }
+
+    .stock-status-out { color: #ef4444; font-size: 0.7rem; font-weight: 800; }
+</style>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+(function() {
+    var searchInput = document.getElementById('front-search-input');
+    var sortField = document.getElementById('front-sort-field');
+    var ascBtn = document.getElementById('dir-asc-btn');
+    var descBtn = document.getElementById('dir-desc-btn');
+    var grid = document.getElementById('front-products-grid');
+    var loadingIndicator = document.getElementById('front-search-loading');
+    var liveBadge = document.getElementById('front-live-badge');
+    var clearBtn = document.getElementById('front-clear-btn');
+    var countBadge = document.getElementById('front-product-count');
+    var currentDir = 'ASC';
+    var debounceTimer = null;
+
+    function frontSearch() {
+        var q = searchInput.value.trim();
+        var sort = sortField.value;
+        var dir = currentDir;
+
+        // Show loading
+        loadingIndicator.style.display = 'inline';
+        liveBadge.style.display = 'none';
+        grid.classList.add('loading');
+
+        // Show/hide clear button
+        clearBtn.style.display = q.length > 0 ? '' : 'none';
+
+        var url = '{{ path("app_marketplace_ajax_search") }}' + 
+                  '?q=' + encodeURIComponent(q) + 
+                  '&sort=' + encodeURIComponent(sort) + 
+                  '&dir=' + encodeURIComponent(dir);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                loadingIndicator.style.display = 'none';
+                liveBadge.style.display = 'inline';
+                grid.classList.remove('loading');
+
+                if (xhr.status === 200) {
+                    grid.innerHTML = xhr.responseText;
+                    // Update count badge
+                    var cardCount = grid.querySelectorAll('.product-card-col').length;
+                    countBadge.innerHTML = '<i class="fas fa-cube me-1"></i> ' + cardCount + ' produits';
+                } else {
+                    console.error('AJAX search failed:', xhr.status);
+                }
+            }
+        };
+        xhr.send();
+    }
+
+    // Debounced live search on input
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(frontSearch, 300);
+    });
+
+    // Instant search on sort change
+    sortField.addEventListener('change', frontSearch);
+
+    // Direction toggle buttons
+    ascBtn.addEventListener('click', function() {
+        currentDir = 'ASC';
+        ascBtn.classList.add('active');
+        descBtn.classList.remove('active');
+        frontSearch();
+    });
+    descBtn.addEventListener('click', function() {
+        currentDir = 'DESC';
+        descBtn.classList.add('active');
+        ascBtn.classList.remove('active');
+        frontSearch();
+    });
+
+    // Clear search
+    clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        frontSearch();
+    });
+
+    // Enter key triggers search
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            frontSearch();
+        }
+    });
+})();
+</script>
+{% endblock %}

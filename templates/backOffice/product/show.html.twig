@@ -1,0 +1,201 @@
+{% extends 'back_base.html.twig' %}
+
+{% block title %}Détails Produit - Marketplace Fintech{% endblock %}
+
+{% block body_back %}
+<div class="container-fluid py-4 bg-light-soft">
+    <div class="d-sm-flex align-items-center justify-content-between mb-5">
+        <div>
+            <h1 class="h3 mb-1 text-gray-900 font-weight-bold">Fiche Produit Complète</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb bg-transparent p-0 small">
+                    <li class="breadcrumb-item"><a href="{{ path('app_admin_panel') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_back_product_index') }}">Produits</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="{{ path('app_back_product_index') }}" class="btn btn-sm btn-white shadow-sm rounded-pill px-4 border text-muted">
+                <i class="fas fa-arrow-left mr-2"></i> Retour
+            </a>
+            <a href="{{ path('app_back_product_edit', {id: product.id}) }}" class="btn btn-info shadow-sm rounded-pill px-5 text-white font-weight-bold">
+                <i class="fas fa-edit mr-2"></i> Modifier
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Product Main Info -->
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-xl overflow-hidden glass-card mb-4 mt-n2">
+                <div class="card-header bg-white py-4 d-flex align-items-center border-bottom border-light">
+                    <div class="icon-circle bg-primary-soft text-primary mr-3 shadow-none border">
+                        <i class="fas fa-info-circle fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="m-0 font-weight-bold text-gray-800 h5">Détails Techniques</h6>
+                        <small class="text-muted">Dernière mise à jour : {{ product.updatedAt ? product.updatedAt|date('d/m/Y H:i') : 'Indisponible' }}</small>
+                    </div>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <div class="row mb-5">
+                        <div class="col-md-12">
+                            <div class="d-flex align-items-start justify-content-between mb-3">
+                                <div>
+                                    <h2 class="text-gray-900 font-weight-extrabold mb-1 h1">{{ product.name }}</h2>
+                                    <p class="text-primary font-weight-bold letter-spacing-1 mb-3"><i class="fas fa-certificate mr-1"></i> {{ product.brand ?: 'Marque non spécifiée' }}</p>
+                                </div>
+                                <div class="text-right">
+                                    {% if product.avgRating %}
+                                        <div class="rating-badge bg-warning-light text-warning-dark border px-3 py-2 rounded-lg">
+                                            <span class="h5 font-weight-bold mb-0">{{ product.avgRating }}</span>
+                                            <div class="rating-stars small mt-n1">
+                                                {% for i in 1..5 %}
+                                                    <i class="fas fa-star {{ i <= product.avgRating|round ? 'text-warning' : 'text-gray-300' }}"></i>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="categories mb-4">
+                                <span class="badge badge-info-soft rounded-pill px-4 py-2 font-weight-bold border border-info-light">
+                                    {{ product.category|replace({'_': ' '})|title }}
+                                </span>
+                                <span class="badge {{ product.status == 'available' ? 'badge-success-soft' : 'badge-danger-soft' }} rounded-pill px-4 py-2 font-weight-bold ml-2">
+                                    Statut: {{ product.status|upper }}
+                                </span>
+                            </div>
+
+                            <div class="lead text-gray-700 bg-gray-50 border-left border-5 border-info p-4 rounded bg-white border border-light">
+                                {{ product.description }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row border-top pt-5">
+                        <div class="col-md-4 mb-4">
+                            <div class="text-uppercase small font-weight-extrabold text-primary mb-2 opacity-75 letter-spacing-1">Structure de Prix</div>
+                            <div class="price-display">
+                                {% if product.discountPrice and product.discountPrice > 0 %}
+                                    <div class="h3 text-success font-weight-bold mb-0">{{ product.discountPrice }} <small class="font-size-14 font-weight-normal">BTC</small></div>
+                                    <div class="text-muted"><del>{{ product.price }} BTC</del> <span class="badge badge-success-light small">-{{ (((product.price - product.discountPrice) / product.price) * 100)|round }}%</span></div>
+                                {% else %}
+                                    <div class="h3 text-gray-900 font-weight-bold mb-0">{{ product.price }} <small class="font-size-14 font-weight-normal">BTC</small></div>
+                                    <div class="text-muted small">Prix standard (Marketplace)</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="text-uppercase small font-weight-extrabold text-primary mb-2 opacity-75 letter-spacing-1">Disponibilité</div>
+                            <div class="h3 font-weight-bold {{ product.stock < 10 ? 'text-danger' : 'text-dark' }}">
+                                {{ product.stock }} <small class="font-size-14 font-weight-normal text-muted">unités</small>
+                            </div>
+                            <div class="progress progress-sm mt-3" style="width: 100px;">
+                                <div class="progress-bar {{ product.stock < 10 ? 'bg-danger' : 'bg-success' }}" style="width: {{ product.stock > 100 ? 100 : product.stock }}%"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="text-uppercase small font-weight-extrabold text-primary mb-2 opacity-75 letter-spacing-1">Publication</div>
+                            <div class="h4 text-gray-800 font-weight-bold mb-0">
+                                {{ product.createdAt ? product.createdAt|date('d M Y') : 'N/A' }}
+                            </div>
+                            <div class="text-muted small mt-1">Date de création système</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Image & Merchant Info -->
+        <div class="col-lg-4">
+            <!-- Image Card -->
+            <div class="card shadow-lg border-0 rounded-xl overflow-hidden mb-4 mt-n2">
+                <div class="card-body p-0 text-center bg-gray-50 position-relative">
+                    {% if product.imageUrl %}
+                        <img src="{{ asset('uploads/products/' ~ product.imageUrl) }}" class="img-fluid w-100" style="min-height: 300px; max-height: 500px; object-fit: cover;" alt="{{ product.name }}">
+                        <div class="img-overlay-brand p-3 text-white text-right">
+                            <span class="badge badge-dark opacity-75 px-3 py-1 font-weight-light">{{ product.brand ?: 'Fintech Asset' }}</span>
+                        </div>
+                    {% else %}
+                        <div class="py-5 bg-white border">
+                            <i class="fas fa-image fa-8x text-gray-100"></i>
+                            <p class="text-muted mt-3 font-italic">Visuel non disponible</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Merchant Card -->
+            <div class="card shadow-lg border-0 rounded-xl mb-4 overflow-hidden border-top border-4 border-info">
+                <div class="card-header bg-white py-4 border-0">
+                    <h6 class="m-0 font-weight-bold text-gray-800 text-uppercase letter-spacing-1 small">Vendeur / Propriétaire</h6>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light rounded-lg">
+                        <div class="avatar-circle-lg mr-3 bg-info text-white font-weight-bold shadow-sm">
+                            {{ product.utilisateur ? product.utilisateur.nom|first|upper ~ product.utilisateur.prenom|first|upper : 'AD' }}
+                        </div>
+                        <div>
+                            <div class="font-weight-extrabold text-gray-900 h6 mb-0">{{ product.utilisateur ? product.utilisateur.prenom ~ ' ' ~ product.utilisateur.nom : 'Admin Centrale' }}</div>
+                            <small class="text-muted"><i class="fas fa-check-circle text-success mr-1"></i> Marchand Certifié</small>
+                        </div>
+                    </div>
+                    <div class="row text-center mt-4 px-2">
+                        <div class="col-6 border-right">
+                            <div class="h5 font-weight-bold text-dark mb-0">12</div>
+                            <small class="text-muted small text-uppercase font-size-10">Produits en ligne</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h5 font-weight-bold text-success mb-0">4.8</div>
+                            <small class="text-muted small text-uppercase font-size-10">Score Moyen</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card border-0 shadow-sm rounded-xl overflow-hidden mt-5 bg-white">
+                <div class="card-body p-4 text-center border-top border-4 border-danger">
+                    <h6 class="text-danger font-weight-bold small text-uppercase letter-spacing-1 mb-4">Gestion Administrative</h6>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <form method="post" action="{{ path('app_back_product_delete', {'id': product.id}) }}" onsubmit="return confirm('Attention ! Supprimer définitivement ce produit ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ product.id) }}">
+                            <button class="btn btn-danger btn-sm rounded-pill px-4 shadow-sm font-weight-bold">
+                                <i class="fas fa-trash-alt mr-2"></i> Retirer du Marché
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-light-soft { background-color: #f8fbff; }
+    .rounded-xl { border-radius: 1.5rem !important; }
+    .glass-card { background: rgba(255, 255, 255, 0.98); }
+    .icon-circle { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .bg-primary-soft { background-color: #f1f5f9; }
+    .badge-primary-soft { background-color: #f0f7ff; color: #3b82f6; }
+    .badge-success-soft { background-color: #ecfdf5; color: #10b981; }
+    .badge-danger-soft { background-color: #fef2f2; color: #ef4444; }
+    .badge-info-soft { background-color: #eff6ff; color: #3b82f6; }
+    .badge-warning-light { background-color: #fffbeb; }
+    .text-warning-dark { color: #92400e; }
+    .text-font-extrabold { font-weight: 800; }
+    .italic-serif { font-style: italic; }
+    .avatar-circle-lg { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .letter-spacing-1 { letter-spacing: 0.08rem; }
+    .gap-3 { gap: 1rem; }
+    .gap-2 { gap: 0.5rem; }
+    .img-overlay-brand { position: absolute; top: 0; right: 0; left: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent); }
+    .font-size-10 { font-size: 10px; }
+    .font-size-14 { font-size: 14px; }
+    .mt-n2 { margin-top: -0.5rem; }
+    .h1 { font-weight: 900; letter-spacing: -0.02rem; }
+</style>
+{% endblock %}

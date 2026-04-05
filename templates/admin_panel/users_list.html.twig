@@ -74,6 +74,23 @@
     </a>
 </li>
 
+        <!-- Marketplace -->
+        <hr class="sidebar-divider">
+            <div class="sidebar-heading">Interface</div>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_back_product_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Produits</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_back_order_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Commandes</span>
+                </a>
+            </li>
+
     <hr class="sidebar-divider">
 
     <!-- Logout -->
@@ -109,8 +126,8 @@
                                 {{ app.user.prenom }} {{ app.user.nom }}
                             </span>
                             <img class="img-profile rounded-circle"
-                                 src="/uploads/users/selfies/{{ app.user.userImage }}"
-                                 style="width:32px;height:32px;object-fit:cover;">
+                                src="/uploads/users/selfies/{{ app.user.userImage }}"
+                                style="width:32px;height:32px;object-fit:cover;">
                         </a>
                         <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
                             <a class="dropdown-item" href="{{ path('app_logout') }}">
