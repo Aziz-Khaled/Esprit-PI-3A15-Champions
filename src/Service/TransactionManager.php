@@ -70,7 +70,7 @@ class TransactionManager
 
         if ($isCryptoTradingPair) {
             // Vérifier si la devise est autorisée pour le trading
-            if (!$currency->getIsTrading()) {
+            if (!$currency->isTrading()) {
                 throw new \Exception("This currency is not authorized for trading transactions.");
             }
         }

@@ -10,6 +10,7 @@ use App\Form\WalletType;
 use App\Form\TransactionType; // Import important pour la modale
 use App\Repository\WalletRepository;
 use App\Repository\CurrencyRepository;
+use App\Repository\TransactionRepository;
 use App\Repository\WalletCurrencyRepository; 
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\ORM\EntityManagerInterface;
@@ -188,4 +189,42 @@ public function exportStatement(EntityManagerInterface $entityManager): Response
         'Content-Type' => 'application/pdf',
         'Content-Disposition' => 'attachment; filename="statement_champions.pdf"'
     ]);
-}}
+}
+#[Route('/{id}/history-json', name: 'app_wallet_history_json', methods: ['GET'])]
+public function getHistoryJson(int $id, WalletRepository $walletRepository, TransactionRepository $transactionRepository): JsonResponse
+{
+    $wallet = $walletRepository->find($id);
+    if (!$wallet) return new JsonResponse(['error' => 'Wallet not found'], 404);
+
+    $transactions = $transactionRepository->createQueryBuilder('t')
+        ->where('t.walletSource = :wallet OR t.walletDestination = :wallet')
+        ->setParameter('wallet', $wallet)
+        ->orderBy('t.dateTransaction', 'DESC')
+        ->getQuery()
+        ->getResult();
+
+    $data = [];
+    foreach ($transactions as $t) {
+        // Déterminer si c'est un débit (sortie) ou un crédit (entrée)
+        $isDebit = ($t->getWalletSource() && $t->getWalletSource()->getIdWallet() === $wallet->getIdWallet());
+        
+        // Déterminer la contrepartie
+        $counterparty = 'External';
+        if ($isDebit) {
+            $counterparty = $t->getWalletDestination() ? $t->getWalletDestination()->getRib() : 'N/A';
+        } else {
+            $counterparty = $t->getWalletSource() ? $t->getWalletSource()->getRib() : 'N/A';
+        }
+
+        $data[] = [
+            'date' => $t->getDateTransaction() ? $t->getDateTransaction()->format('d/m/Y H:i') : 'N/A',
+            'type' => $t->getType(),
+            'amount' => number_format($t->getMontant(), 2),
+            'currency' => $t->getCurrency() ? $t->getCurrency()->getNom() : '',
+            'counterparty' => $counterparty,
+            'direction' => $isDebit ? 'out' : 'in' // <--- On ajoute cette info
+        ];
+    }
+    return new JsonResponse($data);
+}
+}
