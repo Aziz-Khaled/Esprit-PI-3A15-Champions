@@ -25,13 +25,13 @@ class KYCInfoType extends AbstractType
                     'Commerçant'   => 'COMMERCANT',
                     'Admin'        => 'ADMIN',
                 ],
-                'expanded'    => true,   // renders as radio buttons
+                'expanded'    => true,   
                 'multiple'    => false,
                 'constraints' => [
                     new NotBlank(['message' => 'Please select a role']),
                 ],
             ])
-            // NOT mapped to entity — we handle the file upload manually
+            
             ->add('selfie', FileType::class, [
                 'label'       => 'Profile Photo',
                 'mapped'      => false,
