@@ -1,18 +1,16 @@
 <?php
 
 namespace App\Controller\frontOffice\credit;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 use App\Entity\Credit;
 use App\Entity\Utilisateur;
-use App\Repository\WalletRepository;
-use App\Repository\WalletCurrencyRepository;
 use App\Entity\Negociation;
 use App\Entity\Wallet;
 use App\Form\CreditType;
-use App\Service\AiExpertService;
 use App\Form\NegociationType;
 use App\Repository\CreditRepository;
+use App\Repository\WalletCurrencyRepository;
+use App\Service\AiExpertService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,7 +21,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class CreditController extends AbstractController
 {
     /**
-     * Liste des demandes de crédit avec filtres
+     * Liste des demandes de crédit avec filtres (Version fusionnée)
      */
     #[Route('/liste', name: 'app_credit_index')]
     public function index(Request $request, CreditRepository $creditRepository): Response
@@ -31,7 +29,7 @@ class CreditController extends AbstractController
         $searchTerm = $request->query->get('q');
         $status = $request->query->get('status');
         $sortBy = $request->query->get('sortBy', 'date_desc');
-
+        
         $minAmountRaw = $request->query->get('minAmount');
         $minAmount = ($minAmountRaw !== null && $minAmountRaw !== '') ? (float) $minAmountRaw : null;
 
@@ -57,11 +55,10 @@ class CreditController extends AbstractController
     #[Route('/investor', name: 'app_credit_investor_index')]
     public function investorIndex(CreditRepository $creditRepository, EntityManagerInterface $entityManager): Response
     {
-        // RÉPARATION : Simulation de l'utilisateur si non connecté pour éviter l'erreur 401
         $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
         
         if (!$user) {
-            throw $this->createAccessDeniedException('Aucun utilisateur disponible pour la session.');
+            throw $this->createAccessDeniedException('Aucun utilisateur disponible.');
         }
 
         $credits = $creditRepository->findBy(['status' => 'OPEN']);
@@ -97,102 +94,82 @@ class CreditController extends AbstractController
     }
 
     /**
-     * Scanner : Étude de risque pour l'investisseur
+     * Scanner : Étude de risque avec Expert AI (Ta fonctionnalité clé)
      */
-  // src/Controller/frontOffice/credit/CreditController.php
+    #[Route('/investor/scanner/{id_credit}', name: 'app_credit_scanner', requirements: ['id_credit' => '\d+'], methods: ['GET'])]
+    public function scanner(
+        int $id_credit, 
+        CreditRepository $creditRepository, 
+        EntityManagerInterface $entityManager,
+        WalletCurrencyRepository $walletCurrencyRepository,
+        AiExpertService $aiService
+    ): Response {
+        $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
+        $credit = $creditRepository->find($id_credit);
 
-#[Route('/investor/scanner/{id_credit}', name: 'app_credit_scanner', requirements: ['id_credit' => '\d+'], methods: ['GET'])]
-public function scanner(
-    int $id_credit, 
-    CreditRepository $creditRepository, 
-    EntityManagerInterface $entityManager,
-    WalletCurrencyRepository $walletCurrencyRepository,
-    AiExpertService $aiService
-): Response {
-    // 1. Récupération de l'utilisateur (Investisseur)
-    $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
+        if (!$credit) {
+            throw $this->createNotFoundException('Dossier introuvable.');
+        }
 
-    if (!$user) {
-        throw $this->createNotFoundException('Utilisateur introuvable. Veuillez vous connecter.');
-    }
+        $wallet = $entityManager->getRepository(Wallet::class)->findOneBy(['utilisateur' => $user]);
+        $rib = $wallet ? $wallet->getRib() : 'RIB non configuré';
 
-    // 2. Récupération du crédit
-    $credit = $creditRepository->find($id_credit);
-    if (!$credit) {
-        throw $this->createNotFoundException('Ce dossier de crédit n\'existe pas.');
-    }
-
-    // 3. Récupération du Wallet (pour le RIB)
-    $wallet = $entityManager->getRepository(Wallet::class)->findOneBy(['utilisateur' => $user]);
-    $rib = $wallet ? $wallet->getRib() : 'RIB non configuré';
-
-    // 4. Récupération du solde spécifique via le nom de la devise (ex: "EUR")
-    // On utilise getDevise() qui est la méthode correcte de ton entité Credit
-    $nomDeviseDuCredit = $credit->getDevise(); 
-
-    $walletCurrency = $walletCurrencyRepository->findOneBy([
-        'wallet' => $wallet,
-        'nomCurrency' => $nomDeviseDuCredit 
-    ]);
-    
-    $walletBalance = $walletCurrency ? (float) $walletCurrency->getSolde() : 0.0;
-
-    // 5. Calcul du montant manquant (Total déjà investi)
-    $totalInvested = 0.0;
-    $acceptedNegocs = $entityManager->getRepository(Negociation::class)->findBy([
-        'credit' => $credit, 
-        'status' => 'ACCEPTED'
-    ]);
-
-    foreach ($acceptedNegocs as $n) { 
-        $totalInvested += (float) $n->getMontant(); 
-    }
-    
-    $totalCredit = (float) $credit->getMontant();
-    $remainingAmount = $totalCredit - $totalInvested;
-
-    // 6. Calcul du risque
-    $pourcentage = ($walletBalance > 0) ? ($remainingAmount / $walletBalance) * 100 : 100;
-    $displayPercentage = min($pourcentage, 100);
-
-    $risqueNiveau = ($pourcentage > 70) ? 'CRITIQUE' : (($pourcentage > 30) ? 'MODÉRÉ' : 'FAIBLE');
-    $risqueClasse = ($risqueNiveau === 'CRITIQUE') ? 'danger' : (($risqueNiveau === 'MODÉRÉ') ? 'warning' : 'success');
-
-    // 7. ANALYSE EXPERT AI
-    try {
-        // Dans ton entité Projet, vérifie si c'est getTitle() ou getNom()
-        $projectTitle = $credit->getProjet() ? $credit->getProjet()->getTitle() : 'Projet sans titre';
+        $nomDeviseDuCredit = $credit->getDevise(); 
+        $walletCurrency = $walletCurrencyRepository->findOneBy([
+            'wallet' => $wallet,
+            'nomCurrency' => $nomDeviseDuCredit 
+        ]);
         
-        $aiAnalysis = $aiService->getRiskAnalysis(
-            $projectTitle,
-            $remainingAmount,
-            $walletBalance
-        );
-    } catch (\Exception $e) {
-        $aiAnalysis = "L'expert note une exposition de " . round($displayPercentage, 1) . "%. Analyse basée sur votre solde actuel en " . $nomDeviseDuCredit . ".";
+        $walletBalance = $walletCurrency ? (float) $walletCurrency->getSolde() : 0.0;
+
+        $totalInvested = 0.0;
+        $acceptedNegocs = $entityManager->getRepository(Negociation::class)->findBy([
+            'credit' => $credit, 
+            'status' => 'ACCEPTED'
+        ]);
+
+        foreach ($acceptedNegocs as $n) { 
+            $totalInvested += (float) $n->getMontant(); 
+        }
+        
+        $remainingAmount = (float)$credit->getMontant() - $totalInvested;
+
+        $pourcentage = ($walletBalance > 0) ? ($remainingAmount / $walletBalance) * 100 : 100;
+        $displayPercentage = min($pourcentage, 100);
+
+        $risqueNiveau = ($pourcentage > 70) ? 'CRITIQUE' : (($pourcentage > 30) ? 'MODÉRÉ' : 'FAIBLE');
+        $risqueClasse = ($risqueNiveau === 'CRITIQUE') ? 'danger' : (($risqueNiveau === 'MODÉRÉ') ? 'warning' : 'success');
+
+        try {
+            $projectTitle = $credit->getProjet() ? $credit->getProjet()->getTitle() : 'Projet sans titre';
+            $aiAnalysis = $aiService->getRiskAnalysis($projectTitle, $remainingAmount, $walletBalance);
+        } catch (\Exception $e) {
+            $aiAnalysis = "Analyse basée sur votre solde actuel en " . $nomDeviseDuCredit . ". Exposition : " . round($displayPercentage, 1) . "%.";
+        }
+
+        return $this->render('front_office/credit/scanner_analyse.html.twig', [
+            'credit' => $credit,
+            'wallet' => $wallet,
+            'walletBalance' => $walletBalance,
+            'remainingAmount' => $remainingAmount,
+            'risqueNiveau' => $risqueNiveau,
+            'risqueClasse' => $risqueClasse,
+            'pourcentage' => $displayPercentage,
+            'aiAnalysis' => $aiAnalysis,
+            'rib' => $rib
+        ]);
     }
 
-    // 8. Rendu de la vue
-    return $this->render('front_office/credit/scanner_analyse.html.twig', [
-        'credit' => $credit,
-        'wallet' => $wallet,
-        'walletBalance' => $walletBalance,
-        'remainingAmount' => $remainingAmount,
-        'risqueNiveau' => $risqueNiveau,
-        'risqueClasse' => $risqueClasse,
-        'pourcentage' => $displayPercentage,
-        'aiAnalysis' => $aiAnalysis,
-        'rib' => $rib
-    ]);
-}
-    
+    /**
+     * Négociation (Offre investisseur)
+     */
     #[Route('/new-negociation/{id}', name: 'app_credit_new_negociation', requirements: ['id' => '\d+'])]
     public function newNegociation(Request $request, Credit $credit, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
 
         if ($credit->getStatus() !== 'OPEN') {
-            throw $this->createAccessDeniedException('Ce crédit n\'est plus disponible.');
+            throw $this->createAccessDeniedException('Crédit non disponible.');
         }
 
         $negociation = new Negociation();
@@ -207,7 +184,7 @@ public function scanner(
             $entityManager->persist($negociation);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Votre proposition a été envoyée !');
+            $this->addFlash('success', 'Proposition envoyée !');
             return $this->redirectToRoute('app_credit_investor_index');
         }
 
@@ -218,13 +195,13 @@ public function scanner(
     }
 
     /**
-     * Création d'une demande de crédit (Borrower)
+     * Création demande (Borrower)
      */
     #[Route('/nouvelle-demande', name: 'app_credit_new')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $credit = new Credit();
-        $user = $entityManager->getRepository(Utilisateur::class)->find(1); 
+        $user = $entityManager->getRepository(Utilisateur::class)->find(1);
         if ($user) { $credit->setBorrower($user); }
 
         $form = $this->createForm(CreditType::class, $credit);
@@ -234,8 +211,7 @@ public function scanner(
             $credit->setStatus('OPEN'); 
             $entityManager->persist($credit);
             $entityManager->flush();
-
-            $this->addFlash('success', 'Demande soumise avec succès !');
+            $this->addFlash('success', 'Demande soumise !');
             return $this->redirectToRoute('app_credit_index');
         }
 
@@ -245,7 +221,7 @@ public function scanner(
     }
 
     /**
-     * Modification d'une demande
+     * Edition
      */
     #[Route('/{id_credit}/modifier', name: 'app_credit_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Credit $credit, EntityManagerInterface $entityManager): Response
@@ -266,7 +242,7 @@ public function scanner(
     }
 
     /**
-     * Suppression d'une demande
+     * Suppression
      */
     #[Route('/{id_credit}/supprimer', name: 'app_credit_delete', methods: ['POST'])]
     public function delete(Request $request, Credit $credit, EntityManagerInterface $entityManager): Response
@@ -275,7 +251,10 @@ public function scanner(
             $entityManager->remove($credit);
             $entityManager->flush();
             $this->addFlash('success', 'Suppression réussie.');
+        } else {
+            $this->addFlash('danger', 'Jeton invalide.');
         }
+
         return $this->redirectToRoute('app_credit_index');
     }
 }
