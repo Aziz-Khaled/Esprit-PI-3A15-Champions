@@ -8,11 +8,14 @@ use Symfony\Component\Routing\Annotation\Route;
 
 final class ProjetController extends AbstractController
 {
+    /**
+     * Dashboard FrontOffice
+     */
     #[Route('/projet', name: 'app_projet')]
     public function index(): Response
     {
-        return $this->render('projet/index.html.twig', [
-            'controller_name' => 'ProjetController',
-        ]);
+        // On ajoute "front_office/" devant car c'est le dossier parent
+        return $this->render('front_office/projet/index.html.twig');
     }
+
 }

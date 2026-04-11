@@ -1,0 +1,108 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Analyse de Risque - Expert AI{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div id="report-content" class="card shadow-lg border-0">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+            <h4 class="mb-0"><i class="fas fa-shield-alt"></i> Rapport d'Analyse Financière</h4>
+            <div class="d-flex align-items-center">
+                 <button onclick="generatePDF()" class="btn btn-sm btn-outline-light me-3 no-pdf">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <span class="badge rounded-pill bg-{{ risqueClasse }} p-2 px-4 shadow-sm" style="font-size: 0.9rem;">
+                    NIVEAU : {{ risqueNiveau }}
+                </span>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="mb-4 pb-3 border-bottom">
+                <p class="text-muted mb-0 small uppercase fw-bold">Compte associé (RIB)</p>
+                <h5 class="text-dark fw-bold">{{ rib }}</h5>
+            </div>
+
+            <div class="row mb-4 text-center">
+                <div class="col-md-4">
+                    <p class="text-muted mb-1 small uppercase fw-bold">Votre Solde ({{ credit.devise }})</p>
+                    <h3 class="text-success fw-bold">{{ walletBalance|number_format(2, ',', ' ') }} {{ credit.devise }}</h3>
+                </div>
+                <div class="col-md-4 border-start border-end">
+                    <p class="text-muted mb-1 small uppercase fw-bold">Reste à financer</p>
+                    <h3 class="text-primary fw-bold">{{ remainingAmount|number_format(2, ',', ' ') }} {{ credit.devise }}</h3>
+                </div>
+                <div class="col-md-4">
+                    <p class="text-muted mb-1 small uppercase fw-bold">Impact sur Capital</p>
+                    <h3 class="text-{{ risqueClasse }} fw-bold">{{ pourcentage|number_format(1) }} %</h3>
+                </div>
+            </div>
+
+            <div class="progress mb-4 shadow-sm" style="height: 30px; border-radius: 15px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-{{ risqueClasse }}" 
+                     role="progressbar" 
+                     style="width: {{ pourcentage > 100 ? 100 : pourcentage }}%">
+                    Indice d'exposition : {{ pourcentage|number_format(0) }}%
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="card border-{{ risqueClasse }} mb-4 shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-{{ risqueClasse }}">
+                        <i class="fas fa-robot"></i> L'avis de l'Expert AI Champions
+                    </h5>
+                    <p class="card-text fs-5 fst-italic text-dark">
+                        "{{ aiAnalysis }}"
+                    </p>
+                    <div class="d-flex align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-bolt text-warning"></i> Analyse générée pour le compte {{ rib }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-secondary border-0 shadow-sm">
+                <h6 class="fw-bold"><i class="fas fa-info-circle text-primary"></i> Guide Rapide :</h6>
+                {% if risqueNiveau == 'CRITIQUE' %}
+                    <p class="mb-0 text-danger">
+                        <strong>Alerte :</strong> Ce projet présente une exposition trop élevée par rapport à votre solde en {{ credit.devise }}.
+                    </p>
+                {% else %}
+                    <p class="mb-0 text-success">
+                        Le ratio risque/liquidité est optimal.
+                    </p>
+                {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-between mt-5 no-pdf">
+                <a href="{{ path('app_credit_investor_index') }}" class="btn btn-outline-secondary px-4">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+                
+                <a href="{{ path('app_credit_new_negociation', {'id': credit.idCredit}) }}"
+                   class="btn btn-{{ risqueClasse == 'danger' ? 'secondary' : 'warning' }} btn-lg px-5 shadow">
+                    <i class="fas fa-handshake"></i> PROPOSER UNE OFFRE
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    function generatePDF() {
+        const element = document.getElementById('report-content');
+        const opt = {
+            margin: 10,
+            filename: 'Analyse_Risque_{{ rib }}.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+</script>
+{% endblock %}

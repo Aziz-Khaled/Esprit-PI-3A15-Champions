@@ -1,0 +1,667 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Investir dans les Crédits - Champions{% endblock %}
+
+{% block body %}
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-light: #a855f7;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --bg-light: #f8fafc;
+        --card-bg: #ffffff;
+        --text-main: #1f2937;
+        --text-muted: #6b7280;
+        --border: #e5e7eb;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        background-color: var(--bg-light);
+        font-family: 'Inter', sans-serif;
+        color: var(--text-main);
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 10px;
+    }
+
+    .header p {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+    }
+
+    .wallet-info {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: var(--shadow);
+    }
+
+    .wallet-info h3 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .credits-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .credit-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+
+    .credit-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
+    }
+
+    .credit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .credit-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .credit-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-open {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .credit-project {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 8px;
+    }
+
+    .credit-description {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .credit-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 12px 0;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--success) 0%, var(--warning) 100%);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+
+    .remaining-amount {
+        text-align: center;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-top: 8px;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        background-color: var(--card-bg);
+        margin: 5% auto;
+        padding: 0;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        animation: modalFadeIn 0.3s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-50px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+        padding: 24px 24px 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 24px;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 8px;
+    }
+
+    .modal-subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .modal-body {
+        padding: 0 24px;
+    }
+
+    .modal-section {
+        margin-bottom: 24px;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 12px;
+    }
+
+    .project-info {
+        background: var(--bg-light);
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+    }
+
+    .project-title {
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 4px;
+    }
+
+    .project-description {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .credit-details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .detail-card {
+        background: var(--bg-light);
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .detail-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary);
+        display: block;
+    }
+
+    .detail-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .remaining-highlight {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+    }
+
+    .modal-footer {
+        padding: 24px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-secondary {
+        background: var(--bg-light);
+        color: var(--text-main);
+        border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+
+    /* Nouveau bouton pour le rapport IA */
+    .btn-purple {
+        background: #8e44ad;
+        color: white;
+    }
+
+    .btn-purple:hover {
+        background: #732d91;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(142, 68, 173, 0.3);
+    }
+
+    .close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 28px;
+        font-weight: bold;
+        color: var(--text-muted);
+        cursor: pointer;
+    }
+
+    .close:hover {
+        color: var(--text-main);
+    }
+
+    /* Risk Analysis Modal */
+    .risk-modal .modal-content {
+        max-width: 800px;
+    }
+
+    .risk-analysis {
+        padding: 24px;
+    }
+
+    .risk-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .risk-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 8px;
+    }
+
+    .wallet-display {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        color: white;
+        padding: 16px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .wallet-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .risk-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .risk-card {
+        background: var(--bg-light);
+        padding: 16px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .risk-score {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .risk-low { color: var(--success); }
+    .risk-medium { color: var(--warning); }
+    .risk-high { color: var(--danger); }
+
+    .risk-label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .recommendation {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+    }
+
+    .recommendation-title {
+        font-weight: 600;
+        color: var(--success);
+        margin-bottom: 8px;
+    }
+
+    .recommendation-text {
+        color: var(--text-main);
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 10px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+        }
+
+        .credits-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .modal-content {
+            margin: 10% auto;
+            width: 95%;
+        }
+
+        .modal-footer {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="header">
+        <h1>Investir dans les Crédits</h1>
+        <p>Découvrez les opportunités d'investissement disponibles</p>
+    </div>
+
+    <div class="wallet-info">
+        <h3>Solde de votre Wallet: {{ walletBalance|number_format(2, ',', ' ') }} €</h3>
+    </div>
+
+    <div class="credits-grid">
+        {% for item in creditsWithAmounts %}
+            {% set credit = item.credit %}
+            {% set totalInvested = item.totalInvested %}
+            {% set remainingAmount = item.remainingAmount %}
+            {% set progressPercent = (totalInvested / credit.montant * 100)|round %}
+
+            <div class="credit-card" onclick="openModal({{ credit.idCredit }}, '{{ credit.projet.title }}', '{{ credit.description|escape('js') }}', '{{ credit.montant }}', '{{ credit.taux }}', '{{ credit.duree }}', '{{ remainingAmount }}', '{{ credit.devise }}')">
+                <div class="credit-header">
+                    <div class="credit-amount">{{ credit.montant|number_format(2, ',', ' ') }} {{ credit.devise }}</div>
+                    <div class="credit-status status-open">Disponible</div>
+                </div>
+
+                <div class="credit-project">{{ credit.projet.title }}</div>
+                <div class="credit-description">{{ credit.description }}</div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ progressPercent }}%"></div>
+                </div>
+
+                <div class="remaining-amount">
+                    Restant: {{ remainingAmount|number_format(2, ',', ' ') }} {{ credit.devise }}
+                </div>
+
+                <div class="credit-details">
+                    <div class="detail-item">
+                        <span>Taux:</span>
+                        <span>{{ credit.taux }}%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>Durée:</span>
+                        <span>{{ credit.duree }} mois</span>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="creditModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">Détails du Crédit</div>
+            <div class="modal-subtitle" id="modalProject"></div>
+        </div>
+        <div class="modal-body">
+            <div class="modal-section">
+                <div class="section-title">Projet Associé</div>
+                <div class="project-info">
+                    <div class="project-title" id="projectTitle"></div>
+                    <div class="project-description" id="projectDescription"></div>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <div class="section-title">Détails du Crédit</div>
+                <div class="credit-details-grid">
+                    <div class="detail-card">
+                        <span class="detail-value" id="creditAmount"></span>
+                        <span class="detail-label">Montant demandé</span>
+                    </div>
+                    <div class="detail-card">
+                        <span class="detail-value" id="creditRate"></span>
+                        <span class="detail-label">Taux d'intérêt</span>
+                    </div>
+                    <div class="detail-card">
+                        <span class="detail-value" id="creditDuration"></span>
+                        <span class="detail-label">Durée</span>
+                    </div>
+                    <div class="detail-card remaining-highlight">
+                        <span class="detail-value" id="remainingAmount"></span>
+                        <span class="detail-label">Montant restant</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
+            <button class="btn btn-primary" onclick="openRiskAnalysis()">
+                <span>🔍</span> Scanner
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="riskModal" class="modal risk-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeRiskModal()">&times;</span>
+        <div class="risk-analysis">
+            <div class="risk-header">
+                <div class="risk-title">Analyse de Risque d'Investissement</div>
+                <div class="wallet-display">
+                    <div>Votre solde disponible: <span class="wallet-amount">{{ walletBalance|number_format(2, ',', ' ') }} €</span></div>
+                </div>
+            </div>
+
+            <div class="risk-grid">
+                <div class="risk-card">
+                    <div class="risk-score risk-low">A</div>
+                    <div class="risk-label">Note de Risque</div>
+                </div>
+                <div class="risk-card">
+                    <div class="risk-score risk-medium">7.2/10</div>
+                    <div class="risk-label">Fiabilité Projet</div>
+                </div>
+                <div class="risk-card">
+                    <div class="risk-score risk-high">15%</div>
+                    <div class="risk-label">Risque de Défaut</div>
+                </div>
+                <div class="risk-card">
+                    <div class="risk-score risk-low">8.5/10</div>
+                    <div class="risk-label">Rentabilité</div>
+                </div>
+            </div>
+
+            <div class="recommendation">
+                <div class="recommendation-title">✅ Recommandation d'Investissement</div>
+                <div class="recommendation-text">
+                    Ce crédit présente un bon profil de risque avec un projet solide.
+                    L'investissement est recommandé compte tenu de votre solde disponible.
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRiskModal()">Fermer</button>
+                
+                {# AJOUT DU LIEN VERS LE SCANNER DÉTAILLÉ #}
+                <button id="btnDetailedScanner" class="btn btn-purple">
+                    <span>📊</span> Consulter le rapport complet
+                </button>
+
+                <button class="btn btn-primary" onclick="openNegotiation()">
+                    <span>🤝</span> Négocier
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentCreditId = null;
+
+function openModal(creditId, projectTitle, description, amount, rate, duration, remaining, currency) {
+    currentCreditId = creditId;
+    document.getElementById('modalTitle').textContent = 'Crédit de ' + amount + ' ' + currency;
+    document.getElementById('modalProject').textContent = 'Projet: ' + projectTitle;
+    document.getElementById('projectTitle').textContent = projectTitle;
+    document.getElementById('projectDescription').textContent = description;
+    document.getElementById('creditAmount').textContent = amount + ' ' + currency;
+    document.getElementById('creditRate').textContent = rate + '%';
+    document.getElementById('creditDuration').textContent = duration + ' mois';
+    document.getElementById('remainingAmount').textContent = remaining + ' ' + currency;
+
+    document.getElementById('creditModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('creditModal').style.display = 'none';
+}
+
+function openRiskAnalysis() {
+    closeModal();
+    // On met à jour le lien du bouton de scan détaillé dynamiquement
+    const detailedBtn = document.getElementById('btnDetailedScanner');
+    detailedBtn.onclick = function() {
+        window.location.href = '/front/credit-gestion/investor/scanner/' + currentCreditId;
+    };
+    document.getElementById('riskModal').style.display = 'block';
+}
+
+function closeRiskModal() {
+    document.getElementById('riskModal').style.display = 'none';
+}
+
+function openNegotiation() {
+    // Rediriger vers la page de négociation avec l'ID du crédit
+    window.location.href = '/front/credit-gestion/new-negociation/' + currentCreditId;
+}
+
+// Fermer les modals en cliquant en dehors
+window.onclick = function(event) {
+    const creditModal = document.getElementById('creditModal');
+    const riskModal = document.getElementById('riskModal');
+
+    if (event.target == creditModal) {
+        closeModal();
+    }
+    if (event.target == riskModal) {
+        closeRiskModal();
+    }
+}
+</script>
+
+{% endblock %}
