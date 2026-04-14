@@ -680,7 +680,8 @@
   </div>
 </div>
 <div class="view" id="view-history">
-  <div class="chat-full-wrap" style="max-width: 1000px;"> <div class="chat-full-header">
+  <div class="chat-full-wrap" style="max-width: 1000px;">
+    <div class="chat-full-header">
       <div class="avatar">📋</div>
       <div>
         <h3>Trade History</h3>
@@ -689,33 +690,47 @@
     </div>
     
     <div style="flex: 1; overflow-y: auto; padding-top: 20px;">
-      <table class="table" style="width: 100%; border-collapse: collapse; font-family: var(--font-body);">
+      <table style="width: 100%; border-collapse: collapse;">
         <thead>
-          <tr style="text-align: left; color: var(--text-secondary); border-bottom: 1px solid var(--border);">
-            <th style="padding: 12px;">Date</th>
-            <th style="padding: 12px;">Pair</th>
-            <th style="padding: 12px;">Type</th>
-            <th style="padding: 12px;">Mode</th>
-            <th style="padding: 12px;">Quantity</th>
-            <th style="padding: 12px;">Price</th>
-            <th style="padding: 12px;">Status</th>
+          <tr style="color: var(--text-secondary); text-align: left; font-size: 13px;">
+            <th style="padding: 15px;">Type</th>
+            <th style="padding: 15px;">Mode</th>
+            <th style="padding: 15px;">Price</th>
+            <th style="padding: 15px;">Quantity</th>
+            <th style="padding: 15px;">Status</th>
+            <th style="padding: 15px;">Date</th>
           </tr>
         </thead>
         <tbody id="tradeHistoryBody">
+          {# Cette partie est utilisée si vous chargez les données au rendu initial via Twig #}
           {% for trade in trades %}
             <tr style="border-bottom: 1px solid var(--border); transition: background .15s;">
-              <td style="padding: 12px;">{{ trade.createdAt|date('M d, H:i') }}</td>
-              
-              <td style="padding: 12px;" class="{{ trade.tradeType == 'BUY' ? 'text-success' : 'text-danger' }}">
+              <td style="padding: 12px;" class="{{ trade.tradeType == 'BUY' ? 'text-success' : 'text-danger' }} font-weight-bold">
                 {{ trade.tradeType }}
               </td>
-              <td style="padding: 12px; font-size: 11px; color: var(--text-secondary);">{{ trade.orderMode|default('MARKET') }}</td>
-              <td style="padding: 12px;">{{ trade.quantity }}</td>
-              <td style="padding: 12px; font-family: var(--font-mono);">${{ trade.price|number_format(2) }}</td>
+              
+              <td style="padding: 12px; font-size: 11px; color: var(--text-secondary);">
+                {{ trade.orderMode|upper }}
+              </td>
+              
+              <td style="padding: 12px; font-family: var(--font-mono);">
+                ${{ trade.price|number_format(2) }}
+              </td>
+              
+              <td style="padding: 12px; color: var(--text-secondary);">
+                {{ trade.quantity }}
+              </td>
+
               <td style="padding: 12px;">
-                <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px;" class="badge {{ trade.status == 'EXECUTED' ? 'bg-success' : 'bg-warning' }}">
+                <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;
+                  background: {{ trade.status == 'COMPLETED' ? 'rgba(14, 203, 129, 0.2)' : 'rgba(240, 185, 11, 0.2)' }}; 
+                  color: {{ trade.status == 'COMPLETED' ? 'var(--accent-green)' : 'var(--accent-yellow)' }};">
                   {{ trade.status }}
                 </span>
+              </td>
+
+              <td style="padding: 12px; color: var(--text-secondary); font-size: 12px;">
+                {{ trade.createdAt|date('M d, H:i') }}
               </td>
             </tr>
           {% endfor %}
@@ -733,6 +748,7 @@
     let currentInterval = '5'; // Pour TradingView
     let currentTab = 'BUY'; // BUY ou SELL
     let tvWidget = null;
+    let isBotActive = false;
 
     // --- 1. GESTION DES VUES (NAVIGATION) ---
     function switchView(viewId, btn) {
@@ -743,7 +759,7 @@
         btn.classList.add('active');
 
         if (viewId === 'dashboard') initTradingView();
-        if (viewId === 'history') refreshHistory();
+        if (viewId === 'history') refreshTradeHistory();
     }
 
     // --- 2. PRIX EN TEMPS RÉEL (BINANCE) ---
@@ -766,14 +782,16 @@
 
                 // Update Header if it's the current asset
                 if (sym === currentSymbol) {
-                    document.getElementById('headerPrice').innerText = coin.price.toLocaleString() + " $";
-                    document.getElementById('headerPrice').className = `pair-price-big ${coin.change >= 0 ? 'up' : 'down'}`;
+                    const hPrice = document.getElementById('headerPrice');
+                    if (hPrice) {
+                        hPrice.innerText = coin.price.toLocaleString() + " $";
+                        hPrice.className = `pair-price-big ${coin.change >= 0 ? 'up' : 'down'}`;
+                    }
                     document.getElementById('hChange').innerText = coin.change.toFixed(2) + "%";
                     document.getElementById('hHigh').innerText = coin.high.toLocaleString();
                     document.getElementById('hLow').innerText = coin.low.toLocaleString();
                     document.getElementById('hVol').innerText = coin.volume.toFixed(0);
                     
-                    // Calcul du coût total dans le formulaire
                     updateTotalCost(coin.price);
                 }
             });
@@ -781,11 +799,21 @@
     }
 
     // --- 3. EXECUTION DES TRADES (ACHAT / VENTE) ---
+    function toggleLimitPrice() {
+        const mode = document.getElementById('orderMode').value;
+        const group = document.getElementById('limitPriceGroup');
+        if (group) group.style.display = (mode === 'limit') ? 'block' : 'none';
+    }
+
     async function executeTrade() {
         const qty = document.getElementById('qtyInput').value;
         const mode = document.getElementById('orderMode').value.toUpperCase();
         const targetPrice = document.getElementById('targetPrice').value;
-
+        
+        if (mode === 'LIMIT' && !targetPrice) {
+            showToast("Veuillez saisir un prix cible pour le bot", "error");
+            return;
+        }
         if (!qty || qty <= 0) return showToast("Veuillez saisir une quantité", "error");
 
         const btn = document.getElementById('tradeBtn');
@@ -808,10 +836,15 @@
             const res = await response.json();
             if (res.success) {
                 showToast(res.message || "Transaction réussie !", "success");
+                
+                // --- AJOUT : MISE À JOUR AUTOMATIQUE DE L'HISTORY ---
+                refreshTradeHistory(); 
+                
                 if (res.newBalance) {
                     document.querySelector('.balance-badge .val').innerText = `$${parseFloat(res.newBalance).toLocaleString()}`;
                 }
                 document.getElementById('qtyInput').value = '';
+                document.getElementById('targetPrice').value = '';
             } else {
                 showToast(res.error, "error");
             }
@@ -903,10 +936,80 @@
         btn.innerText = `${type} ${currentSymbol}`;
     }
 
-    function toggleLimitPrice() {
-        const mode = document.getElementById('orderMode').value;
-        document.getElementById('limitPriceGroup').style.display = (mode === 'limit') ? 'block' : 'none';
+    function toggleBot() {
+        const toggle = document.getElementById('botToggle');
+        const label = document.getElementById('botStatusLabel');
+        
+        isBotActive = !isBotActive;
+        
+        if (isBotActive) {
+            toggle.classList.add('on');
+            label.innerText = "ON";
+            label.style.color = "var(--accent-green)";
+            showToast("Bot de trading activé", "success");
+        } else {
+            toggle.classList.remove('on');
+            label.innerText = "OFF";
+            label.style.color = "var(--text-secondary)";
+            showToast("Bot désactivé", "error");
+        }
+        
+        fetch('/api/bot/toggle', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ active: isBotActive }) 
+        });
     }
+
+    async function refreshTradeHistory() {
+    try {
+        const response = await fetch('/api/trades/history');
+        const trades = await response.json();
+        const tbody = document.getElementById('tradeHistoryBody');
+        
+        if (!tbody) return;
+
+        tbody.innerHTML = trades.map(trade => `
+            <tr style="border-bottom: 1px solid var(--border); transition: all 0.3s;">
+                <td style="padding: 15px;" class="${trade.trade_type === 'BUY' ? 'text-success' : 'text-danger'} font-weight-bold">
+                    ${trade.trade_type}
+                </td>
+
+                <td style="padding: 15px; color: var(--text-secondary); font-size: 13px;">
+                    ${trade.order_mode}
+                </td>
+
+                <td style="padding: 15px; color: #fff;">
+                    $${parseFloat(trade.price).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                </td>
+
+                <td style="padding: 15px; color: var(--text-secondary);">
+                    ${parseFloat(trade.quantity).toFixed(6)}
+                </td>
+
+                <td style="padding: 15px;">
+                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;
+                        background: ${
+                            trade.status === 'COMPLETED' ? 'rgba(14, 203, 129, 0.2)' : 
+                            trade.status === 'PENDING' ? 'rgba(240, 185, 11, 0.2)' : 'rgba(255, 255, 255, 0.1)'
+                        }; 
+                        color: ${
+                            trade.status === 'COMPLETED' ? '#0ecb81' : 
+                            trade.status === 'PENDING' ? '#f0b90b' : '#fff'
+                        };">
+                        ${trade.status}
+                    </span>
+                </td>
+
+                <td style="padding: 15px; color: var(--text-secondary); font-size: 12px;">
+                    ${trade.date}
+                </td>
+            </tr>
+        `).join('');
+    } catch (e) { 
+        console.error("Erreur de rafraîchissement de l'historique", e); 
+    }
+}
 
     function showToast(msg, type) {
         const container = document.getElementById('toastContainer');
@@ -914,7 +1017,10 @@
         t.className = `toast ${type}`;
         t.innerText = msg;
         container.appendChild(t);
-        setTimeout(() => t.remove(), 4000);
+        setTimeout(() => {
+            t.style.opacity = '0';
+            setTimeout(() => t.remove(), 500);
+        }, 3500);
     }
 
     function updateTotalCost(price) {
@@ -925,21 +1031,30 @@
     // --- LANCEMENT ---
     window.onload = () => {
         initTradingView();
-        setInterval(updatePrices, 3000); // Mise à jour toutes les 3s
+        setInterval(updatePrices, 3000); 
         updatePrices();
         if(dbAssets.length) getRecommendation(dbAssets[0]);
         
-        // Charger les news au démarrage
         fetch('/trading/api/news').then(r => r.json()).then(news => {
             const list = document.getElementById('newsList');
-            list.innerHTML = news.map(n => `
-                <a href="${n.url}" target="_blank" class="news-item">
-                    <div class="news-item-title">${n.title}</div>
-                    <div class="news-item-meta">${n.source} • ${new Date(n.publishedAt).toLocaleDateString()}</div>
-                </a>
-            `).join('');
-        });
+            if (list) {
+                list.innerHTML = news.map(n => `
+                    <a href="${n.url}" target="_blank" class="news-item">
+                        <div class="news-item-title">${n.title}</div>
+                        <div class="news-item-meta">${n.source} • ${new Date(n.publishedAt).toLocaleDateString()}</div>
+                    </a>
+                `).join('');
+            }
+        }).catch(() => {});
     };
+
+    setInterval(() => {
+        const historyView = document.getElementById('view-history');
+        if (historyView && historyView.classList.contains('active')) {
+            refreshTradeHistory();
+        }
+    }, 5000);
+
 </script>
 {% endblock %}
 
