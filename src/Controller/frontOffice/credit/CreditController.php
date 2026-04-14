@@ -97,72 +97,83 @@ class CreditController extends AbstractController
      * Scanner : Étude de risque avec Expert AI (Ta fonctionnalité clé)
      */
     #[Route('/investor/scanner/{id_credit}', name: 'app_credit_scanner', requirements: ['id_credit' => '\d+'], methods: ['GET'])]
-    public function scanner(
-        int $id_credit, 
-        CreditRepository $creditRepository, 
-        EntityManagerInterface $entityManager,
-        WalletCurrencyRepository $walletCurrencyRepository,
-        AiExpertService $aiService
-    ): Response {
-        $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
-        $credit = $creditRepository->find($id_credit);
+public function scanner(
+    int $id_credit, 
+    CreditRepository $creditRepository, 
+    EntityManagerInterface $entityManager,
+    WalletCurrencyRepository $walletCurrencyRepository,
+    AiExpertService $aiService
+): Response {
+    // 1. Récupération de l'utilisateur et du dossier
+    $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
+    $credit = $creditRepository->find($id_credit);
 
-        if (!$credit) {
-            throw $this->createNotFoundException('Dossier introuvable.');
-        }
-
-        $wallet = $entityManager->getRepository(Wallet::class)->findOneBy(['utilisateur' => $user]);
-        $rib = $wallet ? $wallet->getRib() : 'RIB non configuré';
-
-        $nomDeviseDuCredit = $credit->getDevise(); 
-        $walletCurrency = $walletCurrencyRepository->findOneBy([
-            'wallet' => $wallet,
-            'nomCurrency' => $nomDeviseDuCredit 
-        ]);
-        
-        $walletBalance = $walletCurrency ? (float) $walletCurrency->getSolde() : 0.0;
-
-        $totalInvested = 0.0;
-        $acceptedNegocs = $entityManager->getRepository(Negociation::class)->findBy([
-            'credit' => $credit, 
-            'status' => 'ACCEPTED'
-        ]);
-
-        foreach ($acceptedNegocs as $n) { 
-            $totalInvested += (float) $n->getMontant(); 
-        }
-        
-        $remainingAmount = (float)$credit->getMontant() - $totalInvested;
-
-        $pourcentage = ($walletBalance > 0) ? ($remainingAmount / $walletBalance) * 100 : 100;
-        $displayPercentage = min($pourcentage, 100);
-
-        $risqueNiveau = ($pourcentage > 70) ? 'CRITIQUE' : (($pourcentage > 30) ? 'MODÉRÉ' : 'FAIBLE');
-        $risqueClasse = ($risqueNiveau === 'CRITIQUE') ? 'danger' : (($risqueNiveau === 'MODÉRÉ') ? 'warning' : 'success');
-
-        try {
-            $projectTitle = $credit->getProjet() ? $credit->getProjet()->getTitle() : 'Projet sans titre';
-            $aiAnalysis = $aiService->getRiskAnalysis($projectTitle, $remainingAmount, $walletBalance);
-        } catch (\Exception $e) {
-            $aiAnalysis = "Analyse basée sur votre solde actuel en " . $nomDeviseDuCredit . ". Exposition : " . round($displayPercentage, 1) . "%.";
-        }
-
-        return $this->render('front_office/credit/scanner_analyse.html.twig', [
-            'credit' => $credit,
-            'wallet' => $wallet,
-            'walletBalance' => $walletBalance,
-            'remainingAmount' => $remainingAmount,
-            'risqueNiveau' => $risqueNiveau,
-            'risqueClasse' => $risqueClasse,
-            'pourcentage' => $displayPercentage,
-            'aiAnalysis' => $aiAnalysis,
-            'rib' => $rib
-        ]);
+    if (!$credit) {
+        throw $this->createNotFoundException('Dossier introuvable.');
     }
 
-    /**
-     * Négociation (Offre investisseur)
-     */
+    // 2. Récupération du Wallet et du RIB
+    $wallet = $entityManager->getRepository(Wallet::class)->findOneBy(['utilisateur' => $user]);
+    $rib = $wallet ? $wallet->getRib() : 'RIB non configuré';
+
+    // 3. Gestion de la devise et du solde
+    $nomDeviseDuCredit = $credit->getDevise(); 
+    $walletCurrency = $walletCurrencyRepository->findOneBy([
+        'wallet' => $wallet,
+        'nomCurrency' => $nomDeviseDuCredit 
+    ]);
+    
+    $walletBalance = $walletCurrency ? (float) $walletCurrency->getSolde() : 0.0;
+
+    // 4. Calcul du montant restant à financer
+    $totalInvested = 0.0;
+    $acceptedNegocs = $entityManager->getRepository(Negociation::class)->findBy([
+        'credit' => $credit, 
+        'status' => 'ACCEPTED'
+    ]);
+
+    foreach ($acceptedNegocs as $n) { 
+        $totalInvested += (float) $n->getMontant(); 
+    }
+    
+    $remainingAmount = (float)$credit->getMontant() - $totalInvested;
+
+    // 5. Calcul des indicateurs de risque (Mathématiques)
+    $pourcentage = ($walletBalance > 0) ? ($remainingAmount / $walletBalance) * 100 : 100;
+    $displayPercentage = min($pourcentage, 100);
+
+    $risqueNiveau = ($pourcentage > 70) ? 'CRITIQUE' : (($pourcentage > 30) ? 'MODÉRÉ' : 'FAIBLE');
+    $risqueClasse = ($risqueNiveau === 'CRITIQUE') ? 'danger' : (($risqueNiveau === 'MODÉRÉ') ? 'warning' : 'success');
+
+    // 6. Appel à l'IA avec gestion d'erreur transparente
+    try {
+        $projectTitle = $credit->getProjet() ? $credit->getProjet()->getTitle() : 'Projet sans titre';
+        
+        // On tente l'analyse via Groq
+        $aiAnalysis = $aiService->getRiskAnalysis($projectTitle, $remainingAmount, $walletBalance);
+
+    } catch (\Exception $e) {
+        /**
+         * Si l'API échoue, on affiche le message technique.
+         * Cela te permettra de voir si c'est un problème de "401 Unauthorized" (clé) 
+         * ou de "429 Too Many Requests" (quota).
+         */
+        $aiAnalysis = "⚠️ Erreur AI : " . $e->getMessage();
+    }
+
+    // 7. Rendu de la vue
+    return $this->render('front_office/credit/scanner_analyse.html.twig', [
+        'credit' => $credit,
+        'wallet' => $wallet,
+        'walletBalance' => $walletBalance,
+        'remainingAmount' => $remainingAmount,
+        'risqueNiveau' => $risqueNiveau,
+        'risqueClasse' => $risqueClasse,
+        'pourcentage' => $displayPercentage,
+        'aiAnalysis' => $aiAnalysis,
+        'rib' => $rib
+    ]);
+}
     #[Route('/new-negociation/{id}', name: 'app_credit_new_negociation', requirements: ['id' => '\d+'])]
     public function newNegociation(Request $request, Credit $credit, EntityManagerInterface $entityManager): Response
     {

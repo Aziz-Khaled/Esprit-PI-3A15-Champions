@@ -1,0 +1,90 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Smart Contract - Champions Fintech{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="card shadow-lg border-primary">
+        {# HEADER DYNAMIQUE #}
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                {% if contrat is defined %}
+                    📜 Étape Finale : Signature du Contrat
+                {% else %}
+                    📄 Détails du Smart Contract
+                {% endif %}
+            </h2>
+            {% if credit.contratId %}
+                <span class="badge bg-light text-primary p-2">Réf: {{ credit.contratId }}</span>
+            {% endif %}
+        </div>
+
+        <div class="card-body bg-light">
+            {# INFOS GÉNÉRALES #}
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p><strong>Emprunteur :</strong> {{ credit.borrower.nom }}</p>
+                    <p><strong>Investisseur :</strong> {{ negociation.utilisateur.nom }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p><strong>Date :</strong> {{ credit.dateContrat ? credit.dateContrat|date('d/m/Y H:i') : "En attente de validation" }}</p>
+                    <p><strong>Montant négocié :</strong> <span class="text-success fw-bold">{{ negociation.montant|number_format(2, ',', ' ') }} DT</span></p>
+                </div>
+            </div>
+            
+            <hr>
+
+            {# ZONE DE TEXTE DU CONTRAT #}
+            <div class="p-4 bg-white border rounded shadow-sm" style="white-space: pre-wrap; font-family: 'Courier New', Courier, monospace; min-height: 300px; max-height: 500px; overflow-y: auto;">
+                {% if contrat is defined %}
+                    {# MODE PRÉVISUALISATION : On affiche le texte provenant de l'IA #}
+                    {{ contrat }}
+                {% else %}
+                    {# MODE CONSULTATION : Le texte n'est pas stocké en BDD #}
+                    <div class="text-center py-5">
+                        <i class="fas fa-shield-alt fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">Contrat envoyé de manière sécurisée</h4>
+                        <p class="text-secondary">
+                            Conformément à notre politique de protection des données, le contenu détaillé 
+                            a été transmis directement par email aux deux parties concernées.
+                        </p>
+                        <p>ID de transaction : <code>{{ credit.contratId }}</code></p>
+                    </div>
+                {% endif %}
+            </div>
+
+            {# ACTIONS DYNAMIQUES #}
+            {% if contrat is defined %}
+                {# FORMULAIRE D'ENVOI (Uniquement en prévisualisation) #}
+                <form action="{{ path('app_front_negociation_confirm_send', {'id': negociation.id_negociation}) }}" method="POST" class="mt-4">
+                    {# On garde le texte dans un champ caché pour l'envoyer au contrôleur #}
+                    <input type="hidden" name="contrat_content" value="{{ contrat }}">
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Veuillez relire le contrat. En cliquant sur "Confirmer", un email automatique sera envoyé.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ path('app_front_negociation_received') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-paper-plane"></i> Confirmer et Envoyer par Email
+                        </button>
+                    </div>
+                </form>
+            {% else %}
+                {# BOUTONS DE CONSULTATION #}
+                <div class="mt-4 d-flex justify-content-center gap-2">
+                    <button class="btn btn-secondary" onclick="window.print()">
+                        <i class="fas fa-print"></i> Imprimer le récapitulatif
+                    </button>
+                    <a href="{{ path('app_front_negociation_received') }}" class="btn btn-primary">
+                        Retour à mes offres
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

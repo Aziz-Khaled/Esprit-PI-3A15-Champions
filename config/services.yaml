@@ -1,16 +1,21 @@
 # config/services.yaml
 
 parameters:
-    # Vous pouvez aussi définir des paramètres ici si besoin
+    # On définit le paramètre OpenAI au lieu de Hugging Face
+    app.openai_key: '%env(OPENAI_API_KEY)%'
 
 services:
-    # default configuration for services in *this* file
+    # configuration par défaut pour les services de ce fichier
     _defaults:
         autowire: true      # Injecte automatiquement les dépendances
-        autoconfigure: true # Enregistre automatiquement les services (commandes, etc.)
-        
-        # SOLUTION : On lie la variable $apiKey globalement pour tout le projet
+        autoconfigure: true # Enregistre automatiquement les services
+
+        # On lie les variables globalement pour tout le projet
         bind:
+            # Cette ligne permet à ton contrôleur de recevoir $openAiKey automatiquement
+            $openAiKey: '%app.openai_key%'
+            # Tu peux garder Groq ou HF ici si tu en as besoin ailleurs, 
+            # mais pour ton contrat, c'est $openAiKey qui compte.
             $apiKey: '%env(GROQ_API_KEY)%'
 
     # Chargement automatique des classes du dossier src/
@@ -20,9 +25,3 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
-
-    # Optionnel : Si vous préférez garder une déclaration spécifique, 
-    # assurez-vous qu'elle est BIEN indentée (4 espaces)
-    # App\Service\AiExpertService:
-    #     arguments:
-    #         $apiKey: '%env(GROQ_API_KEY)%'

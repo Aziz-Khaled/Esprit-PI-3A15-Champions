@@ -6,13 +6,17 @@ use App\Entity\Credit;
 use App\Entity\Negociation;
 use App\Form\NegociationType;
 use App\Repository\NegociationRepository;
-use App\Repository\UtilisateurRepository; // Ajout indispensable
+use App\Repository\UtilisateurRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\CreditScorer;
+use OpenAI;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 
 #[Route('/front/negociation')]
 class NegociationController extends AbstractController
@@ -27,13 +31,9 @@ class NegociationController extends AbstractController
         EntityManagerInterface $em,
         UtilisateurRepository $userRepo 
     ): Response {
-        
-        // SIMULATION : On récupère l'utilisateur ID 1 car l'auth n'est pas intégrée
-        // Vérifie bien dans phpMyAdmin que tu as un utilisateur avec id_user = 1
-        $user = $userRepo->find(1); 
-
-        if (!$user) {
-            throw new \Exception("Test bloqué : Aucun utilisateur trouvé avec l'ID 1 dans la table utilisateur.");
+        $investisseur = $userRepo->find(1); // Test user
+        if (!$investisseur) {
+            throw $this->createNotFoundException("Investisseur test introuvable.");
         }
 
         $negociation = new Negociation();
@@ -42,17 +42,17 @@ class NegociationController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $negociation->setCredit($credit);
-            $negociation->setUtilisateur($user); 
+            $negociation->setUtilisateur($investisseur); 
             $negociation->setStatus('PROPOSED');
+            $negociation->setCreatedAt(new \DateTimeImmutable());
 
             $em->persist($negociation);
             $em->flush();
 
-            $this->addFlash('success', 'Proposition enregistrée avec succès !');
+            $this->addFlash('success', 'Proposition envoyée !');
             return $this->redirectToRoute('app_front_negociation_received'); 
         }
 
-        // CORRECTION : Le chemin doit être frontOffice (majuscule O) et newNegociation (majuscule N)
         return $this->render('front_office/credit/newNegociation.html.twig', [
             'form' => $form->createView(),
             'credit' => $credit
@@ -65,10 +65,11 @@ class NegociationController extends AbstractController
     #[Route('/mes-offres', name: 'app_front_negociation_received')]
     public function listReceived(NegociationRepository $repo, UtilisateurRepository $userRepo): Response
     {
-        // On simule aussi l'utilisateur ici pour voir les offres
         $user = $userRepo->find(2); 
+        if (!$user) {
+            throw $this->createNotFoundException("Emprunteur test introuvable.");
+        }
 
-        // On passe l'utilisateur simulé au repository
         $offres = $repo->findByEmprunteur($user); 
 
         return $this->render('front_office/credit/received.html.twig', [
@@ -77,32 +78,122 @@ class NegociationController extends AbstractController
     }
 
     /**
-     * Accepter une offre
+     * ÉTAPE 1 : Générer le contrat via OPENAI
      */
-    #[Route('/accepter/{id}', name: 'app_front_negociation_accept', methods: ['POST'])]
-    public function accept(
-        #[MapEntity(mapping: ['id' => 'id_negociation'])] Negociation $negociation, 
+#[Route('/accepter/{id}', name: 'app_front_negociation_accept', methods: ['POST'])]
+public function accept(
+    #[MapEntity(mapping: ['id' => 'id_negociation'])] Negociation $negociation, 
+    string $openAiKey,
+    \App\Service\CreditScorer $scorer // Injection du nouveau service métier
+): Response {
+    $credit = $negociation->getCredit();
+
+    // --- 1. APPEL À L'ALGORITHME MÉTIER AVANCÉ ---
+    // Cette méthode isolée dans ton fichier CreditScorer calcule les scores dynamiquement.
+    $analyseRisque = $scorer->getRiskAnalysis(
+        $negociation->getMontant(), 
+        $negociation->getTauxPropose()
+    );
+
+    // --- 2. GÉNÉRATION DU CONTRAT VIA IA ---
+    $client = OpenAI::client($openAiKey);
+    $prompt = sprintf(
+        "Rédige un contrat de prêt financier formel en français. 
+        Prêteur : %s. Emprunteur : %s. Montant : %.2f DT. Taux : %.2f%%. 
+        Génère uniquement les clauses juridiques structurées.",
+        $negociation->getUtilisateur()->getNom(),
+        $credit->getBorrower()->getNom(),
+        $negociation->getMontant(),
+        $negociation->getTauxPropose()
+    );
+
+    try {
+        $response = $client->chat()->create([
+            'model' => 'gpt-4o',
+            'messages' => [
+                ['role' => 'system', 'content' => 'Tu es un expert juridique en Fintech.'],
+                ['role' => 'user', 'content' => $prompt],
+            ],
+        ]);
+
+        $texteContrat = $response->choices[0]->message->content;
+        
+    } catch (\Exception $e) {
+        // En cas d'erreur API (quota, débit), on affiche un message clair pour le debug.
+        $texteContrat = "Le service de génération IA est indisponible (Erreur: " . $e->getMessage() . "). " .
+                        "Veuillez procéder avec le mode de signature manuel.";
+    }
+
+    // --- 3. RENDU DE LA VUE ---
+    return $this->render('front_office/credit/contract_view.html.twig', [
+        'contrat' => $texteContrat,
+        'negociation' => $negociation,
+        'credit' => $credit,
+        'analyse' => $analyseRisque // On envoie l'objet d'analyse complet pour le pop-up
+    ]);
+}
+
+    /**
+     * ÉTAPE 2 : Confirmation et ENVOI EMAIL
+     */
+    #[Route('/confirmer-signature/{id}', name: 'app_front_negociation_confirm_send', methods: ['POST'])]
+    public function confirmAndSend(
+        #[MapEntity(mapping: ['id' => 'id_negociation'])] Negociation $negociation,
+        Request $request,
+        MailerInterface $mailer,
         EntityManagerInterface $em
     ): Response {
-        $negociation->setStatus('ACCEPTED'); 
-        $em->flush();
+        $texteContrat = $request->request->get('contrat_content');
+        $credit = $negociation->getCredit();
 
-        $this->addFlash('success', 'Offre acceptée !');
+        if (!$texteContrat) {
+            $this->addFlash('error', 'Contenu du contrat manquant.');
+            return $this->redirectToRoute('app_front_negociation_received');
+        }
+
+        try {
+            $email = (new Email())
+                ->from('noreply@champions-fintech.tn')
+                ->to($credit->getBorrower()->getEmail()) 
+                ->cc($negociation->getUtilisateur()->getEmail())
+                ->subject('Contrat Signé - Champions Fintech #' . $negociation->getId())
+                ->text($texteContrat);
+
+            $mailer->send($email);
+
+            $negociation->setStatus('ACCEPTED'); 
+            $credit->setDateContrat(new \DateTime());
+            // Hash sécurisé pour l'ID du contrat (Important pour ta spé Cyber)
+            $credit->setContratId('OA-' . strtoupper(substr(md5($texteContrat), 0, 8)));
+
+            $em->flush();
+            $this->addFlash('success', 'Contrat signé et envoyé !');
+
+        } catch (\Exception $e) {
+            $this->addFlash('error', "Erreur lors de l'envoi.");
+        }
+
+        return $this->redirectToRoute('app_front_negociation_received');
+    }
+     #[Route('/rejeter/{id}', name: 'app_front_negociation_delete', methods: ['POST', 'GET'])]
+    public function delete(
+        #[MapEntity(mapping: ['id' => 'id_negociation'])] Negociation $negociation,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $entityManager->remove($negociation);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'L\'offre a été rejetée et supprimée avec succès.');
+
         return $this->redirectToRoute('app_front_negociation_received');
     }
 
-    /**
-     * Rejeter une offre
-     */
-    #[Route('/rejeter/{id}', name: 'app_front_negociation_delete', methods: ['POST'])]
-    public function delete(
-        #[MapEntity(mapping: ['id' => 'id_negociation'])] Negociation $negociation, 
-        EntityManagerInterface $em
-    ): Response {
-        $em->remove($negociation); 
-        $em->flush();
-
-        $this->addFlash('danger', 'Offre rejetée.');
-        return $this->redirectToRoute('app_front_negociation_received');
+    #[Route('/contrat/{id}', name: 'app_front_credit_contract')]
+    public function viewContract(Credit $credit): Response {
+        if (!$credit->getContratId()) {
+            $this->addFlash('error', "Contrat inexistant.");
+            return $this->redirectToRoute('app_front_negociation_received');
+        }
+        return $this->render('front_office/credit/contract_view.html.twig', ['credit' => $credit]);
     }
 }

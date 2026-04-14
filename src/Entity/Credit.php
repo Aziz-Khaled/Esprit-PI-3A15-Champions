@@ -136,4 +136,14 @@ class Credit
         }
         return $this;
     }
+    public function getMontantRestant(): float
+{
+    $totalAccepte = 0;
+    foreach ($this->negociations as $negociation) {
+        if ($negociation->getStatus() === 'ACCEPTED') {
+            $totalAccepte += (float) $negociation->getMontant();
+        }
+    }
+    return (float) $this->montant - $totalAccepte;
+}
 }

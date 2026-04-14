@@ -14,14 +14,15 @@ class NegociationRepository extends ServiceEntityRepository
     }
 
     public function findByEmprunteur($user)
-    {
-        return $this->createQueryBuilder('n')
-            ->join('n.credit', 'c')
-            ->join('c.projet', 'p')
-            ->where('p.utilisateur = :user')
-            ->setParameter('user', $user)
-            ->orderBy('n.id_negociation', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-}
+{
+    return $this->createQueryBuilder('n')
+        ->select('n', 'c', 'p', 'u')
+        ->join('n.credit', 'c')
+        ->leftJoin('c.projet', 'p')
+        ->join('n.utilisateur', 'u')
+        ->where('c.borrower = :user') // Utilise 'borrower' défini dans Credit.php
+        ->setParameter('user', $user)
+        ->orderBy('n.id_negociation', 'DESC') // Utilise l'ID de ta table
+        ->getQuery()
+        ->getResult();
+}}
