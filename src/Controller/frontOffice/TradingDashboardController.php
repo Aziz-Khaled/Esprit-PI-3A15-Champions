@@ -16,32 +16,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 #[Route('/trading', name: 'app_trading_')]
 class TradingDashboardController extends AbstractController
 {
-    // ── CoinGecko (gratuit, pas de clé requise) ──
-    private string $geckoBase = 'https://api.coingecko.com/api/v3';
-
-    // ── Map symbol → ID CoinGecko ──
-    // Ajoute ici tout asset que tu crées dans l'admin
-    private array $geckoIds = [
-        'BTC'   => 'bitcoin',
-        'ETH'   => 'ethereum',
-        'XRP'   => 'ripple',
-        'BNB'   => 'binancecoin',
-        'SOL'   => 'solana',
-        'ADA'   => 'cardano',
-        'DOGE'  => 'dogecoin',
-        'DOT'   => 'polkadot',
-        'AVAX'  => 'avalanche-2',
-        'LINK'  => 'chainlink',
-        'UNI'   => 'uniswap',
-        'ATOM'  => 'cosmos',
-        'LTC'   => 'litecoin',
-        'MATIC' => 'matic-network',
-        'ESP'   => 'espers',
-        'ZAMA'  => 'zama',
-        'SENT'  => 'sentinel',
-        'RLUSD' => 'ripple-usd',
-    ];
-
+    // Utilisation de l'API publique de Binance (pas besoin de map complexe)
+    private string $binanceBase = 'https://api.binance.com/api/v3';
     private string $newsApiKey = '';
     private string $grokApiKey = '';
 
@@ -54,24 +30,25 @@ class TradingDashboardController extends AbstractController
     // ─────────────────────────────────────────
     // 1. DASHBOARD
     // ─────────────────────────────────────────
-    #[Route('/dashboard', name: 'dashboard', methods: ['GET'])]
+  #[Route('/dashboard', name: 'dashboard', methods: ['GET'])]
     public function dashboard(WalletRepository $walletRepo, AssetRepository $assetRepo): Response
     {
-        $userId = 1;
-
+        $userId = 1; 
         $wallet = $walletRepo->findOneBy(['utilisateur' => $userId]);
-        $solde  = $wallet ? $wallet->getSolde() : 0;
 
-        $trades = $this->tradeRepo->findBy(
-            ['userId' => $userId],
-            ['createdAt' => 'DESC'],
-            10
-        );
+        // Injection du solde statique pour tes tests
+        if (!$wallet) {
+            $solde = 10000000;
+        } elseif ($wallet->getSolde() <= 0) {
+            $wallet->setSolde(10000000);
+            $this->em->flush();
+            $solde = $wallet->getSolde();
+        } else {
+            $solde = $wallet->getSolde();
+        }
 
-        // Assets actifs depuis la DB
-        $assets  = $assetRepo->findBy(['status' => 'active'], ['symbol' => 'ASC']);
-
-        // Symbols pour le ticker (format "BTCUSDT" pour compatibilité TradingView)
+        $trades = $this->tradeRepo->findBy(['userId' => $userId], ['createdAt' => 'DESC'], 10);
+        $assets = $assetRepo->findBy(['status' => 'active'], ['symbol' => 'ASC']);
         $symbols = array_map(fn($a) => strtoupper($a->getSymbol()) . 'USDT', $assets);
 
         return $this->render('trading_dashboard/dashboard.html.twig', [
@@ -81,109 +58,61 @@ class TradingDashboardController extends AbstractController
             'assets'  => $assets,
         ]);
     }
-
     // ─────────────────────────────────────────
     // 2. PRIX EN TEMPS RÉEL — CoinGecko
     // ─────────────────────────────────────────
-    #[Route('/api/prices', name: 'api_prices', methods: ['GET'])]
+   #[Route('/api/prices', name: 'api_prices', methods: ['GET'])]
     public function getPrices(AssetRepository $assetRepo): JsonResponse
     {
-        // Récupérer uniquement les assets actifs en DB
-        $assets  = $assetRepo->findBy(['status' => 'active']);
-        $symbols = array_map(fn($a) => strtoupper($a->getSymbol()), $assets);
-
-        if (empty($symbols)) {
-            return new JsonResponse([]);
-        }
-
-        // Construire la liste des IDs CoinGecko
-        $ids = [];
-        $idToSymbol = []; // geckoId → symbol
-        foreach ($symbols as $sym) {
-            if (isset($this->geckoIds[$sym])) {
-                $geckoId = $this->geckoIds[$sym];
-                $ids[]   = $geckoId;
-                $idToSymbol[$geckoId] = $sym;
-            }
-        }
-
-        if (empty($ids)) {
-            return new JsonResponse(['error' => 'No CoinGecko IDs found for your assets. Update the $geckoIds map.'], 500);
-        }
-
         try {
-            $response = $this->httpClient->request('GET', $this->geckoBase . '/coins/markets', [
-                'query' => [
-                    'vs_currency'             => 'usd',
-                    'ids'                     => implode(',', $ids),
-                    'order'                   => 'market_cap_desc',
-                    'per_page'                => 50,
-                    'page'                    => 1,
-                    'sparkline'               => 'false',
-                    'price_change_percentage' => '24h',
-                ],
-            ]);
-            $data = $response->toArray();
+            $response = $this->httpClient->request('GET', $this->binanceBase . '/ticker/24hr');
+            $allData = $response->toArray();
 
-            $prices = array_map(fn($coin) => [
-                // Format "BTCUSDT" pour matcher le JS du template
-                'symbol' => strtoupper($idToSymbol[$coin['id']] ?? $coin['symbol']) . 'USDT',
-                'price'  => (float) ($coin['current_price'] ?? 0),
-                'change' => (float) ($coin['price_change_percentage_24h'] ?? 0),
-                'high'   => (float) ($coin['high_24h'] ?? 0),
-                'low'    => (float) ($coin['low_24h'] ?? 0),
-                'volume' => (float) ($coin['total_volume'] ?? 0),
-            ], $data);
+            $assets = $assetRepo->findBy(['status' => 'active']);
+            $dbSymbols = array_map(fn($a) => strtoupper($a->getSymbol()) . 'USDT', $assets);
 
+            $prices = [];
+            foreach ($allData as $ticker) {
+                if (in_array($ticker['symbol'], $dbSymbols)) {
+                    $prices[] = [
+                        'symbol' => $ticker['symbol'],
+                        'price'  => (float) $ticker['lastPrice'],
+                        'change' => (float) $ticker['priceChangePercent'],
+                        'high'   => (float) $ticker['highPrice'],
+                        'low'    => (float) $ticker['lowPrice'],
+                        'volume' => (float) $ticker['volume'],
+                    ];
+                }
+            }
             return new JsonResponse($prices);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], 500);
         }
     }
-
     // ─────────────────────────────────────────
     // 3. PRIX D'UN SYMBOLE — CoinGecko
     // ─────────────────────────────────────────
     #[Route('/api/price/{symbol}', name: 'api_price', methods: ['GET'])]
     public function getPrice(string $symbol): JsonResponse
     {
-        $sym = strtoupper(str_replace('USDT', '', $symbol));
-        $id  = $this->geckoIds[$sym] ?? null;
-
-        if (!$id) {
-            return new JsonResponse(['error' => "No CoinGecko ID for symbol $sym. Add it to \$geckoIds."], 404);
-        }
+        $binanceSymbol = strtoupper(str_replace('USDT', '', $symbol)) . 'USDT';
 
         try {
-            $response = $this->httpClient->request('GET', $this->geckoBase . '/coins/markets', [
-                'query' => [
-                    'vs_currency'             => 'usd',
-                    'ids'                     => $id,
-                    'sparkline'               => 'false',
-                    'price_change_percentage' => '24h',
-                ],
+            $response = $this->httpClient->request('GET', $this->binanceBase . '/ticker/24hr', [
+                'query' => ['symbol' => $binanceSymbol],
             ]);
-            $data = $response->toArray();
+            $coin = $response->toArray();
 
-            if (empty($data)) {
-                return new JsonResponse(['error' => 'Symbol not found on CoinGecko'], 404);
-            }
-
-            $coin = $data[0];
             return new JsonResponse([
-                'symbol'    => $sym . 'USDT',
-                'price'     => (float) $coin['current_price'],
-                'change'    => (float) $coin['price_change_percentage_24h'],
-                'high'      => (float) $coin['high_24h'],
-                'low'       => (float) $coin['low_24h'],
-                'volume'    => (float) $coin['total_volume'],
-                'direction' => $coin['price_change_percentage_24h'] >= 0 ? 'up' : 'down',
+                'symbol'    => $binanceSymbol,
+                'price'     => (float) $coin['lastPrice'],
+                'change'    => (float) $coin['priceChangePercent'],
+                'direction' => (float)$coin['priceChangePercent'] >= 0 ? 'up' : 'down',
             ]);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 500);
+            return new JsonResponse(['error' => 'Binance error: ' . $e->getMessage()], 500);
         }
     }
-
     // ─────────────────────────────────────────
     // 4. GRAPHIQUE — TradingView (pas d'API Binance ici,
     //    TradingView widget charge directement depuis le navigateur)
@@ -229,189 +158,216 @@ class TradingDashboardController extends AbstractController
     }
 
     // ─────────────────────────────────────────
-    // 6. CHATBOT GROK (xAI)
+    // 6. CHATBOT GROQ (xAI)
     // ─────────────────────────────────────────
     #[Route('/api/chatbot', name: 'api_chatbot', methods: ['POST'])]
-    public function chatbot(Request $request): JsonResponse
-    {
-        $data    = json_decode($request->getContent(), true);
-        $message = trim($data['message'] ?? '');
+public function chatbot(Request $request): JsonResponse
+{
+    $data = json_decode($request->getContent(), true);
+    $message = trim($data['message'] ?? '');
 
-        if (empty($message)) {
-            return new JsonResponse(['error' => 'Message is required.'], 400);
-        }
-
-        try {
-            $response = $this->httpClient->request('POST', 'https://api.x.ai/v1/chat/completions', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $this->grokApiKey,
-                    'Content-Type'  => 'application/json',
-                ],
-                'json' => [
-                    'model'    => 'grok-beta',
-                    'messages' => [
-                        [
-                            'role'    => 'system',
-                            'content' => 'You are a cryptocurrency expert assistant. Only answer questions about crypto, blockchain, trading, DeFi, NFTs and financial markets. Be concise.',
-                        ],
-                        ['role' => 'user', 'content' => $message],
-                    ],
-                    'max_tokens'  => 500,
-                    'temperature' => 0.7,
-                ],
-            ]);
-
-            $result = $response->toArray();
-            $reply  = $result['choices'][0]['message']['content'] ?? 'No response.';
-
-            return new JsonResponse(['reply' => $reply]);
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 500);
-        }
+    if (empty($message)) {
+        return new JsonResponse(['error' => 'Message is required.'], 400);
     }
+
+    try {
+        // --- CHANGEMENT ICI : URL de GROQ ---
+        $response = $this->httpClient->request('POST', 'https://api.groq.com/openai/v1/chat/completions', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->grokApiKey, // Ta clé gsk_ fonctionnera ici
+                'Content-Type'  => 'application/json',
+            ],
+            'json' => [
+                // --- CHANGEMENT ICI : Modèle GROQ ---
+                'model' => 'llama-3.3-70b-versatile', 
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => 'You are a crypto expert for the Champions project. Be concise.',
+                    ],
+                    ['role' => 'user', 'content' => $message],
+                ],
+            ],
+        ]);
+
+        $result = $response->toArray();
+        $reply = $result['choices'][0]['message']['content'] ?? 'No response.';
+
+        return new JsonResponse(['reply' => $reply]);
+    } catch (\Exception $e) {
+        return new JsonResponse(['error' => 'Groq API Error: ' . $e->getMessage()], 400);
+    }
+}
 
     // ─────────────────────────────────────────
     // 7. RECOMMANDATION — CoinGecko
     // ─────────────────────────────────────────
-    #[Route('/api/recommend/{symbol}', name: 'api_recommend', methods: ['GET'])]
-    public function recommend(string $symbol, WalletRepository $walletRepo): JsonResponse
-    {
-        $userId = 1;
-        $wallet = $walletRepo->findOneBy(['utilisateur' => $userId]);
-        $solde  = $wallet ? (float) $wallet->getSolde() : 0;
+   #[Route('/api/recommend/{symbol}', name: 'api_recommend', methods: ['GET'])]
+public function recommend(string $symbol, WalletRepository $walletRepo): JsonResponse
+{
+    $userId = 1;
+    $wallet = $walletRepo->findOneBy(['utilisateur' => $userId]);
+    $solde = $wallet ? (float) $wallet->getSolde() : 10000000;
 
-        $sym = strtoupper(str_replace('USDT', '', $symbol));
-        $id  = $this->geckoIds[$sym] ?? null;
+    $sym = strtoupper(str_replace('USDT', '', $symbol));
+    $binanceSymbol = $sym . 'USDT';
 
-        if (!$id) {
-            return new JsonResponse(['error' => "No CoinGecko ID for $sym"], 404);
-        }
+    try {
+        // On récupère les stats 24h sur Binance
+        $response = $this->httpClient->request('GET', $this->binanceBase . '/ticker/24hr', [
+            'query' => ['symbol' => $binanceSymbol],
+        ]);
+        $coin = $response->toArray();
 
-        try {
-            $response = $this->httpClient->request('GET', $this->geckoBase . '/coins/markets', [
-                'query' => [
-                    'vs_currency'             => 'usd',
-                    'ids'                     => $id,
-                    'sparkline'               => 'false',
-                    'price_change_percentage' => '24h',
-                ],
-            ]);
-            $data = $response->toArray();
-            if (empty($data)) return new JsonResponse(['error' => 'Not found'], 404);
+        $price = (float) $coin['lastPrice'];
+        $change24h = (float) $coin['priceChangePercent'];
+        $volatility = abs($change24h);
 
-            $coin       = $data[0];
-            $price      = (float) $coin['current_price'];
-            $change24h  = (float) $coin['price_change_percentage_24h'];
-            $volatility = abs($change24h);
-
-            $riskFactor = match(true) {
-                $volatility > 10 => 0.05,
-                $volatility > 5  => 0.10,
-                $volatility > 2  => 0.20,
-                default          => 0.30,
-            };
-
-            $maxInvestment = $solde * $riskFactor;
-            $maxQuantity   = $price > 0 ? round($maxInvestment / $price, 6) : 0;
-            $riskLevel     = match(true) {
-                $volatility > 10 => 'HIGH',
-                $volatility > 5  => 'MEDIUM',
-                default          => 'LOW',
-            };
-
-            return new JsonResponse([
-                'symbol'        => $sym,
-                'currentPrice'  => $price,
-                'change24h'     => $change24h,
-                'volatility'    => $volatility,
-                'riskLevel'     => $riskLevel,
-                'solde'         => $solde,
-                'maxInvestment' => round($maxInvestment, 2),
-                'maxQuantity'   => $maxQuantity,
-                'advice'        => $this->getAdvice($riskLevel, $change24h),
-            ]);
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    private function getAdvice(string $riskLevel, float $change): string
-    {
-        return match($riskLevel) {
-            'HIGH'   => '⚠️ High volatility detected. Limit your investment to avoid major losses.',
-            'MEDIUM' => '⚡ Moderate volatility. Invest cautiously and diversify.',
-            'LOW'    => '✅ Market is stable. Safe to invest within recommended limits.',
-            default  => 'No data available.',
+        // Logique de risque adaptée aux pourcentages Binance
+        $riskFactor = match(true) {
+            $volatility > 10 => 0.05, // Risque élevé : on n'investit que 5% du solde
+            $volatility > 5  => 0.10,
+            default          => 0.20,
         };
+
+        $maxInvestment = $solde * $riskFactor;
+        $maxQuantity = $price > 0 ? round($maxInvestment / $price, 6) : 0;
+        $riskLevel = ($volatility > 10) ? 'HIGH' : (($volatility > 5) ? 'MEDIUM' : 'LOW');
+
+        return new JsonResponse([
+            'symbol'        => $sym,
+            'currentPrice'  => $price,
+            'change24h'     => $change24h,
+            'volatility'    => $volatility,
+            'riskLevel'     => $riskLevel,
+            'solde'         => $solde,
+            'maxInvestment' => round($maxInvestment, 2),
+            'maxQuantity'   => $maxQuantity,
+            'advice'        => $this->getAdvice($riskLevel, $change24h),
+        ]);
+    } catch (\Exception $e) {
+        return new JsonResponse(['error' => 'Binance error: ' . $e->getMessage()], 500);
+    }
+}
+
+   
+    // ─────────────────────────────────────────
+    // 8. ACHAT/VENTE — Supporte Market et Limit (Bot)
+    // ─────────────────────────────────────────
+   #[Route('/api/execute-trade', name: 'api_execute_trade', methods: ['POST'])]
+public function executeTrade(Request $request, WalletRepository $walletRepo, AssetRepository $assetRepo): JsonResponse
+{
+    $data = json_decode($request->getContent(), true);
+    $userId = 1; // À remplacer par $this->getUser()->getId() plus tard
+    
+    // Correction 1 : Gérer les deux noms de clés possibles pour le type de trade
+    $tradeType = strtoupper($data['tradeType'] ?? $data['type'] ?? ''); 
+    $symbol = strtoupper(str_replace('USDT', '', $data['symbol'] ?? ''));
+    $quantity = (float) ($data['quantity'] ?? 0);
+    $orderMode = strtoupper($data['orderMode'] ?? 'MARKET');
+    $targetPrice = isset($data['targetPrice']) ? (float) $data['targetPrice'] : null;
+
+    if (!$symbol || $quantity <= 0) {
+        return new JsonResponse(['error' => 'Paramètres invalides.'], 400);
     }
 
-    // ─────────────────────────────────────────
-    // 8. ACHAT/VENTE — prix via CoinGecko simple/price
-    // ─────────────────────────────────────────
-    #[Route('/api/execute-trade', name: 'api_execute_trade', methods: ['POST'])]
-    public function executeTrade(Request $request, WalletRepository $walletRepo): JsonResponse
-    {
-        $data      = json_decode($request->getContent(), true);
-        $userId    = 1;
-        $symbol    = strtoupper(str_replace('USDT', '', $data['symbol'] ?? ''));
-        $tradeType = strtoupper($data['tradeType'] ?? '');
-        $quantity  = (float) ($data['quantity'] ?? 0);
+    $wallet = $walletRepo->findOneBy(['utilisateur' => $userId]);
+    $asset = $assetRepo->findOneBy(['symbol' => $symbol]);
 
-        if (!$symbol || !$tradeType || $quantity <= 0) {
-            return new JsonResponse(['error' => 'Invalid parameters.'], 400);
+    if (!$wallet || !$asset) {
+        return new JsonResponse(['error' => 'Wallet ou Asset introuvable.'], 404);
+    }
+
+    $trade = new \App\Entity\Trade();
+    $trade->setUserId($userId);
+    
+    // Correction 2 : Assigner l'assetId (obligatoire en base de données)
+    $trade->setAssetId($asset->getId()); 
+    
+    // Correction 3 : Utiliser float pour correspondre à ton entité
+    $trade->setQuantity($quantity); 
+    $trade->setTradeType($tradeType);
+    $trade->setOrderMode($orderMode);
+    $trade->setCreatedAt(new \DateTime());
+
+    // --- LOGIQUE ORDRE LIMIT (BOT) ---
+    if ($orderMode === 'LIMIT') {
+        if (!$targetPrice) {
+            return new JsonResponse(['error' => 'Prix cible requis pour le mode LIMIT.'], 400);
         }
-
-        $id = $this->geckoIds[$symbol] ?? null;
-        if (!$id) {
-            return new JsonResponse(['error' => "No CoinGecko ID for $symbol. Add it to \$geckoIds."], 400);
-        }
-
-        try {
-            $response = $this->httpClient->request('GET', $this->geckoBase . '/simple/price', [
-                'query' => ['ids' => $id, 'vs_currencies' => 'usd'],
-            ]);
-            $priceData = $response->toArray();
-            $price     = (float) ($priceData[$id]['usd'] ?? 0);
-
-            if ($price <= 0) {
-                return new JsonResponse(['error' => 'Cannot fetch price from CoinGecko.'], 500);
-            }
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'Cannot fetch price: ' . $e->getMessage()], 500);
-        }
-
-        $total  = $price * $quantity;
-        $wallet = $walletRepo->findOneBy(['utilisateur' => $userId]);
-
-        if (!$wallet) {
-            return new JsonResponse(['error' => 'Wallet not found.'], 404);
-        }
-
-        $soldeCourant = (float) $wallet->getSolde();
-
-        if ($tradeType === 'BUY') {
-            if ($soldeCourant < $total) {
-                return new JsonResponse([
-                    'error' => 'Insufficient balance. Need $' . number_format($total, 2) . ', have $' . number_format($soldeCourant, 2),
-                ], 400);
-            }
-            $wallet->setSolde($soldeCourant - $total);
-        } elseif ($tradeType === 'SELL') {
-            $wallet->setSolde($soldeCourant + $total);
-        } else {
-            return new JsonResponse(['error' => 'Invalid trade type.'], 400);
-        }
-
+        
+        $trade->setStatus('PENDING');
+        $trade->setPrice($targetPrice); 
+        
+        $this->em->persist($trade);
         $this->em->flush();
 
         return new JsonResponse([
-            'success'    => true,
-            'tradeType'  => $tradeType,
-            'symbol'     => $symbol,
-            'quantity'   => $quantity,
-            'price'      => $price,
-            'total'      => $total,
-            'newBalance' => (float) $wallet->getSolde(),
+            'success' => true,
+            'message' => "Ordre LIMIT enregistré pour $symbol.",
+            'status'  => 'PENDING'
         ]);
+    } 
+    
+    // --- LOGIQUE ORDRE MARKET (IMMÉDIAT) ---
+    try {
+        $res = $this->httpClient->request('GET', $this->binanceBase . '/ticker/price?symbol=' . $symbol . 'USDT');
+        $currentPrice = (float) $res->toArray()['price'];
+    } catch (\Exception $e) {
+        return new JsonResponse(['error' => 'Erreur Binance: ' . $e->getMessage()], 500);
+    }
+
+    $total = $currentPrice * $quantity;
+    $solde = (float) $wallet->getSolde();
+
+    if ($tradeType === 'BUY') {
+        if ($solde < $total) {
+            return new JsonResponse(['error' => 'Solde insuffisant.'], 400);
+        }
+        $wallet->setSolde($solde - $total);
+    } else {
+        $wallet->setSolde($solde + $total);
+    }
+
+    // Correction 4 : Utiliser 'COMPLETED' (valeur autorisée par ton ENUM SQL)
+    $trade->setStatus('COMPLETED'); 
+    $trade->setPrice($currentPrice);
+    $trade->setExecutedAt(new \DateTime()); // Optionnel : remplir la date d'exécution
+
+    $this->em->persist($trade);
+    $this->em->flush();
+
+    return new JsonResponse([
+        'success'    => true,
+        'newBalance' => $wallet->getSolde(),
+        'status'     => 'COMPLETED'
+    ]);
+}
+    // ─────────────────────────────────────────
+    // 9. HISTORIQUE COMPLET DES TRADES
+    // ─────────────────────────────────────────
+    #[Route('/api/history', name: 'api_history', methods: ['GET'])]
+    public function getHistory(): JsonResponse
+    {
+        $userId = 1; // À remplacer par $this->getUser()->getId()
+
+        $trades = $this->tradeRepo->findBy(
+            ['userId' => $userId],
+            ['createdAt' => 'DESC']
+        );
+
+        $data = array_map(fn($t) => [
+            'id'         => $t->getId(),
+            'symbol'     => $t->getSymbol(),
+            'type'       => $t->getTradeType(),
+            'mode'       => $t->getOrderMode() ?? 'MARKET',
+            'quantity'   => $t->getQuantity(),
+            'price'      => $t->getPrice(),
+            'status'     => $t->getStatus(),
+            'date'       => $t->getCreatedAt()->format('d/m/Y H:i'),
+            'total'      => round((float)$t->getQuantity() * (float)$t->getPrice(), 2)
+        ], $trades);
+
+        return new JsonResponse($data);
     }
 }
