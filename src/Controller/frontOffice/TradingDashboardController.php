@@ -346,28 +346,50 @@ public function executeTrade(Request $request, WalletRepository $walletRepo, Ass
     // ─────────────────────────────────────────
     // 9. HISTORIQUE COMPLET DES TRADES
     // ─────────────────────────────────────────
-    #[Route('/api/history', name: 'api_history', methods: ['GET'])]
-    public function getHistory(): JsonResponse
-    {
-        $userId = 1; // À remplacer par $this->getUser()->getId()
+   #[Route('/api/trades/history', name: 'api_history', methods: ['GET'])]
+public function getHistory(): JsonResponse
+{
+    $userId = 1; 
+    $trades = $this->tradeRepo->findBy(['userId' => $userId], ['createdAt' => 'DESC']);
 
-        $trades = $this->tradeRepo->findBy(
-            ['userId' => $userId],
-            ['createdAt' => 'DESC']
-        );
+    $data = array_map(fn($t) => [
+        'trade_type' => $t->getTradeType(), // 'BUY' ou 'SELL'
+        'order_mode' => $t->getOrderMode(), // 'MARKET' ou 'LIMIT'
+        'price'      => (float) $t->getPrice(),
+        'quantity'   => (float) $t->getQuantity(),
+        'status'     => $t->getStatus(),    // 'PENDING', 'ACTIVE', 'COMPLETED'
+        'date'       => $t->getCreatedAt()->format('d M, H:i'),
+    ], $trades);
 
-        $data = array_map(fn($t) => [
-            'id'         => $t->getId(),
-            'symbol'     => $t->getSymbol(),
-            'type'       => $t->getTradeType(),
-            'mode'       => $t->getOrderMode() ?? 'MARKET',
-            'quantity'   => $t->getQuantity(),
-            'price'      => $t->getPrice(),
-            'status'     => $t->getStatus(),
-            'date'       => $t->getCreatedAt()->format('d/m/Y H:i'),
-            'total'      => round((float)$t->getQuantity() * (float)$t->getPrice(), 2)
-        ], $trades);
+    return new JsonResponse($data);
+}
 
-        return new JsonResponse($data);
-    }
+
+    #[Route('/api/bot/stats', name: 'api_bot_stats', methods: ['GET'])]
+public function getBotStats(TradeRepository $tradeRepo): JsonResponse
+{
+    $userId = 1;
+    // Compter les trades exécutés par le bot aujourd'hui
+    $today = new \DateTime('today');
+    
+    $tradesToday = $tradeRepo->createQueryBuilder('t')
+        ->select('count(t.id)')
+        ->where('t.userId = :user')
+        ->andWhere('t.status = :status')
+        ->andWhere('t.executedAt >= :today')
+        ->setParameter('user', $userId)
+        ->setParameter('status', 'COMPLETED')
+        ->setParameter('today', $today)
+        ->getQuery()
+        ->getSingleScalarResult();
+
+    return new JsonResponse([
+        'tradesToday' => $tradesToday,
+        'botStatus' => true, // Tu peux stocker ça en DB ou en Cache
+        'winRate' => 65,    // Logique à calculer selon tes profits/pertes
+        'pnl' => 12.50      // Profit/Perte total du jour
+    ]);
+}
+
+
 }
