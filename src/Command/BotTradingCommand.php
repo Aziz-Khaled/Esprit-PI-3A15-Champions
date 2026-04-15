@@ -14,11 +14,32 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[AsCommand(
     name: 'app:bot:trading',
-    description: 'Bot qui surveille les prix et exécute les trades automatiquement.',
+    description: 'Bot qui surveille les ordres LIMIT PENDING et les execute automatiquement via CoinGecko.',
 )]
 class BotTradingCommand extends Command
 {
-    private string $binanceBase = 'https://api.binance.com/api/v3';
+    private string $geckoBase = 'https://api.coingecko.com/api/v3';
+
+    private array $geckoIds = [
+        'BTC'   => 'bitcoin',
+        'ETH'   => 'ethereum',
+        'XRP'   => 'ripple',
+        'BNB'   => 'binancecoin',
+        'SOL'   => 'solana',
+        'ADA'   => 'cardano',
+        'DOGE'  => 'dogecoin',
+        'DOT'   => 'polkadot',
+        'AVAX'  => 'avalanche-2',
+        'LINK'  => 'chainlink',
+        'UNI'   => 'uniswap',
+        'ATOM'  => 'cosmos',
+        'LTC'   => 'litecoin',
+        'MATIC' => 'matic-network',
+        'ESP'   => 'espers',
+        'ZAMA'  => 'zama',
+        'SENT'  => 'sentinel',
+        'RLUSD' => 'ripple-usd',
+    ];
 
     public function __construct(
         private HttpClientInterface    $httpClient,
@@ -31,109 +52,206 @@ class BotTradingCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $output->writeln('<info>🤖 Bot Trading démarré — surveillance des prix...</info>');
+        $output->writeln('');
+        $output->writeln('<info>============================================</info>');
+        $output->writeln('<info>   BOT TRADING DEMARRE                      </info>');
+        $output->writeln('<info>   API : CoinGecko (pas de blocage geo)     </info>');
+        $output->writeln('<info>   Cycle : toutes les 15 secondes           </info>');
+        $output->writeln('<info>============================================</info>');
+        $output->writeln('');
 
+        $cycle = 0;
         while (true) {
-            // On nettoie l'EntityManager à chaque cycle pour avoir des données fraîches de la DB
-            $this->em->clear(); 
-            
+            $cycle++;
+            $this->em->clear();
+
+            $output->writeln(sprintf(
+                '<comment>[%s] Cycle #%d ----------------------------------------</comment>',
+                date('H:i:s'), $cycle
+            ));
+
             $this->processPendingTrades($output);
-            
-            // On attend 10 secondes (plus rapide pour une démo Esprit)
-            sleep(10); 
+            $output->writeln('');
+            sleep(15);
         }
 
         return Command::SUCCESS;
     }
 
     private function processPendingTrades(OutputInterface $output): void
-{
-    $pendingTrades = $this->tradeRepo->findBy(['status' => 'PENDING', 'orderMode' => 'LIMIT']);
+    {
+        $pendingTrades = $this->tradeRepo->findBy([
+            'status'    => 'PENDING',
+            'orderMode' => 'LIMIT',
+        ]);
 
-    foreach ($pendingTrades as $trade) {
-        // IMPORTANT : Récupérer le symbole via l'Asset si getSymbol() n'existe pas directement
-        // Si tu as une relation, c'est $trade->getAsset()->getSymbol()
-        $symbol = $trade->getAsset() ? $trade->getAsset()->getSymbol() : 'BTC';
+        if (empty($pendingTrades)) {
+            $output->writeln('  Aucun ordre LIMIT PENDING trouve.');
+            return;
+        }
 
-        $marketPrice = $this->getBinancePrice($symbol);
+        $output->writeln(sprintf('  <info>%d ordre(s) PENDING a surveiller...</info>', count($pendingTrades)));
+
+        // Grouper par symbole pour limiter les appels API
+        $tradesBySymbol = [];
+        foreach ($pendingTrades as $trade) {
+            $symbol = $this->getTradeSymbol($trade);
+            if (!$symbol) {
+                $output->writeln(sprintf('  <e>Trade #%d : symbole introuvable, ignore.</e>', $trade->getId()));
+                continue;
+            }
+            $tradesBySymbol[$symbol][] = $trade;
+        }
+
+        foreach ($tradesBySymbol as $symbol => $trades) {
+            $geckoId = $this->geckoIds[$symbol] ?? null;
+
+            if (!$geckoId) {
+                $output->writeln(sprintf('  Symbole "%s" absent de $geckoIds.', $symbol));
+                continue;
+            }
+
+            $marketPrice = $this->getCoinGeckoPrice($geckoId);
+
+            if ($marketPrice === null) {
+                $output->writeln(sprintf('  Prix indisponible pour %s.', $symbol));
+                continue;
+            }
+
+            $output->writeln(sprintf(
+                '  %s/USDT => Prix marche : $%s',
+                $symbol,
+                number_format($marketPrice, 6)
+            ));
+
+            foreach ($trades as $trade) {
+                $this->evaluateTrade($trade, $symbol, $marketPrice, $output);
+            }
+
+            sleep(1); // limite rate CoinGecko gratuit
+        }
+    }
+
+    private function evaluateTrade(Trade $trade, string $symbol, float $marketPrice, OutputInterface $output): void
+    {
         $targetPrice = (float) $trade->getPrice();
-        $now = new \DateTime();
+        $tradeType   = strtoupper($trade->getTradeType());
+        $quantity    = (float) $trade->getQuantity();
 
-        // AFFICHAGE DEMANDÉ : Date | Prix Marché | Prix Client
         $output->writeln(sprintf(
-            '[%s] %s | Marché: <info>$%s</info> | Client: <comment>$%s</comment>',
-            $now->format('H:i:s'),
-            $symbol,
-            number_format($marketPrice, 2),
-            number_format($targetPrice, 2)
+            '    Trade #%d | %s | Cible: $%s | Marche: $%s | Qty: %s',
+            $trade->getId(),
+            $tradeType,
+            number_format($targetPrice, 6),
+            number_format($marketPrice, 6),
+            $quantity
         ));
 
         $shouldExecute = false;
 
-        // Logique de déclenchement
-        if ($trade->getTradeType() === 'BUY' && $marketPrice <= $targetPrice) {
+        if ($tradeType === 'BUY' && $marketPrice <= $targetPrice) {
             $shouldExecute = true;
-        } elseif ($trade->getTradeType() === 'SELL' && $marketPrice >= $targetPrice) {
+            $output->writeln('    <info>BUY declenche : marche <= cible</info>');
+        } elseif ($tradeType === 'SELL' && $marketPrice >= $targetPrice) {
             $shouldExecute = true;
+            $output->writeln('    <info>SELL declenche : marche >= cible</info>');
+        } else {
+            $output->writeln('    En attente des conditions...');
         }
 
         if ($shouldExecute) {
-            $output->writeln("<fg=green;options=bold>🚀 EXECUTION DECLENCHÉE !</>");
             $this->executeTradeWithWallet($trade, $marketPrice, $output);
         }
     }
-}
-  private function executeTradeWithWallet(Trade $trade, float $marketPrice, OutputInterface $output): void
-{
-    $wallet = $this->walletRepo->findOneBy(['utilisateur' => $trade->getUserId()]);
-    
-    if (!$wallet) {
-        $output->writeln('<error>Wallet introuvable.</error>');
-        return;
-    }
 
-    $quantity = (float) $trade->getQuantity();
-    $total    = $marketPrice * $quantity;
-    $solde    = (float) $wallet->getSolde();
+    private function executeTradeWithWallet(Trade $trade, float $marketPrice, OutputInterface $output): void
+    {
+        $userId    = $trade->getUserId();
+        $wallet    = $this->walletRepo->findOneBy(['utilisateur' => $userId]);
+        $quantity  = (float) $trade->getQuantity();
+        $total     = $marketPrice * $quantity;
+        $tradeType = strtoupper($trade->getTradeType());
 
-    if ($trade->getTradeType() === 'BUY') {
-        if ($solde < $total) {
-            $output->writeln("<error>❌ Fonds insuffisants.</error>");
-            // On le laisse en PENDING pour qu'il réessaie plus tard quand l'user aura de l'argent
-            return; 
-        } else {
-            $wallet->setSolde($solde - $total);
-            $trade->setStatus('COMPLETED');
+        if (!$wallet) {
+            $output->writeln('    <e>Wallet introuvable pour userId=' . $userId . '</e>');
+            return;
         }
-    } else {
-        // Logique de VENTE
-        $wallet->setSolde($solde + $total);
-        $trade->setStatus('COMPLETED');
-    }
 
-    // On n'enregistre que si le statut est passé à COMPLETED
-    if ($trade->getStatus() === 'COMPLETED') {
-        $trade->setPrice($marketPrice); 
-        $trade->setExecutedAt(new \DateTime());
-        
+        $solde = (float) $wallet->getSolde();
+
+        if ($tradeType === 'BUY') {
+            if ($solde < $total) {
+                $output->writeln(sprintf('    Solde insuffisant : besoin $%.2f, dispo $%.2f', $total, $solde));
+                $trade->setStatus('CANCELLED');
+                $this->em->flush();
+                return;
+            }
+            $wallet->setSolde($solde - $total);
+        } elseif ($tradeType === 'SELL') {
+            $wallet->setSolde($solde + $total);
+        } else {
+            return;
+        }
+
+        // PENDING -> COMPLETED
+        $trade->setStatus('COMPLETED');
+        $trade->setPrice((string) $marketPrice);
+
+        if (method_exists($trade, 'setExecutedAt')) {
+            $trade->setExecutedAt(new \DateTime());
+        }
+
         $this->em->persist($wallet);
         $this->em->persist($trade);
-        $this->em->flush(); 
+        $this->em->flush();
 
-        $output->writeln('<info>✅ Statut mis à jour : PENDING -> COMPLETED</info>');
+        $output->writeln(sprintf(
+            '    <info>TRADE #%d EXECUTE | %s | Qty: %.6f @ $%.6f | Total: $%.2f | Solde: $%.2f</info>',
+            $trade->getId(),
+            $tradeType,
+            $quantity,
+            $marketPrice,
+            $total,
+            (float) $wallet->getSolde()
+        ));
     }
 
-}
-private function getBinancePrice(string $symbol): ?float
+    private function getTradeSymbol(Trade $trade): ?string
+    {
+        // Cas 1 : relation Asset
+        if (method_exists($trade, 'getAsset') && $trade->getAsset()) {
+            return strtoupper($trade->getAsset()->getSymbol());
+        }
+
+        // Cas 2 : champ symbol direct sur le trade
+        if (method_exists($trade, 'getSymbol') && $trade->getSymbol()) {
+            return strtoupper(str_replace('USDT', '', $trade->getSymbol()));
+        }
+
+        // Cas 3 : via assetId en DB
+        if (method_exists($trade, 'getAssetId') && $trade->getAssetId()) {
+            try {
+                $row = $this->em->getConnection()->fetchAssociative(
+                    'SELECT symbol FROM asset WHERE id = :id',
+                    ['id' => $trade->getAssetId()]
+                );
+                if ($row) return strtoupper($row['symbol']);
+            } catch (\Exception) {}
+        }
+
+        return null;
+    }
+
+    private function getCoinGeckoPrice(string $geckoId): ?float
     {
         try {
-            // On ajoute 'USDT' car Binance utilise des paires (ex: BTCUSDT)
-            $response = $this->httpClient->request('GET', $this->binanceBase . '/ticker/price', [
-                'query' => ['symbol' => strtoupper($symbol) . 'USDT']
+            $response = $this->httpClient->request('GET', $this->geckoBase . '/simple/price', [
+                'query'   => ['ids' => $geckoId, 'vs_currencies' => 'usd'],
+                'timeout' => 10,
             ]);
             $data = $response->toArray();
-            return (float) ($data['price'] ?? null);
-        } catch (\Exception $e) {
+            return isset($data[$geckoId]['usd']) ? (float) $data[$geckoId]['usd'] : null;
+        } catch (\Exception) {
             return null;
         }
     }
