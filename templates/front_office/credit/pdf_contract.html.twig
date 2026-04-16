@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: sans-serif; color: #333; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 2px solid #8353E2; padding-bottom: 20px; }
+        .contract-title { color: #8353E2; text-transform: uppercase; }
+        .section { margin: 20px 0; }
+        .label { font-weight: bold; color: #555; }
+        .footer { margin-top: 50px; padding-top: 20px; border-top: 1px dashed #ccc; font-size: 10px; }
+        .signature-box { margin-top: 30px; display: table; width: 100%; }
+        .signature { display: table-cell; width: 50%; border: 1px solid #eee; padding: 10px; }
+        .hash-code { font-family: monospace; background: #f4f4f4; word-break: break-all; font-size: 9px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="contract-title">Contrat de Financement Numérique</h1>
+        <p>Référence : {{ credit.contratId }}</p>
+    </div>
+
+    <div class="section">
+        <p>Le présent contrat lie les parties suivantes :</p>
+        <p><span class="label">L'Emprunteur :</span> {{ credit.borrower.firstName }} {{ credit.borrower.lastName }}</p>
+        <p><span class="label">L'Investisseur :</span> {{ credit.investisseur.firstName }} {{ credit.investisseur.lastName }}</p>
+    </div>
+
+    <div class="section">
+        <h3>Détails du Crédit</h3>
+        <p><span class="label">Projet :</span> {{ credit.projet.title }}</p>
+        <p><span class="label">Montant :</span> {{ credit.montant }} {{ credit.devise }}</p>
+        <p><span class="label">Taux :</span> {{ credit.taux }}%</p>
+        <p><span class="label">Durée :</span> {{ credit.duree }} mois</p>
+    </div>
+
+    <div class="signature-box">
+        <div class="signature">
+            <p class="label">Signature de l'Emprunteur</p>
+            <p>Fait à Tunis, le {{ date|date('d/m/Y H:i') }}</p>
+            <div class="hash-code">CERT-CLIENT-{{ final_hash|slice(0, 32) }}</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Ce document est généré électroniquement par ChampionsFinance. L'empreinte numérique (Hash) garantit l'intégrité du contenu. Toute modification ultérieure rend ce document invalide.</p>
+        <p>ID Technique : {{ final_hash }}</p>
+    </div>
+</body>
+</html>

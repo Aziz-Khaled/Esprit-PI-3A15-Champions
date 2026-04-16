@@ -14,9 +14,12 @@ security:
             provider: users_in_memory
 
     access_control:
-        # CORRECTION : Le chemin doit correspondre au préfixe de votre contrôleur
+        # Autorise spécifiquement la route de signature du contrat
+        - { path: ^/client/sign-finish, roles: PUBLIC_ACCESS }
+
+        # Autorise la gestion globale du crédit
         - { path: ^/front/credit-gestion, roles: PUBLIC_ACCESS }
         
-        # Anciennes règles (gardées par précaution)
+        # Tes autres règles
         - { path: ^/investisseur/marketplace, roles: PUBLIC_ACCESS }
         - { path: ^/frontOffice/credit, roles: PUBLIC_ACCESS }
