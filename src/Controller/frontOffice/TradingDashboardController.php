@@ -422,23 +422,36 @@ private function getAdvice(string $riskLevel, float $change24h): string
 public function executeTrade(Request $request, WalletRepository $walletRepo, AssetRepository $assetRepo): JsonResponse
 {
     $data      = json_decode($request->getContent(), true);
-    $userId    = 1;
+    $userId    = 1; // ← STATIQUE — remplacer par $this->getUser()->getId() quand auth prête
     $tradeType = strtoupper($data['tradeType'] ?? $data['type'] ?? '');
     $symbol    = strtoupper(str_replace('USDT', '', $data['symbol'] ?? ''));
     $quantity  = (float) ($data['quantity'] ?? 0);
     $orderMode = strtoupper($data['orderMode'] ?? 'MARKET');
     $targetPrice = isset($data['targetPrice']) ? (float) $data['targetPrice'] : null;
+    $currentPriceFromRequest = isset($data['currentPrice']) ? (float) $data['currentPrice'] : null;
  
     if (!$symbol || $quantity <= 0) {
-        return new JsonResponse(['error' => 'Parametres invalides.'], 400);
+        return new JsonResponse(['error' => 'Paramètres invalides (symbol ou quantity).'], 400);
     }
  
+    // ── Récupérer ou créer le wallet ──────────────────────────────
     $wallet = $walletRepo->findOneBy(['utilisateur' => $userId]);
-    $asset  = $assetRepo->findOneBy(['symbol' => $symbol]);
+    if (!$wallet) {
+        // Création automatique si inexistant
+        $wallet = new \App\Entity\Wallet();
+        $wallet->setUtilisateur($userId);
+        $wallet->setSolde(10_000_000.0);
+        $this->em->persist($wallet);
+        $this->em->flush();
+    }
  
-    if (!$wallet) return new JsonResponse(['error' => 'Wallet introuvable.'], 404);
-    if (!$asset)  return new JsonResponse(['error' => "Asset '$symbol' introuvable en DB."], 404);
+    // ── Récupérer l'asset ─────────────────────────────────────────
+    $asset = $assetRepo->findOneBy(['symbol' => $symbol]);
+    if (!$asset) {
+        return new JsonResponse(['error' => "Asset '$symbol' introuvable en base de données."], 404);
+    }
  
+    // ── Créer le trade ────────────────────────────────────────────
     $trade = new \App\Entity\Trade();
     $trade->setUserId($userId);
     $trade->setAssetId($asset->getId());
@@ -447,7 +460,11 @@ public function executeTrade(Request $request, WalletRepository $walletRepo, Ass
     $trade->setOrderMode($orderMode);
     $trade->setCreatedAt(new \DateTime());
  
-    // ── ORDRE LIMIT (bot géré par BotTradingCommand) ──
+    $currentBalance = (float) $wallet->getSolde();
+ 
+    // ══════════════════════════════════════════════════════════════
+    // CAS 1 : ORDRE LIMIT (PENDING — pas de débit immédiat)
+    // ══════════════════════════════════════════════════════════════
     if ($orderMode === 'LIMIT') {
         if (!$targetPrice || $targetPrice <= 0) {
             return new JsonResponse(['error' => 'Prix cible requis pour le mode LIMIT.'], 400);
@@ -459,65 +476,78 @@ public function executeTrade(Request $request, WalletRepository $walletRepo, Ass
         $this->em->persist($trade);
         $this->em->flush();
  
+        // ✅ FIX : retourner newBalance même pour LIMIT (solde non débité)
         return new JsonResponse([
-            'success' => true,
-            'message' => "Ordre LIMIT enregistre : $tradeType $quantity $symbol @ \$$targetPrice. Le bot l'executera automatiquement.",
-            'status'  => 'PENDING',
-            'tradeId' => $trade->getId(),
+            'success'    => true,
+            'message'    => "Ordre LIMIT enregistré : $tradeType $quantity $symbol @ \$$targetPrice",
+            'status'     => 'PENDING',
+            'tradeId'    => $trade->getId(),
+            'newBalance' => $currentBalance,  // ← solde inchangé pour LIMIT
+            'balance'    => $currentBalance,
+            'symbol'     => $symbol,
+            'tradeType'  => $tradeType,
+            'quantity'   => $quantity,
+            'price'      => $targetPrice,
         ]);
     }
  
-    // ── ORDRE MARKET (execution immediate via Binance côté navigateur → prix envoyé) ──
-    // On utilise le prix fourni par le client (issu du WebSocket Binance navigateur)
-    // OU on récupère le prix via CoinGecko côté serveur
-    $currentPrice = null;
+    // ══════════════════════════════════════════════════════════════
+    // CAS 2 : ORDRE MARKET (exécution immédiate)
+    // ══════════════════════════════════════════════════════════════
  
-    // Essai 1 : prix envoyé par le client (depuis WebSocket Binance navigateur)
-    if (isset($data['currentPrice']) && (float)$data['currentPrice'] > 0) {
-        $currentPrice = (float) $data['currentPrice'];
+    // Étape 1 : prix du client (depuis WebSocket Binance)
+    $currentPrice = null;
+    if ($currentPriceFromRequest && $currentPriceFromRequest > 0) {
+        $currentPrice = $currentPriceFromRequest;
     }
  
-    // Essai 2 : CoinGecko côté serveur
+    // Étape 2 : fallback Binance REST si le client n'a pas envoyé le prix
     if (!$currentPrice) {
-        $geckoIds = [
-            'BTC'=>'bitcoin','ETH'=>'ethereum','XRP'=>'ripple','BNB'=>'binancecoin',
-            'SOL'=>'solana','ADA'=>'cardano','DOGE'=>'dogecoin','DOT'=>'polkadot',
-            'AVAX'=>'avalanche-2','LINK'=>'chainlink','ATOM'=>'cosmos','LTC'=>'litecoin',
-            'ESP'=>'espers','ZAMA'=>'zama','SENT'=>'sentinel','RLUSD'=>'ripple-usd',
-        ];
-        $geckoId = $geckoIds[$symbol] ?? null;
-        if ($geckoId) {
-            try {
-                $res = $this->httpClient->request('GET', 'https://api.coingecko.com/api/v3/simple/price', [
-                    'query' => ['ids' => $geckoId, 'vs_currencies' => 'usd'],
-                    'timeout' => 8,
-                ]);
-                $priceData = $res->toArray();
-                $currentPrice = (float) ($priceData[$geckoId]['usd'] ?? 0);
-            } catch (\Exception) {}
+        try {
+            $binanceSymbol = $symbol . 'USDT';
+            $res = $this->httpClient->request('GET', $this->binanceBase . '/ticker/price', [
+                'query'   => ['symbol' => $binanceSymbol],
+                'timeout' => 5,
+            ]);
+            $priceData    = $res->toArray();
+            $currentPrice = (float) ($priceData['price'] ?? 0);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'error' => "Impossible de récupérer le prix actuel depuis Binance : " . $e->getMessage()
+            ], 500);
         }
     }
  
     if (!$currentPrice || $currentPrice <= 0) {
-        return new JsonResponse(['error' => 'Impossible de recuperer le prix actuel.'], 500);
+        return new JsonResponse(['error' => 'Prix actuel introuvable.'], 500);
     }
  
     $total = $currentPrice * $quantity;
     $solde = (float) $wallet->getSolde();
  
+    // ── Vérification solde + mise à jour ──────────────────────────
     if ($tradeType === 'BUY') {
         if ($solde < $total) {
             return new JsonResponse([
-                'error' => "Solde insuffisant. Besoin \$" . number_format($total, 2) . ", disponible \$" . number_format($solde, 2),
+                'error' => sprintf(
+                    "Solde insuffisant. Besoin : $%s — Disponible : $%s",
+                    number_format($total, 2),
+                    number_format($solde, 2)
+                ),
             ], 400);
         }
-        $wallet->setSolde($solde - $total);
+        $newSolde = $solde - $total;
+        $wallet->setSolde($newSolde);
+ 
     } elseif ($tradeType === 'SELL') {
-        $wallet->setSolde($solde + $total);
+        $newSolde = $solde + $total;
+        $wallet->setSolde($newSolde);
+ 
     } else {
-        return new JsonResponse(['error' => 'Type de trade invalide.'], 400);
+        return new JsonResponse(['error' => "Type de trade invalide : '$tradeType'."], 400);
     }
  
+    // ── Finaliser le trade ────────────────────────────────────────
     $trade->setStatus('COMPLETED');
     $trade->setPrice((string) $currentPrice);
     if (method_exists($trade, 'setExecutedAt')) {
@@ -527,6 +557,9 @@ public function executeTrade(Request $request, WalletRepository $walletRepo, Ass
     $this->em->persist($trade);
     $this->em->flush();
  
+    // ✅ FIX CRITIQUE : newBalance TOUJOURS présent dans la réponse
+    $finalBalance = (float) $wallet->getSolde();
+ 
     return new JsonResponse([
         'success'    => true,
         'tradeType'  => $tradeType,
@@ -534,8 +567,10 @@ public function executeTrade(Request $request, WalletRepository $walletRepo, Ass
         'quantity'   => $quantity,
         'price'      => $currentPrice,
         'total'      => $total,
-        'newBalance' => (float) $wallet->getSolde(),
+        'newBalance' => $finalBalance,  // ← utilisé par le JS pour mettre à jour l'affichage
+        'balance'    => $finalBalance,  // ← alias pour compatibilité
         'status'     => 'COMPLETED',
+        'tradeId'    => $trade->getId(),
     ]);
 }
  
@@ -604,6 +639,142 @@ public function getBotStats(TradeRepository $tradeRepo): JsonResponse
         'pnl' => 12.50      // Profit/Perte total du jour
     ]);
 }
+// ─────────────────────────────────────────
+// 10. ROUTES POUR LE BOT (ORDERS PENDING)
+// ─────────────────────────────────────────
 
+#[Route('/api/bot/pending-orders', name: 'api_bot_pending_orders', methods: ['GET'])]
+public function getBotPendingOrders(AssetRepository $assetRepo): JsonResponse
+{
+    $userId = 1;
+    $pendingOrders = $this->tradeRepo->findBy([
+        'userId' => $userId,
+        'status' => 'PENDING'
+    ]);
+    
+    $result = [];
+    foreach ($pendingOrders as $order) {
+        $asset = $assetRepo->find($order->getAssetId());
+        if ($asset) {
+            $result[] = [
+                'id' => $order->getId(),
+                'symbol' => $asset->getSymbol(),
+                'trade_type' => $order->getTradeType(),
+                'quantity' => (float) $order->getQuantity(),
+                'target_price' => (float) $order->getPrice(),
+                'created_at' => $order->getCreatedAt()->format('Y-m-d H:i:s')
+            ];
+        }
+    }
+    
+    return new JsonResponse($result);
+}
+
+#[Route('/api/bot/check-and-execute', name: 'api_bot_check_execute', methods: ['POST'])]
+public function checkAndExecutePendingOrders(Request $request, WalletRepository $walletRepo, AssetRepository $assetRepo): JsonResponse
+{
+    $data = json_decode($request->getContent(), true);
+    $orderId = $data['orderId'] ?? null;
+    $currentPrice = (float) ($data['currentPrice'] ?? 0);
+    
+    if (!$orderId || $currentPrice <= 0) {
+        return new JsonResponse(['error' => 'Invalid parameters'], 400);
+    }
+    
+    $order = $this->tradeRepo->find($orderId);
+    if (!$order || $order->getStatus() !== 'PENDING') {
+        return new JsonResponse(['error' => 'Order not found or already executed'], 404);
+    }
+    
+    $userId = 1;
+    $wallet = $walletRepo->findOneBy(['utilisateur' => $userId]);
+    $asset = $assetRepo->find($order->getAssetId());
+    
+    if (!$wallet || !$asset) {
+        return new JsonResponse(['error' => 'Wallet or asset not found'], 404);
+    }
+    
+    $quantity = (float) $order->getQuantity();
+    $total = $currentPrice * $quantity;
+    $tradeType = $order->getTradeType();
+    $currentBalance = (float) $wallet->getSolde();
+    
+    // Vérifier la condition d'exécution
+    $targetPrice = (float) $order->getPrice();
+    $shouldExecute = false;
+    
+    if ($tradeType === 'BUY' && $currentPrice <= $targetPrice) {
+        $shouldExecute = true;
+    } elseif ($tradeType === 'SELL' && $currentPrice >= $targetPrice) {
+        $shouldExecute = true;
+    }
+    
+    if (!$shouldExecute) {
+        return new JsonResponse(['error' => 'Condition not met'], 400);
+    }
+    
+    // Exécuter l'ordre
+    if ($tradeType === 'BUY') {
+        if ($currentBalance < $total) {
+            return new JsonResponse(['error' => 'Insufficient balance'], 400);
+        }
+        $wallet->setSolde($currentBalance - $total);
+    } else {
+        $wallet->setSolde($currentBalance + $total);
+    }
+    
+    $order->setStatus('COMPLETED');
+    $order->setPrice((string) $currentPrice);
+    if (method_exists($order, 'setExecutedAt')) {
+        $order->setExecutedAt(new \DateTime());
+    }
+    
+    $this->em->flush();
+    
+    return new JsonResponse([
+        'success' => true,
+        'tradeType' => $tradeType,
+        'quantity' => $quantity,
+        'price' => $currentPrice,
+        'newBalance' => (float) $wallet->getSolde()
+    ]);
+}
+
+#[Route('/api/bot/stats/real', name: 'api_bot_stats_real', methods: ['GET'])]
+public function getRealBotStats(): JsonResponse
+{
+    $userId = 1;
+    $today = new \DateTime('today');
+    
+    // Trades complétés aujourd'hui
+    $tradesCompleted = $this->tradeRepo->createQueryBuilder('t')
+        ->select('count(t.id)')
+        ->where('t.userId = :user')
+        ->andWhere('t.status = :status')
+        ->andWhere('t.createdAt >= :today')
+        ->setParameter('user', $userId)
+        ->setParameter('status', 'COMPLETED')
+        ->setParameter('today', $today)
+        ->getQuery()
+        ->getSingleScalarResult();
+    
+    // Trades en attente
+    $tradesPending = $this->tradeRepo->createQueryBuilder('t')
+        ->select('count(t.id)')
+        ->where('t.userId = :user')
+        ->andWhere('t.status = :status')
+        ->setParameter('user', $userId)
+        ->setParameter('status', 'PENDING')
+        ->getQuery()
+        ->getSingleScalarResult();
+    
+    return new JsonResponse([
+        'tradesToday' => $tradesCompleted,
+        'pendingOrders' => $tradesPending,
+        'botStatus' => true,
+        'winRate' => 65,
+        'pnl' => 12.50
+    ]);
+}
 
 }
