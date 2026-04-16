@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}CryptoTrade – Dashboard{% endblock %}
+{% block title %}Champions– Dashboard{% endblock %}
 
 {% block stylesheets %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -87,191 +87,207 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .iv-btn.on{background:var(--bg4);color:var(--yellow)}
 #tv{flex:1;min-height:0}
 
-/* Order panel */
-.ord-panel{width:270px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+/* Order panel - REFONDU */
+.ord-panel{width:320px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
+.ord-panel::-webkit-scrollbar{width:3px}
+.ord-panel::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* Formulaire d'achat/vente - EN PREMIER */
+.trade-form-section{background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
 .ord-tabs{display:flex;border-bottom:1px solid var(--border)}
 .ord-tab{flex:1;padding:11px;text-align:center;font-weight:700;font-size:13px;cursor:pointer;background:none;border:none;color:var(--muted);font-family:var(--font-h);transition:all .2s;position:relative}
 .ord-tab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;transform:scaleX(0);transition:transform .2s}
 .ord-tab.buy.on{color:var(--green)}.ord-tab.buy.on::after{background:var(--green);transform:scaleX(1)}
 .ord-tab.sell.on{color:var(--red)}.ord-tab.sell.on::after{background:var(--red);transform:scaleX(1)}
-.ord-body{padding:14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex:1}
-.ord-body::-webkit-scrollbar{width:3px}
-.ord-body::-webkit-scrollbar-thumb{background:var(--border)}
-.fld{display:flex;flex-direction:column;gap:5px}
-.fld label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.fld select,.fld input{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:var(--font-h);outline:none;transition:border-color .2s;width:100%}
-.fld select:focus,.fld input:focus{border-color:var(--yellow)}
-.qty-hint{font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
-.qty-hint span{color:var(--yellow);font-family:var(--font-m)}
-.total-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg3);border-radius:6px}
-.total-row span:first-child{color:var(--muted);font-size:11px}
-.total-row span:last-child{font-family:var(--font-m);font-weight:700;color:var(--yellow)}
-.trade-btn{width:100%;padding:11px;border:none;border-radius:8px;font-size:13px;font-weight:800;font-family:var(--font-h);cursor:pointer;letter-spacing:.04em;transition:all .2s}
-.trade-btn:hover{filter:brightness(1.1)}
-.trade-btn:active{transform:scale(.98)}
-.trade-btn.buy{background:var(--green);color:#000}
-.trade-btn.sell{background:var(--red);color:#fff}
-.risk-pill{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--muted)}
+.ord-body{padding:14px;display:flex;flex-direction:column;gap:10px}
+
+/* RECOMMANDEUR - APRÈS LE FORMULAIRE */
+.rec-panel{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 14px;flex-shrink:0}
+.rec-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px}
+.rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.rec-kpi{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 9px}
+.rec-kpi-lbl{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+.rec-kpi-val{font-family:var(--font-m);font-size:13px;font-weight:700;color:var(--text)}
+.rec-kpi-val.g{color:var(--green)}.rec-kpi-val.r{color:var(--red)}.rec-kpi-val.y{color:var(--yellow)}.rec-kpi-val.b{color:var(--blue)}
+.trend-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.03em}
+.trend-badge.bullish{background:rgba(0,214,143,.12);color:var(--green);border:1px solid rgba(0,214,143,.3)}
+.trend-badge.bearish{background:rgba(255,77,106,.12);color:var(--red);border:1px solid rgba(255,77,106,.3)}
+.trend-badge.neutral{background:rgba(107,117,144,.12);color:var(--muted);border:1px solid var(--border)}
+.kelly-meter{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.kelly-track{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.kelly-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.sizing-box{border-radius:7px;padding:9px 12px;margin-bottom:8px}
+.sizing-box.buy-box{background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.2)}
+.sizing-box.sell-box{background:rgba(255,77,106,.06);border:1px solid rgba(255,77,106,.2)}
+.sizing-box-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.sizing-box-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.sizing-box.buy-box .sizing-box-title{color:var(--green)}
+.sizing-box.sell-box .sizing-box-title{color:var(--red)}
+.sizing-qty{font-family:var(--font-m);font-size:18px;font-weight:700}
+.sizing-box.buy-box .sizing-qty{color:var(--green)}
+.sizing-box.sell-box .sizing-qty{color:var(--red)}
+.sizing-sub{font-size:10px;color:var(--muted)}
+.sizing-targets{display:flex;gap:8px;margin-top:6px}
+.t-chip{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 6px;border-radius:5px;border:1px solid var(--border);background:var(--bg4)}
+.t-chip-lbl{font-size:8px;color:var(--muted);font-weight:700;letter-spacing:.06em}
+.t-chip-val{font-family:var(--font-m);font-size:10px;font-weight:700}
+.t-chip.tp .t-chip-val{color:var(--green)}
+.t-chip.sl .t-chip-val{color:var(--red)}
+.t-chip.sup .t-chip-val{color:var(--blue)}
+
+/* Security bundle & news - EN BAS */
+.sec-bundle{background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0}
+.sec-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer}
+.sec-header-left{display:flex;align-items:center;gap:7px}
+.sec-title-txt{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.sec-score-ring{width:32px;height:32px;position:relative;flex-shrink:0}
+.sec-score-ring svg{width:32px;height:32px}
+.sec-score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-m);font-size:9px;font-weight:700}
+.sec-toggle-btn{font-size:10px;color:var(--muted);transition:transform .2s}
+.sec-toggle-btn.open{transform:rotate(180deg)}
+.sec-body{padding:0 14px 14px;display:none;flex-direction:column;gap:8px}
+.sec-check{display:flex;align-items:flex-start;gap:8px;padding:7px 9px;border-radius:6px;border:1px solid var(--border)}
+.sec-check.ok{background:rgba(0,214,143,.04);border-color:rgba(0,214,143,.15)}
+.sec-check.warn{background:rgba(245,166,35,.04);border-color:rgba(245,166,35,.2)}
+.sec-check.fail{background:rgba(255,77,106,.05);border-color:rgba(255,77,106,.2)}
+.sec-check-icon{font-size:12px;flex-shrink:0}
+.sec-check-info{flex:1}
+.sec-check-name{font-size:11px;font-weight:700;color:var(--text)}
+.sec-check-desc{font-size:10px;color:var(--muted);margin-top:2px}
+.sec-check.ok .sec-check-name{color:var(--green)}
+.sec-check.warn .sec-check-name{color:var(--yellow)}
+.sec-check.fail .sec-check-name{color:var(--red)}
+.sec-warning-flags{display:flex;flex-direction:column;gap:5px}
+.sec-flag{display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:5px;font-size:10px;font-weight:600}
+.sec-flag.danger{background:rgba(255,77,106,.08);color:var(--red);border:1px solid rgba(255,77,106,.2)}
+.sec-flag.warning{background:rgba(245,166,35,.08);color:var(--yellow);border:1px solid rgba(245,166,35,.2)}
+.sec-guard-block{padding:10px 12px;border-radius:7px;border:1.5px solid var(--red);background:rgba(255,77,106,.06);display:none;flex-direction:column;gap:5px;margin-bottom:10px}
+.sec-guard-block.visible{display:flex}
+.sec-guard-title{font-size:11px;font-weight:700;color:var(--red)}
+.sec-guard-msg{font-size:10px;color:var(--muted)}
+.risk-pill{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:11px}
 .risk-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .risk-pill.low .risk-dot{background:var(--green)}
 .risk-pill.med .risk-dot{background:var(--yellow)}
 .risk-pill.high .risk-dot{background:var(--red)}
-
-/* ── LIMIT PRICE FIELD ── */
 .limit-price-wrap{display:none;flex-direction:column;gap:5px}
 .limit-price-wrap.show{display:flex}
-.limit-price-badge{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:6px 10px;background:rgba(245,166,35,.07);
-  border:1px solid rgba(245,166,35,.25);border-radius:6px;font-size:11px;
-}
+.limit-price-badge{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.25);border-radius:6px;font-size:11px}
 .limit-price-badge .lbl{color:var(--muted)}
 .limit-price-badge .val{font-family:var(--font-m);color:var(--yellow);font-weight:700}
 .limit-pending-list{display:flex;flex-direction:column;gap:4px}
-.limit-order-item{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:6px 10px;background:var(--bg3);border:1px solid var(--border);
-  border-radius:6px;font-size:11px;animation:tin .3s ease;
-}
+.limit-order-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:11px}
 .limit-order-item .li-sym{font-family:var(--font-m);color:var(--yellow);font-weight:700}
-.limit-order-item .li-info{color:var(--muted)}
-.limit-order-item .li-cancel{background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0 4px;font-weight:700}
-.limit-order-item .li-dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);animation:pulse 1.5s infinite;margin-right:5px}
-
-/* News */
-.news-panel{overflow-y:auto;display:flex;flex-direction:column;max-height:200px}
-.news-panel::-webkit-scrollbar{width:3px}
-.news-panel::-webkit-scrollbar-thumb{background:var(--border)}
-.news-card{padding:10px 14px;border-bottom:1px solid var(--border);display:block;text-decoration:none;transition:background .15s}
+.limit-order-item .li-cancel{background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0 4px}
+.news-panel{overflow-y:auto;max-height:200px;padding:0 14px 14px}
+.news-card{padding:10px 0;border-bottom:1px solid var(--border);display:block;text-decoration:none}
 .news-card:hover{background:var(--bg3)}
-.news-card-t{font-size:11px;color:var(--text);line-height:1.45;margin-bottom:3px}
+.news-card-t{font-size:11px;color:var(--text);margin-bottom:3px}
 .news-card-m{font-size:10px;color:var(--muted)}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.fld select,.fld input{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:var(--font-h);outline:none;width:100%}
+.fld select:focus,.fld input:focus{border-color:var(--yellow)}
+.qty-hint{font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+.qty-hint span{color:var(--yellow);font-family:var(--font-m)}
+.total-row{display:flex;justify-content:space-between;padding:8px 10px;background:var(--bg3);border-radius:6px}
+.total-row span:first-child{color:var(--muted);font-size:11px}
+.total-row span:last-child{font-family:var(--font-m);font-weight:700;color:var(--yellow)}
+.trade-btn{width:100%;padding:11px;border:none;border-radius:8px;font-size:13px;font-weight:800;font-family:var(--font-h);cursor:pointer;letter-spacing:.04em}
+.trade-btn:hover{filter:brightness(1.1)}
+.trade-btn.buy{background:var(--green);color:#000}
+.trade-btn.sell{background:var(--red);color:#fff}
 
-/* ══ BOT ══ */
+/* BOT & autres pages */
 #pg-bot{flex-direction:column;background:var(--bg)}
 .bot-layout{flex:1;display:grid;grid-template-columns:310px 1fr;overflow:hidden}
 .bot-sb{background:var(--bg2);border-right:1px solid var(--border);padding:24px 20px;display:flex;flex-direction:column;gap:18px;overflow-y:auto}
-.bot-sb h2{font-size:18px;font-weight:800;letter-spacing:-.02em}
-.bot-sb h2 em{color:var(--yellow);font-style:normal}
+.bot-sb h2{font-size:18px;font-weight:800}
+.bot-sb h2 em{color:var(--yellow)}
 .bf{display:flex;flex-direction:column;gap:6px}
-.bf label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.bf select,.bf input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font-h);outline:none;transition:border-color .2s;width:100%}
-.bf select:focus,.bf input:focus{border-color:var(--yellow)}
+.bf label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.bf select,.bf input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;width:100%}
 .strat-cards{display:flex;flex-direction:column;gap:8px}
-.strat-card{padding:11px 14px;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s}
+.strat-card{padding:11px 14px;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;cursor:pointer}
 .strat-card:hover{border-color:var(--yellow)}
 .strat-card.sel{border-color:var(--yellow);background:rgba(245,166,35,.06)}
 .sc-name{font-weight:700;font-size:13px;margin-bottom:3px}
-.sc-desc{font-size:11px;color:var(--muted);line-height:1.4}
-.btn-start{padding:12px;background:var(--yellow);color:#000;border:none;border-radius:8px;font-family:var(--font-h);font-weight:800;font-size:14px;cursor:pointer;transition:all .2s;letter-spacing:.03em}
-.btn-start:hover{filter:brightness(1.1)}
+.sc-desc{font-size:11px;color:var(--muted)}
+.btn-start{padding:12px;background:var(--yellow);color:#000;border:none;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer}
 .btn-start.stop{background:var(--red);color:#fff}
 .bot-main{padding:24px;display:flex;flex-direction:column;gap:18px;overflow-y:auto}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px}
-.stat-lbl{font-size:10px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.stat-lbl{font-size:10px;color:var(--muted);margin-bottom:8px}
 .stat-v{font-family:var(--font-m);font-size:22px;font-weight:700}
 .stat-v.g{color:var(--green)}.stat-v.r{color:var(--red)}
 .log-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;flex:1;display:flex;flex-direction:column;overflow:hidden}
-.log-hd{padding:10px 16px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:8px}
+.log-hd{padding:10px 16px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:8px}
 .ldot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
 .ldot.live{background:var(--green);animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.log-list{flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:4px;font-family:var(--font-m);font-size:11px}
-.log-list::-webkit-scrollbar{width:3px}
-.log-list::-webkit-scrollbar-thumb{background:var(--border)}
-.ll{color:var(--muted);line-height:1.6}
+.log-list{flex:1;overflow-y:auto;padding:10px 16px;font-family:var(--font-m);font-size:11px}
+.ll{color:var(--muted);margin-bottom:4px}
 .ll .ts{color:var(--dim);margin-right:8px}
-.ll .bt{color:var(--green);font-weight:700}
-.ll .st{color:var(--red);font-weight:700}
-.ll .it{color:var(--blue);font-weight:700}
-.ll .wt{color:var(--yellow);font-weight:700}
+.ll .bt{color:var(--green)}.ll .st{color:var(--red)}.ll .it{color:var(--blue)}.ll .wt{color:var(--yellow)}
 
-/* ══ HISTORY ══ */
 #pg-hist{flex-direction:column;background:var(--bg);overflow:hidden}
 .hist-wrap{flex:1;display:flex;flex-direction:column;padding:24px;gap:16px;overflow:hidden}
-.hist-top{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.hist-top h2{font-size:20px;font-weight:800;letter-spacing:-.02em}
-.hist-top h2 em{color:var(--yellow);font-style:normal}
-.hist-filters{display:flex;gap:10px;align-items:center}
-.hf-btn{padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:12px;font-family:var(--font-h);font-weight:600;cursor:pointer;transition:all .2s}
-.hf-btn:hover{border-color:var(--yellow);color:var(--yellow)}
+.hist-top{display:flex;align-items:center;justify-content:space-between}
+.hist-top h2{font-size:20px;font-weight:800}
+.hist-top h2 em{color:var(--yellow)}
+.hist-filters{display:flex;gap:10px}
+.hf-btn{padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:12px;cursor:pointer}
 .hf-btn.active{background:var(--yellow);border-color:var(--yellow);color:#000}
-.hist-search{padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--font-h);outline:none;transition:border-color .2s;width:180px}
-.hist-search:focus{border-color:var(--yellow)}
-/* Summary cards */
-.hist-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;flex-shrink:0}
-.hsum-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
-.hsum-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.hist-search{padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);width:180px}
+.hist-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.hsum-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.hsum-lbl{font-size:10px;color:var(--muted);text-transform:uppercase}
 .hsum-val{font-family:var(--font-m);font-size:18px;font-weight:700}
 .hsum-val.g{color:var(--green)}.hsum-val.r{color:var(--red)}.hsum-val.y{color:var(--yellow)}
-/* Table */
 .hist-table-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--border);border-radius:10px}
-.hist-table-head{display:grid;grid-template-columns:60px 80px 90px 120px 100px 80px 90px 90px;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
-.hist-table-head span{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.hist-table-head{display:grid;grid-template-columns:60px 80px 90px 120px 100px 80px 90px 90px;padding:10px 16px;border-bottom:1px solid var(--border)}
+.hist-table-head span{font-size:10px;font-weight:700;color:var(--muted)}
 .hist-table-body{flex:1;overflow-y:auto}
-.hist-table-body::-webkit-scrollbar{width:3px}
-.hist-table-body::-webkit-scrollbar-thumb{background:var(--border)}
-.hist-row{display:grid;grid-template-columns:60px 80px 90px 120px 100px 80px 90px 90px;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);transition:background .15s;animation:tin .3s ease}
+.hist-row{display:grid;grid-template-columns:60px 80px 90px 120px 100px 80px 90px 90px;padding:10px 16px;border-bottom:1px solid var(--border)}
 .hist-row:hover{background:var(--bg3)}
-.hist-row span{font-size:12px;color:var(--text);display:flex;align-items:center}
-.hist-row .hr-id{color:var(--muted);font-family:var(--font-m);font-size:11px}
-.hist-row .hr-sym{font-family:var(--font-m);font-weight:700;color:var(--yellow)}
-.hist-row .hr-type{font-weight:700}
+.hist-row span{font-size:12px;color:var(--text)}
+.hist-row .hr-sym{color:var(--yellow)}
 .hist-row .hr-type.buy{color:var(--green)}
 .hist-row .hr-type.sell{color:var(--red)}
-.hist-row .hr-price,.hist-row .hr-qty,.hist-row .hr-total{font-family:var(--font-m);font-size:11px}
-.hist-row .hr-mode{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:var(--bg3);border:1px solid var(--border)}
-.hist-row .hr-mode.market{color:var(--blue);border-color:rgba(61,139,255,.3);background:rgba(61,139,255,.07)}
-.hist-row .hr-mode.limit{color:var(--yellow);border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.07)}
-.hist-row .hr-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
-.hr-status.completed{color:var(--green);background:rgba(0,214,143,.1);border:1px solid rgba(0,214,143,.25)}
-.hr-status.pending{color:var(--yellow);background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.25)}
-.hr-status.cancelled{color:var(--red);background:rgba(255,77,106,.1);border:1px solid rgba(255,77,106,.25)}
-.hist-row .hr-date{color:var(--muted);font-size:11px}
-.hist-empty{padding:40px;text-align:center;color:var(--muted);font-size:14px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
-.hist-empty .he-icon{font-size:40px;opacity:.4}
+.hr-mode{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;background:var(--bg3)}
+.hr-mode.market{color:var(--blue)}
+.hr-mode.limit{color:var(--yellow)}
+.hr-status.completed{color:var(--green)}
+.hr-status.pending{color:var(--yellow)}
+.hr-status.cancelled{color:var(--red)}
 
-/* ══ CHAT ══ */
-#pg-chat{flex-direction:column;align-items:center;justify-content:flex-start;background:var(--bg);padding:0}
-.chat-wrap{width:100%;max-width:760px;height:100%;display:flex;flex-direction:column;padding:20px 0 0}
-.chat-hd{text-align:center;padding:0 20px 18px;border-bottom:1px solid var(--border)}
-.chat-hd h2{font-size:22px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px}
-.chat-hd h2 em{color:var(--yellow);font-style:normal}
-.chat-hd p{color:var(--muted);font-size:13px}
+#pg-chat{flex-direction:column;background:var(--bg)}
+.chat-wrap{width:100%;max-width:760px;height:100%;margin:0 auto;display:flex;flex-direction:column}
+.chat-hd{text-align:center;padding:20px;border-bottom:1px solid var(--border)}
+.chat-hd h2{font-size:22px;font-weight:800}
+.chat-hd h2 em{color:var(--yellow)}
 .msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
-.msgs::-webkit-scrollbar{width:3px}
-.msgs::-webkit-scrollbar-thumb{background:var(--border)}
-.bubble{display:flex;gap:10px;max-width:88%;animation:bin .25s ease}
-@keyframes bin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.bubble{display:flex;gap:10px;max-width:88%}
 .bubble.usr{flex-direction:row-reverse;align-self:flex-end}
-.av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:14px;flex-shrink:0}
+.av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center}
 .av.bot{background:linear-gradient(135deg,var(--yellow),#e08900)}
 .av.usr{background:var(--bg4)}
-.bc{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;max-width:calc(100% - 42px)}
-.bubble.bot .bc{background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:4px 12px 12px 12px}
-.bubble.usr .bc{background:var(--yellow);color:#000;border-radius:12px 4px 12px 12px;font-weight:600}
-.typing .bc{display:flex;gap:4px;align-items:center;padding:12px 16px}
-.td{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:td 1.2s infinite}
-.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
-@keyframes td{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.bc{padding:10px 14px;border-radius:12px;font-size:13px}
+.bubble.bot .bc{background:var(--bg2);border:1px solid var(--border)}
+.bubble.usr .bc{background:var(--yellow);color:#000}
 .chips{display:flex;flex-wrap:wrap;gap:8px;padding:14px 20px}
-.chip{padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .15s;font-family:var(--font-h);font-weight:600}
+.chip{padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--muted);cursor:pointer}
 .chip:hover{border-color:var(--yellow);color:var(--yellow)}
 .chat-inp-row{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px}
-.chat-inp{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;font-family:var(--font-h);outline:none;transition:border-color .2s}
-.chat-inp:focus{border-color:var(--yellow)}
-.chat-inp::placeholder{color:var(--dim)}
-.send-btn{padding:10px 18px;background:var(--yellow);border:none;border-radius:10px;color:#000;font-size:16px;cursor:pointer;transition:all .2s;display:grid;place-items:center}
-.send-btn:hover{filter:brightness(1.1)}
+.chat-inp{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text)}
+.send-btn{padding:10px 18px;background:var(--yellow);border:none;border-radius:10px;color:#000;cursor:pointer}
 
-/* ── TOAST ── */
 .toast-box{position:fixed;top:64px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
-.toast{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;animation:tin .3s ease;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-.toast.ok{background:var(--green);color:#000}.toast.err{background:var(--red);color:#fff}
+.toast{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;animation:tin .3s ease}
+.toast.ok{background:var(--green);color:#000}
+.toast.err{background:var(--red);color:#fff}
 @keyframes tin{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
-
-/* Loading spinner */
 .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--yellow);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
@@ -284,25 +300,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 <!-- ══ NAVBAR ══ -->
 <nav class="navbar">
   <a href="#" class="nav-logo">
-    <div class="nav-logo-icon">₿</div>
-    CryptoTrade
+    Champions-Trading
   </a>
-
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="goPage('dash',this)">
-      <span>📊</span> Dashboard
-    </button>
-    <button class="nav-tab" onclick="goPage('bot',this)">
-      <span>🤖</span> Trading Bot
-    </button>
-    <button class="nav-tab" onclick="goPage('chat',this)">
-      <span>💬</span> AI Assistant
-    </button>
-    <button class="nav-tab" onclick="goPage('hist',this)">
-      <span>📋</span> History
-    </button>
+    <button class="nav-tab active" onclick="goPage('dash',this)"><span></span> Dashboard</button>
+    <button class="nav-tab" onclick="goPage('bot',this)"><span></span> Trading Bot</button>
+    <button class="nav-tab" onclick="goPage('chat',this)"><span></span> AI Assistant</button>
+    <button class="nav-tab" onclick="goPage('hist',this)"><span></span> History</button>
   </div>
-
   <div class="nav-pair" id="navPair">
     <span class="nav-pair-sym" id="navSym">--/USDT</span>
     <span class="nav-price" id="navPrice">--</span>
@@ -312,10 +317,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div class="ns"><span class="ns-l">24h Low</span><span class="ns-v" id="navLo">--</span></div>
     </div>
   </div>
-
   <div class="nav-r">
-    <div class="bal-chip">💰 Balance <span class="v" id="balVal">${{ solde|number_format(2) }}</span></div>
-    <a href="{{ path('app_backoffice_asset_index') }}" class="admin-btn">⚙ Admin</a>
+    <div class="bal-chip" style="flex-direction:column;gap:2px;padding:5px 14px">
+      <span style="font-size:9px;letter-spacing:.08em;color:var(--muted)">💰 BALANCE</span>
+      <span class="v" id="balVal">${{ solde|default(0)|number_format(2, '.', ',') }}</span>
+    </div>
   </div>
 </nav>
 
@@ -341,20 +347,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div class="srch-wrap"><input type="text" id="mktSearch" placeholder="Search…"></div>
       <div class="mkt-list" id="mktList">
         {% for asset in assets %}
-          <div class="mkt-row {% if loop.first %}on{% endif %}"
-               data-symbol="{{ asset.symbol|upper }}"
-               onclick="pickAsset('{{ asset.symbol|upper }}',this)">
-            <div>
-              <div class="mkt-sym">{{ asset.symbol|upper }}</div>
-              <div class="mkt-sub">/USDT</div>
-            </div>
-            <div class="mkt-r">
-              <div class="mkt-pr" id="mp-{{ asset.symbol|upper }}">--</div>
-              <div class="mkt-ch" id="mc-{{ asset.symbol|upper }}">--</div>
-            </div>
+          <div class="mkt-row {% if loop.first %}on{% endif %}" data-symbol="{{ asset.symbol|upper }}" onclick="pickAsset('{{ asset.symbol|upper }}',this)">
+            <div><div class="mkt-sym">{{ asset.symbol|upper }}</div><div class="mkt-sub">/USDT</div></div>
+            <div class="mkt-r"><div class="mkt-pr" id="mp-{{ asset.symbol|upper }}">--</div><div class="mkt-ch" id="mc-{{ asset.symbol|upper }}">--</div></div>
           </div>
         {% else %}
-          <div style="padding:20px;color:var(--muted);text-align:center;font-size:12px;">No active assets.<br>Add from Admin.</div>
+          <div style="padding:20px;color:var(--muted);text-align:center;">No active assets.<br>Add from Admin.</div>
         {% endfor %}
       </div>
     </aside>
@@ -372,215 +370,154 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </main>
 
     <aside class="ord-panel">
-      <div class="ord-tabs">
-        <button class="ord-tab buy on" onclick="pickTab('BUY',this)">BUY</button>
-        <button class="ord-tab sell"   onclick="pickTab('SELL',this)">SELL</button>
+      <!-- SECTION FORMULAIRE D'ACHAT/VENTE - EN PREMIER -->
+      <div class="trade-form-section">
+        <div class="ord-tabs">
+          <button class="ord-tab buy on" onclick="pickTab('BUY',this)">BUY</button>
+          <button class="ord-tab sell" onclick="pickTab('SELL',this)">SELL</button>
+        </div>
+        <div class="ord-body">
+          <div class="sec-guard-block" id="tradeGuardBlock">
+            <div class="sec-guard-title">⛔ Trade bloqué — Risque CRITICAL</div>
+            <div class="sec-guard-msg" id="tradeGuardMsg">Le niveau de risque actuel est trop élevé.</div>
+          </div>
+          <div class="fld">
+            <label>Order Mode</label>
+            <select id="ordMode" onchange="toggleLimitField()">
+              <option value="market">Market</option>
+              <option value="limit">Limit</option>
+            </select>
+          </div>
+          <div class="limit-price-wrap" id="limitPriceWrap">
+            <label>Target Price (USDT)</label>
+            <input type="number" id="limitPriceInp" placeholder="e.g. 95000" min="0" step="any">
+            <div class="limit-price-badge"><span class="lbl">Current market price</span><span class="val" id="limitCurrentPx">--</span></div>
+          </div>
+          <div class="fld">
+            <label>Quantity</label>
+            <input type="number" id="qtyInp" placeholder="e.g. 0.5" min="0" step="any">
+            <div class="qty-hint">Max recommandé: <span id="maxQty">--</span></div>
+          </div>
+          <div class="total-row"><span>Total ≈</span><span id="totalVal">$0.00</span></div>
+          <button class="trade-btn buy" id="tradeBtn" onclick="execTrade()">BUY</button>
+          <div class="risk-pill low" id="riskPill"><div class="risk-dot"></div><span id="riskTxt">Analysing…</span></div>
+          <div id="limitOrdersSection" style="display:none;flex-direction:column;gap:6px;">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);">⏳ Pending Limit Orders</div>
+            <div class="limit-pending-list" id="limitPendingList"></div>
+          </div>
+        </div>
       </div>
-      <div class="ord-body">
 
-        <!-- Order Mode -->
-        <div class="fld">
-          <label>Order Mode</label>
-          <select id="ordMode" onchange="toggleLimitField()">
-            <option value="market">Market</option>
-            <option value="limit">Limit</option>
-          </select>
+      <!-- SECTION RECOMMANDEUR - APRÈS LE FORMULAIRE -->
+      <div class="rec-panel" id="recPanel">
+        <div class="rec-title">Analyse & Recommandation</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="trend-badge neutral" id="trendBadge">⬜ NEUTRAL</div>
+          <div style="font-size:10px;color:var(--muted)">Risque : <span id="riskLabel" style="font-family:var(--font-m);">—</span></div>
         </div>
-
-        <!-- LIMIT PRICE FIELD (hidden by default) -->
-        <div class="limit-price-wrap" id="limitPriceWrap">
-          <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Target Price (USDT)</label>
-          <input type="number" id="limitPriceInp" placeholder="e.g. 95000" min="0" step="any">
-          <!-- Current price hint -->
-          <div class="limit-price-badge" id="limitPriceBadge">
-            <span class="lbl">Current market price</span>
-            <span class="val" id="limitCurrentPx">--</span>
+        <div class="rec-grid">
+          <div class="rec-kpi"><div class="rec-kpi-lbl">RSI (14)</div><div class="rec-kpi-val b" id="rsiVal">—</div></div>
+          <div class="rec-kpi"><div class="rec-kpi-lbl">½ Kelly</div><div class="rec-kpi-val y" id="kellyVal">—</div></div>
+          <div class="rec-kpi"><div class="rec-kpi-lbl">MA5</div><div class="rec-kpi-val" id="ma5Val">—</div></div>
+          <div class="rec-kpi"><div class="rec-kpi-lbl">MA20</div><div class="rec-kpi-val" id="ma20Val">—</div></div>
+        </div>
+        <div class="kelly-meter">
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-size:9px;color:var(--muted);">Exposition recommandée</span>
+            <span class="rec-kpi-val y" id="kellyPct" style="font-size:11px">—</span>
           </div>
-          <div style="font-size:10px;color:var(--muted);line-height:1.5;padding:4px 0;">
-            ⚡ The bot will automatically execute this order when the market reaches your target price.
+          <div class="kelly-track"><div class="kelly-fill" id="kellyFill" style="width:0%"></div></div>
+        </div>
+        <div class="sizing-box buy-box">
+          <div class="sizing-box-hd"><span class="sizing-box-title">▲ MAX BUY</span><span style="font-size:9px;color:var(--muted)" id="buyMaxUSD">≈ $—</span></div>
+          <div class="sizing-qty" id="maxBuyQty">—</div>
+          <div class="sizing-sub" id="buySymLabel">unités</div>
+          <div class="sizing-targets">
+            <div class="t-chip tp"><div class="t-chip-lbl">TP</div><div class="t-chip-val" id="tpVal">—</div></div>
+            <div class="t-chip sl"><div class="t-chip-lbl">SL</div><div class="t-chip-val" id="slVal">—</div></div>
+            <div class="t-chip sup"><div class="t-chip-lbl">ATR</div><div class="t-chip-val" id="atrVal">—</div></div>
           </div>
         </div>
-
-        <!-- Quantity -->
-        <div class="fld">
-          <label>Quantity</label>
-          <input type="number" id="qtyInp" placeholder="e.g. 0.5" min="0" step="any">
-          <div class="qty-hint">Max recommended: <span id="maxQty">--</span></div>
-        </div>
-
-        <!-- Total -->
-        <div class="total-row"><span>Total ≈</span><span id="totalVal">$0.00</span></div>
-
-        <!-- Trade button -->
-        <button class="trade-btn buy" id="tradeBtn" onclick="execTrade()">BUY</button>
-
-        <!-- Risk pill -->
-        <div class="risk-pill low" id="riskPill">
-          <div class="risk-dot"></div>
-          <span id="riskTxt">Analysing…</span>
-        </div>
-
-        <!-- Pending LIMIT orders -->
-        <div id="limitOrdersSection" style="display:none;flex-direction:column;gap:6px;">
-          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">
-            ⏳ Pending Limit Orders
+        <div class="sizing-box sell-box">
+          <div class="sizing-box-hd"><span class="sizing-box-title">▼ MAX SELL</span><span style="font-size:9px;color:var(--muted)" id="sellMaxUSD">≈ $—</span></div>
+          <div class="sizing-qty" id="maxSellQty">—</div>
+          <div class="sizing-sub" id="sellSymLabel">unités</div>
+          <div class="sizing-targets">
+            <div class="t-chip sup"><div class="t-chip-lbl">SUPPORT</div><div class="t-chip-val" id="sup1Val">—</div></div>
+            <div class="t-chip tp"><div class="t-chip-lbl">RESIST.</div><div class="t-chip-val" id="res1Val">—</div></div>
           </div>
-          <div class="limit-pending-list" id="limitPendingList"></div>
         </div>
-
-        <!-- News -->
-        <div class="pnl-hd" style="margin:0 -14px;padding:10px 14px;">Crypto News</div>
-        <div class="news-panel" id="newsList">
-          <div style="padding:12px 0;color:var(--muted);font-size:12px;">Loading…</div>
+        <div id="recAdvice" style="font-size:11px;color:var(--muted);padding:6px 8px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--yellow)">
+          Chargement de l'analyse…
         </div>
-
       </div>
+
+      <!-- SECTION SÉCURITÉ & NEWS - EN BAS -->
+      <div class="sec-bundle">
+        <div class="sec-header" onclick="toggleSecBundle()">
+          <div class="sec-header-left">
+            <div class="sec-score-ring">
+              <svg viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="13" fill="none" stroke="var(--border)" stroke-width="3"/>
+                <circle cx="16" cy="16" r="13" fill="none" id="secRingFill" stroke="var(--green)" stroke-width="3" stroke-dasharray="81.68" stroke-dashoffset="81.68" stroke-linecap="round" transform="rotate(-90 16 16)"/>
+              </svg>
+              <div class="sec-score-num" id="secScoreNum">—</div>
+            </div>
+            <div><div class="sec-title-txt">Security Bundle</div><div style="font-size:9px;color:var(--muted)" id="secSummaryTxt">Protection du capital</div></div>
+          </div>
+          <div class="sec-toggle-btn" id="secToggleIcon">▼</div>
+        </div>
+        <div class="sec-body" id="secBody" style="display:none">
+          <div class="sec-warning-flags" id="secFlags"></div>
+          <div class="sec-check ok" id="scBalance"><div class="sec-check-icon">✓</div><div class="sec-check-info"><div class="sec-check-name">Limite de balance</div><div class="sec-check-desc">Max 20% du portefeuille par trade</div></div></div>
+          <div class="sec-check ok" id="scSL"><div class="sec-check-icon">✓</div><div class="sec-check-info"><div class="sec-check-name">Stop-Loss conseillé</div><div class="sec-check-desc" id="scSLDesc">SL suggéré : —</div></div></div>
+          <div class="sec-check ok" id="scTP"><div class="sec-check-icon">✓</div><div class="sec-check-info"><div class="sec-check-name">Take-Profit conseillé</div><div class="sec-check-desc" id="scTPDesc">TP suggéré : —</div></div></div>
+          <div class="sec-check ok" id="scKelly"><div class="sec-check-icon">✓</div><div class="sec-check-info"><div class="sec-check-name">Sizing ½ Kelly</div><div class="sec-check-desc" id="scKellyDesc">Exposition optimisée</div></div></div>
+          <div class="sec-check ok" id="scVol"><div class="sec-check-icon">✓</div><div class="sec-check-info"><div class="sec-check-name">Volatilité acceptable</div><div class="sec-check-desc" id="scVolDesc">Volatilité 24h : —</div></div></div>
+          <div class="sec-check ok" id="scRsi"><div class="sec-check-icon">✓</div><div class="sec-check-info"><div class="sec-check-name">RSI zone neutre</div><div class="sec-check-desc" id="scRsiDesc">RSI : —</div></div></div>
+        </div>
+      </div>
+
+      <div class="pnl-hd" style="margin:0;padding:10px 14px;">Crypto News</div>
+      <div class="news-panel" id="newsList"><div style="padding:12px 0;color:var(--muted);">Loading…</div></div>
     </aside>
   </div>
 
-  <!-- ── BOT ── -->
+  <!-- BOT PAGE -->
   <div class="page" id="pg-bot">
     <div class="bot-layout">
       <div class="bot-sb">
         <h2>Trading <em>Bot</em></h2>
-        <div class="bf">
-          <label>Asset</label>
-          <select id="botAsset">
-            {% for asset in assets %}
-              <option value="{{ asset.symbol|upper }}">{{ asset.symbol|upper }}/USDT</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="bf">
-          <label>Strategy</label>
-          <div class="strat-cards">
-            <div class="strat-card sel" data-s="ma" onclick="pickStrat(this)">
-              <div class="sc-name">📈 MA Crossover</div>
-              <div class="sc-desc">Buy when fast MA crosses above slow MA. Classic trend-following strategy.</div>
-            </div>
-            <div class="strat-card" data-s="rsi" onclick="pickStrat(this)">
-              <div class="sc-name">⚡ RSI Reversal</div>
-              <div class="sc-desc">Buy oversold (RSI &lt; 30), sell overbought (RSI &gt; 70).</div>
-            </div>
-            <div class="strat-card" data-s="dca" onclick="pickStrat(this)">
-              <div class="sc-name">🔄 DCA Bot</div>
-              <div class="sc-desc">Buy fixed amount at regular intervals regardless of price.</div>
-            </div>
-          </div>
-        </div>
+        <div class="bf"><label>Asset</label><select id="botAsset">{% for asset in assets %}<option value="{{ asset.symbol|upper }}">{{ asset.symbol|upper }}/USDT</option>{% endfor %}</select></div>
+        <div class="bf"><label>Strategy</label><div class="strat-cards"><div class="strat-card sel" data-s="ma" onclick="pickStrat(this)"><div class="sc-name">📈 MA Crossover</div><div class="sc-desc">Buy when fast MA crosses above slow MA.</div></div><div class="strat-card" data-s="rsi" onclick="pickStrat(this)"><div class="sc-name">⚡ RSI Reversal</div><div class="sc-desc">Buy oversold (RSI &lt; 30), sell overbought (RSI &gt; 70).</div></div><div class="strat-card" data-s="dca" onclick="pickStrat(this)"><div class="sc-name">🔄 DCA Bot</div><div class="sc-desc">Buy fixed amount at regular intervals.</div></div></div></div>
         <div class="bf"><label>Investment per trade ($)</label><input type="number" id="botAmt" value="100" min="1"></div>
         <div class="bf"><label>Stop Loss (%)</label><input type="number" id="botSL" value="3" min="0.1" step="0.1"></div>
         <div class="bf"><label>Take Profit (%)</label><input type="number" id="botTP" value="5" min="0.1" step="0.1"></div>
         <button class="btn-start" id="botBtn" onclick="toggleBot()">▶ Start Bot</button>
       </div>
-
       <div class="bot-main">
-        <div class="stats-row">
-          <div class="stat-card"><div class="stat-lbl">Total Trades</div><div class="stat-v" id="sTrades">0</div></div>
-          <div class="stat-card"><div class="stat-lbl">Win Rate</div><div class="stat-v g" id="sWin">0%</div></div>
-          <div class="stat-card"><div class="stat-lbl">P&amp;L</div><div class="stat-v g" id="sPnl">$0.00</div></div>
-          <div class="stat-card"><div class="stat-lbl">Status</div><div class="stat-v" id="sStat" style="font-size:14px;color:var(--muted)">Idle</div></div>
-        </div>
-        <div class="log-box" style="flex:1">
-          <div class="log-hd"><div class="ldot" id="lDot"></div>Bot Activity Log</div>
-          <div class="log-list" id="logList">
-            <div class="ll"><span class="ts">--:--:--</span><span class="it">[INFO]</span> Bot is idle. Configure settings and press Start.</div>
-          </div>
-        </div>
+        <div class="stats-row"><div class="stat-card"><div class="stat-lbl">Total Trades</div><div class="stat-v" id="sTrades">0</div></div><div class="stat-card"><div class="stat-lbl">Win Rate</div><div class="stat-v g" id="sWin">0%</div></div><div class="stat-card"><div class="stat-lbl">P&amp;L</div><div class="stat-v g" id="sPnl">$0.00</div></div><div class="stat-card"><div class="stat-lbl">Status</div><div class="stat-v" id="sStat" style="font-size:14px;">Idle</div></div></div>
+        <div class="log-box"><div class="log-hd"><div class="ldot" id="lDot"></div>Bot Activity Log</div><div class="log-list" id="logList"><div class="ll"><span class="ts">--:--:--</span><span class="it">[INFO]</span> Bot is idle. Configure settings and press Start.</div></div></div>
       </div>
     </div>
   </div>
 
-  <!-- ── HISTORY ── -->
+  <!-- HISTORY PAGE -->
   <div class="page" id="pg-hist">
     <div class="hist-wrap">
-
-      <!-- Top bar -->
-      <div class="hist-top">
-        <h2>Trade <em>History</em></h2>
-        <div class="hist-filters">
-          <button class="hf-btn active" onclick="filterHistory('ALL',this)">All</button>
-          <button class="hf-btn" onclick="filterHistory('BUY',this)">Buy</button>
-          <button class="hf-btn" onclick="filterHistory('SELL',this)">Sell</button>
-          <button class="hf-btn" onclick="filterHistory('COMPLETED',this)">Completed</button>
-          <button class="hf-btn" onclick="filterHistory('PENDING',this)">Pending</button>
-          <input type="text" class="hist-search" id="histSearch" placeholder="🔍 Search symbol…" oninput="renderHistory()">
-          <button class="hf-btn" onclick="loadHistory()" title="Refresh">↻ Refresh</button>
-        </div>
-      </div>
-
-      <!-- Summary cards -->
-      <div class="hist-summary">
-        <div class="hsum-card">
-          <div class="hsum-lbl">Total Trades</div>
-          <div class="hsum-val y" id="hsTotalTrades">0</div>
-        </div>
-        <div class="hsum-card">
-          <div class="hsum-lbl">Buy Orders</div>
-          <div class="hsum-val g" id="hsTotalBuy">0</div>
-        </div>
-        <div class="hsum-card">
-          <div class="hsum-lbl">Sell Orders</div>
-          <div class="hsum-val r" id="hsTotalSell">0</div>
-        </div>
-        <div class="hsum-card">
-          <div class="hsum-lbl">Completed</div>
-          <div class="hsum-val g" id="hsCompleted">0</div>
-        </div>
-        <div class="hsum-card">
-          <div class="hsum-lbl">Pending</div>
-          <div class="hsum-val y" id="hsPending">0</div>
-        </div>
-      </div>
-
-      <!-- Table -->
-      <div class="hist-table-wrap">
-        <div class="hist-table-head">
-          <span>#</span>
-          <span>Symbol</span>
-          <span>Type</span>
-          <span>Price</span>
-          <span>Quantity</span>
-          <span>Total</span>
-          <span>Mode</span>
-          <span>Status</span>
-          <span>Date</span>
-        </div>
-        <div class="hist-table-body" id="histTableBody">
-          <div class="hist-empty">
-            <div class="he-icon">📋</div>
-            <div>Loading trade history…</div>
-          </div>
-        </div>
-      </div>
-
+      <div class="hist-top"><h2>Trade <em>History</em></h2><div class="hist-filters"><button class="hf-btn active" onclick="filterHistory('ALL',this)">All</button><button class="hf-btn" onclick="filterHistory('BUY',this)">Buy</button><button class="hf-btn" onclick="filterHistory('SELL',this)">Sell</button><button class="hf-btn" onclick="filterHistory('COMPLETED',this)">Completed</button><button class="hf-btn" onclick="filterHistory('PENDING',this)">Pending</button><input type="text" class="hist-search" id="histSearch" placeholder="🔍 Search symbol…" oninput="renderHistory()"><button class="hf-btn" onclick="loadHistory()">↻ Refresh</button></div></div>
+      <div class="hist-summary"><div class="hsum-card"><div class="hsum-lbl">Total Trades</div><div class="hsum-val y" id="hsTotalTrades">0</div></div><div class="hsum-card"><div class="hsum-lbl">Buy Orders</div><div class="hsum-val g" id="hsTotalBuy">0</div></div><div class="hsum-card"><div class="hsum-lbl">Sell Orders</div><div class="hsum-val r" id="hsTotalSell">0</div></div><div class="hsum-card"><div class="hsum-lbl">Completed</div><div class="hsum-val g" id="hsCompleted">0</div></div><div class="hsum-card"><div class="hsum-lbl">Pending</div><div class="hsum-val y" id="hsPending">0</div></div></div>
+      <div class="hist-table-wrap"><div class="hist-table-head"><span>#</span><span>Symbol</span><span>Type</span><span>Price</span><span>Quantity</span><span>Total</span><span>Mode</span><span>Status</span><span>Date</span></div><div class="hist-table-body" id="histTableBody"><div class="hist-empty"><div class="he-icon">📋</div><div>Loading trade history…</div></div></div></div>
     </div>
   </div>
 
-  <!-- ── CHAT ── -->
+  <!-- CHAT PAGE -->
   <div class="page" id="pg-chat">
     <div class="chat-wrap">
-      <div class="chat-hd">
-        <h2>🤖 Crypto <em>AI Assistant</em></h2>
-        <p>Powered by Grok · Expert in crypto, DeFi, trading &amp; blockchain</p>
-      </div>
-      <div class="msgs" id="msgs">
-        <div class="bubble bot">
-          <div class="av bot">🤖</div>
-          <div class="bc">👋 Hello! I'm your crypto expert assistant. Ask me anything about Bitcoin, Ethereum, DeFi, NFTs, trading strategies or market analysis!</div>
-        </div>
-      </div>
-      <div class="chips">
-        <div class="chip" onclick="quickAsk('What is Bitcoin?')">What is Bitcoin?</div>
-        <div class="chip" onclick="quickAsk('Best crypto to invest in 2025?')">Best crypto 2025?</div>
-        <div class="chip" onclick="quickAsk('Explain DeFi in simple terms')">Explain DeFi</div>
-        <div class="chip" onclick="quickAsk('What is a crypto wallet?')">Crypto wallet?</div>
-        <div class="chip" onclick="quickAsk('How does blockchain work?')">How blockchain works?</div>
-      </div>
-      <div class="chat-inp-row">
-        <input type="text" class="chat-inp" id="chatInp" placeholder="Ask about crypto, trading, blockchain…" onkeydown="if(event.key==='Enter')sendMsg()">
-        <button class="send-btn" onclick="sendMsg()">➤</button>
-      </div>
+      <div class="chat-hd"><h2>🤖 Crypto <em>AI Assistant</em></h2><p>Powered by Grok · Expert in crypto, DeFi, trading &amp; blockchain</p></div>
+      <div class="msgs" id="msgs"><div class="bubble bot"><div class="av bot">🤖</div><div class="bc">👋 Hello! I'm your crypto expert assistant. Ask me anything about Bitcoin, Ethereum, DeFi, NFTs, trading strategies or market analysis!</div></div></div>
+      <div class="chips"><div class="chip" onclick="quickAsk('What is Bitcoin?')">What is Bitcoin?</div><div class="chip" onclick="quickAsk('Best crypto to invest in 2025?')">Best crypto 2025?</div><div class="chip" onclick="quickAsk('Explain DeFi in simple terms')">Explain DeFi</div><div class="chip" onclick="quickAsk('What is a crypto wallet?')">Crypto wallet?</div><div class="chip" onclick="quickAsk('How does blockchain work?')">How blockchain works?</div></div>
+      <div class="chat-inp-row"><input type="text" class="chat-inp" id="chatInp" placeholder="Ask about crypto, trading, blockchain…" onkeydown="if(event.key==='Enter')sendMsg()"><button class="send-btn" onclick="sendMsg()">➤</button></div>
     </div>
   </div>
 
@@ -593,16 +530,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 // STATE
 // ════════════════════════════════════════════════
 const dbAssets = {{ assets|map(a => a.symbol|upper)|json_encode|raw }};
-let curSym  = dbAssets[0] || 'BTC';
+let curSym  = (dbAssets && dbAssets[0]) ? dbAssets[0] : 'BTC';
 let curIv   = '5';
 let curTab  = 'BUY';
 let curPx   = 0;
-
 const priceMap = {};
-
-// Pending limit orders (client-side watch)
-let limitOrders = []; // [{id, sym, type, qty, targetPrice, direction}]
+let limitOrders = [];
 let limitOrderCounter = 1;
+let lastRec = null;
 
 // ════════════════════════════════════════════════
 // NAVIGATION
@@ -610,10 +545,12 @@ let limitOrderCounter = 1;
 function goPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('pg-' + id).classList.add('on');
+  const page = document.getElementById('pg-' + id);
+  if (page) page.classList.add('on');
   btn.classList.add('active');
-  document.getElementById('navPair').style.display = id === 'dash' ? 'flex' : 'none';
-  if (id === 'hist') loadHistory();
+  const navPair = document.getElementById('navPair');
+  if (navPair) navPair.style.display = id === 'dash' ? 'flex' : 'none';
+  if (id === 'hist' && typeof loadHistory === 'function') loadHistory();
 }
 
 // ════════════════════════════════════════════════
@@ -621,18 +558,21 @@ function goPage(id, btn) {
 // ════════════════════════════════════════════════
 function initChart(sym, iv) {
   const el = document.getElementById('tv');
+  if (!el) return;
   el.innerHTML = '';
-  new TradingView.widget({
-    container_id: 'tv', symbol: 'BINANCE:' + sym + 'USDT',
-    interval: iv, timezone: 'Etc/UTC', theme: 'dark', style: '1', locale: 'en',
-    toolbar_bg: '#0d0f14', allow_symbol_change: true, width: '100%', height: '100%',
-  });
+  if (typeof TradingView !== 'undefined') {
+    new TradingView.widget({
+      container_id: 'tv', symbol: 'BINANCE:' + sym + 'USDT',
+      interval: iv, timezone: 'Etc/UTC', theme: 'dark', style: '1', locale: 'en',
+      toolbar_bg: '#0d0f14', allow_symbol_change: true, width: '100%', height: '100%',
+    });
+  }
 }
 function pickIv(iv, btn) {
   document.querySelectorAll('.iv-btn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   curIv = {'1m':'1','5m':'5','1h':'60','4h':'240','1d':'D'}[iv] || '5';
-  initChart(curSym, curIv);
+  if (curSym) initChart(curSym, curIv);
 }
 
 // ════════════════════════════════════════════════
@@ -642,190 +582,137 @@ function pickAsset(sym, el) {
   document.querySelectorAll('.mkt-row').forEach(r => r.classList.remove('on'));
   el.classList.add('on');
   curSym = sym;
-  document.getElementById('chartLbl').textContent = sym + ' / USDT';
-  document.getElementById('navSym').textContent   = sym + '/USDT';
-  document.getElementById('tradeBtn').textContent = curTab + ' ' + sym;
-  initChart(sym, curIv);
+  const chartLbl = document.getElementById('chartLbl');
+  const navSym = document.getElementById('navSym');
+  const tradeBtn = document.getElementById('tradeBtn');
+  if (chartLbl) chartLbl.textContent = sym + ' / USDT';
+  if (navSym) navSym.textContent = sym + '/USDT';
+  if (tradeBtn) tradeBtn.textContent = curTab + ' ' + sym;
+  if (curSym) initChart(sym, curIv);
   if (priceMap[sym]) { updateNavbar(priceMap[sym]); updateLimitPriceBadge(); }
-  fetchRecommend(sym);
-  reconnectWS();
+  if (typeof fetchRecommend === 'function') fetchRecommend(sym);
+  if (typeof reconnectWS === 'function') reconnectWS();
 }
 
 // ════════════════════════════════════════════════
 // FORMAT
 // ════════════════════════════════════════════════
 function dec(v) { return v < 1 ? 6 : v < 100 ? 4 : 2; }
-function fmt(v)  { return '$' + parseFloat(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:dec(v)}); }
+function fmt(v)  { return v ? '$' + parseFloat(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:dec(v)}) : '$0.00'; }
+function fmtQty(v) { if (!v || isNaN(v)) return '—'; return parseFloat(v).toLocaleString('en-US', {maximumFractionDigits: v < 1 ? 6 : 4}); }
+function fmtPx(v) { if (!v || isNaN(v)) return '—'; const dec = v < 1 ? 6 : v < 100 ? 4 : 2; return '$' + parseFloat(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: dec}); }
 
 // ════════════════════════════════════════════════
-// LIMIT ORDER FIELD — show/hide
+// LIMIT ORDER FUNCTIONS
 // ════════════════════════════════════════════════
 function toggleLimitField() {
-  const mode = document.getElementById('ordMode').value;
+  const mode = document.getElementById('ordMode');
+  if (!mode) return;
   const wrap = document.getElementById('limitPriceWrap');
-  if (mode === 'limit') {
-    wrap.classList.add('show');
+  if (mode.value === 'limit') {
+    if (wrap) wrap.classList.add('show');
     updateLimitPriceBadge();
   } else {
-    wrap.classList.remove('show');
+    if (wrap) wrap.classList.remove('show');
   }
-  // Update button label
   const btn = document.getElementById('tradeBtn');
-  btn.textContent = mode === 'limit'
-    ? 'Place LIMIT ' + curTab + ' Order'
-    : curTab + ' ' + curSym;
+  if (btn) {
+    btn.textContent = mode.value === 'limit' ? 'Place LIMIT ' + curTab + ' Order' : curTab + ' ' + curSym;
+  }
 }
-
 function updateLimitPriceBadge() {
   const el = document.getElementById('limitCurrentPx');
-  if (curPx > 0) el.textContent = fmt(curPx);
+  if (el && curPx > 0) el.textContent = fmt(curPx);
 }
-
-// ════════════════════════════════════════════════
-// PENDING LIMIT ORDERS — render list
-// ════════════════════════════════════════════════
 function renderLimitOrders() {
   const section = document.getElementById('limitOrdersSection');
-  const list    = document.getElementById('limitPendingList');
-
+  const list = document.getElementById('limitPendingList');
+  if (!section || !list) return;
   if (!limitOrders.length) { section.style.display = 'none'; return; }
   section.style.display = 'flex';
-
-  list.innerHTML = limitOrders.map(o => `
-    <div class="limit-order-item" id="lo-${o.id}">
-      <span class="li-sym">${o.sym}/USDT</span>
-      <span class="li-info">${o.type} ${o.qty} @ ${fmt(o.targetPrice)}</span>
-      <span style="font-size:10px;color:var(--muted);margin-left:4px;">${o.direction}</span>
-      <div class="li-dot"></div>
-      <button class="li-cancel" onclick="cancelLimitOrder(${o.id})">✕</button>
-    </div>
-  `).join('');
+  list.innerHTML = limitOrders.map(o => `<div class="limit-order-item" id="lo-${o.id}"><span class="li-sym">${o.sym}/USDT</span><span>${o.type} ${o.qty} @ ${fmt(o.targetPrice)}</span><button class="li-cancel" onclick="cancelLimitOrder(${o.id})">✕</button></div>`).join('');
 }
-
 function cancelLimitOrder(id) {
   limitOrders = limitOrders.filter(o => o.id !== id);
   renderLimitOrders();
   toast('Limit order cancelled.', 'ok');
 }
-
-// ════════════════════════════════════════════════
-// CHECK LIMIT ORDERS — called on every price update
-// ════════════════════════════════════════════════
 function checkLimitOrders(sym, price) {
-  const toExecute = limitOrders.filter(o => {
-    if (o.sym !== sym) return false;
-    if (o.direction === 'AT_OR_BELOW') return price <= o.targetPrice;
-    if (o.direction === 'AT_OR_ABOVE') return price >= o.targetPrice;
-    return false;
-  });
-
+  const toExecute = limitOrders.filter(o => o.sym === sym && ((o.direction === 'AT_OR_BELOW' && price <= o.targetPrice) || (o.direction === 'AT_OR_ABOVE' && price >= o.targetPrice)));
   toExecute.forEach(o => {
-    // Remove from pending list
     limitOrders = limitOrders.filter(x => x.id !== o.id);
     renderLimitOrders();
-
-    // Visual feedback
     toast(`🎯 LIMIT ${o.type} triggered! ${o.sym} @ ${fmt(price)}`, 'ok');
-    logLine('wt', `LIMIT ORDER TRIGGERED: ${o.type} ${o.qty} ${o.sym}/USDT @ ${fmt(price)} (target was ${fmt(o.targetPrice)})`);
-
-    // Execute trade via API
+    logLine('wt', `LIMIT ORDER TRIGGERED: ${o.type} ${o.qty} ${o.sym}/USDT @ ${fmt(price)}`);
     fetch('{{ path('app_trading_api_execute_trade') }}', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        symbol:       o.sym,
-        tradeType:    o.type,
-        quantity:     o.qty,
-        orderMode:    'LIMIT',
-        currentPrice: price,
-        targetPrice:  o.targetPrice,
-      }),
-    })
-    .then(r => r.json())
-    .then(d => {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ symbol: o.sym, tradeType: o.type, quantity: o.qty, orderMode: 'LIMIT', currentPrice: price, targetPrice: o.targetPrice }),
+    }).then(r => r.json()).then(d => {
       if (d.error) { toast('Limit exec error: ' + d.error, 'err'); return; }
       document.getElementById('balVal').textContent = '$' + parseFloat(d.newBalance).toFixed(2);
       toast(`✅ LIMIT ${d.tradeType} executed: ${d.quantity} ${d.symbol} @ ${fmt(d.price)}`, 'ok');
-      logLine('it', `Wallet updated — New balance: $${parseFloat(d.newBalance).toFixed(2)}`);
-      loadHistory(); // refresh history if visible
-    })
-    .catch(() => toast('Failed to execute limit order.', 'err'));
+      loadHistory();
+    }).catch(() => toast('Failed to execute limit order.', 'err'));
   });
 }
 
 // ════════════════════════════════════════════════
-// BINANCE REST + WEBSOCKET
+// BINANCE WEBSOCKET & PRICES
 // ════════════════════════════════════════════════
-function fetchBinanceSnapshot() {
-  if (!dbAssets.length) return;
-  const syms = dbAssets.map(s => '"' + s + 'USDT"').join(',');
-  fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=[${syms}]`)
-    .then(r => r.json())
-    .then(data => {
-      if (!Array.isArray(data)) return;
-      data.forEach(item => {
-        const sym = item.symbol.replace('USDT','');
-        const d   = { price: parseFloat(item.lastPrice), change: parseFloat(item.priceChangePercent), high: parseFloat(item.highPrice), low: parseFloat(item.lowPrice), volume: parseFloat(item.volume) };
-        priceMap[sym] = d;
-        updateMarketRow(sym, d);
-        if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
-      });
-      updateTickerAll();
-      startWebSocket();
-    })
-    .catch(() => fetchServerPrices());
-}
-
 let ws = null, wsReconnectTimer = null;
-
+function fetchBinanceSnapshot() {
+  if (!dbAssets || !dbAssets.length) return;
+  const syms = dbAssets.map(s => '"' + s + 'USDT"').join(',');
+  fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=[${syms}]`).then(r => r.json()).then(data => {
+    if (!Array.isArray(data)) return;
+    data.forEach(item => {
+      const sym = item.symbol.replace('USDT','');
+      const d = { price: parseFloat(item.lastPrice), change: parseFloat(item.priceChangePercent), high: parseFloat(item.highPrice), low: parseFloat(item.lowPrice) };
+      priceMap[sym] = d;
+      updateMarketRow(sym, d);
+      if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
+    });
+    updateTickerAll();
+    startWebSocket();
+  }).catch(() => fetchServerPrices());
+}
 function startWebSocket() {
   if (ws) ws.close();
   clearTimeout(wsReconnectTimer);
-  if (!dbAssets.length) return;
+  if (!dbAssets || !dbAssets.length) return;
   const streams = dbAssets.map(s => s.toLowerCase() + 'usdt@ticker').join('/');
   ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
-  ws.onopen = () => logLine('it', 'Binance WebSocket connected — prices are live');
+  ws.onopen = () => logLine('it', 'WebSocket connected');
   ws.onmessage = (event) => {
     try {
       const tick = JSON.parse(event.data).data;
       if (!tick || !tick.s) return;
       const sym = tick.s.replace('USDT','');
-      const d   = { price: parseFloat(tick.c), change: parseFloat(tick.P), high: parseFloat(tick.h), low: parseFloat(tick.l), volume: parseFloat(tick.v) };
+      const d = { price: parseFloat(tick.c), change: parseFloat(tick.P), high: parseFloat(tick.h), low: parseFloat(tick.l) };
       priceMap[sym] = d;
-      recordPrice(sym, d.price);
       updateMarketRow(sym, d);
       updateTickerItem(sym, d);
       if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
-      // ← Check limit orders on EVERY price tick
       checkLimitOrders(sym, d.price);
     } catch(e) {}
   };
-  ws.onerror = () => {};
   ws.onclose = () => { wsReconnectTimer = setTimeout(startWebSocket, 5000); };
 }
-
 function reconnectWS() { clearTimeout(wsReconnectTimer); startWebSocket(); }
-
 function fetchServerPrices() {
-  fetch('{{ path('app_trading_api_prices') }}')
-    .then(r => r.json())
-    .then(data => {
-      if (!Array.isArray(data)) return;
-      data.forEach(item => {
-        const sym = item.symbol.replace('USDT','');
-        const d   = { price:item.price, change:item.change, high:item.high, low:item.low, volume:item.volume };
-        priceMap[sym] = d;
-        updateMarketRow(sym, d);
-        if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
-        checkLimitOrders(sym, d.price);
-      });
-      updateTickerAll();
-    }).catch(()=>{});
+  fetch('{{ path('app_trading_api_prices') }}').then(r => r.json()).then(data => {
+    if (!Array.isArray(data)) return;
+    data.forEach(item => {
+      const sym = item.symbol.replace('USDT','');
+      const d = { price:item.price, change:item.change, high:item.high, low:item.low };
+      priceMap[sym] = d;
+      updateMarketRow(sym, d);
+      if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
+      checkLimitOrders(sym, d.price);
+    });
+    updateTickerAll();
+  }).catch(()=>{});
 }
-
-// ════════════════════════════════════════════════
-// UI HELPERS
-// ════════════════════════════════════════════════
 function updateMarketRow(sym, d) {
   const pr = document.getElementById('mp-'+sym);
   const ch = document.getElementById('mc-'+sym);
@@ -833,12 +720,14 @@ function updateMarketRow(sym, d) {
   if (ch) { ch.textContent = (d.change>=0?'+':'')+d.change.toFixed(2)+'%'; ch.className='mkt-ch '+(d.change>=0?'up':'dn'); }
 }
 function updateNavbar(d) {
-  document.getElementById('navPrice').textContent = fmt(d.price);
-  document.getElementById('navPrice').className   = 'nav-price' + (d.change>=0?'':' dn');
-  document.getElementById('navChg').textContent   = (d.change>=0?'+':'')+d.change.toFixed(2)+'%';
-  document.getElementById('navChg').style.color   = d.change>=0?'var(--green)':'var(--red)';
-  document.getElementById('navHi').textContent    = fmt(d.high);
-  document.getElementById('navLo').textContent    = fmt(d.low);
+  const navPrice = document.getElementById('navPrice');
+  const navChg = document.getElementById('navChg');
+  const navHi = document.getElementById('navHi');
+  const navLo = document.getElementById('navLo');
+  if (navPrice) { navPrice.textContent = fmt(d.price); navPrice.className = 'nav-price' + (d.change>=0?'':' dn'); }
+  if (navChg) { navChg.textContent = (d.change>=0?'+':'')+d.change.toFixed(2)+'%'; navChg.style.color = d.change>=0?'var(--green)':'var(--red)'; }
+  if (navHi) navHi.textContent = fmt(d.high);
+  if (navLo) navLo.textContent = fmt(d.low);
 }
 function updateTickerItem(sym, d) {
   const ticks = document.querySelectorAll('.tick');
@@ -854,192 +743,218 @@ function updateTickerItem(sym, d) {
 function updateTickerAll() { dbAssets.forEach(sym => { if (priceMap[sym]) updateTickerItem(sym, priceMap[sym]); }); }
 
 // ════════════════════════════════════════════════
-// ORDER FORM
+// ORDER EXECUTION
 // ════════════════════════════════════════════════
 function pickTab(tab, btn) {
   curTab = tab;
   document.querySelectorAll('.ord-tab').forEach(t => t.classList.remove('on'));
   btn.classList.add('on');
   const b = document.getElementById('tradeBtn');
-  const mode = document.getElementById('ordMode').value;
-  b.textContent = mode === 'limit' ? 'Place LIMIT ' + tab + ' Order' : tab + ' ' + curSym;
-  b.className   = 'trade-btn ' + tab.toLowerCase();
+  const mode = document.getElementById('ordMode');
+  if (b && mode) {
+    b.textContent = mode.value === 'limit' ? 'Place LIMIT ' + tab + ' Order' : tab + ' ' + curSym;
+    b.className = 'trade-btn ' + tab.toLowerCase();
+  }
 }
-
-document.getElementById('qtyInp').addEventListener('input', updateTotal);
 function updateTotal() {
-  const qty = parseFloat(document.getElementById('qtyInp').value) || 0;
-  document.getElementById('totalVal').textContent = '$' + (qty * curPx).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const qty = parseFloat(document.getElementById('qtyInp')?.value) || 0;
+  const totalVal = document.getElementById('totalVal');
+  if (totalVal) totalVal.textContent = '$' + (qty * curPx).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
-
-function fetchRecommend(sym) {
-  fetch('{{ path('app_trading_api_recommend', {symbol:'__S__'}) }}'.replace('__S__', sym))
-    .then(r => r.json()).then(d => {
-      if (d.error) return;
-      document.getElementById('maxQty').textContent  = d.maxQuantity;
-      document.getElementById('riskPill').className  = 'risk-pill ' + ({LOW:'low',MEDIUM:'med',HIGH:'high'}[d.riskLevel]||'low');
-      document.getElementById('riskTxt').textContent = d.advice;
-    }).catch(()=>{});
-}
-
+document.getElementById('qtyInp')?.addEventListener('input', updateTotal);
 function execTrade() {
-  const qty  = parseFloat(document.getElementById('qtyInp').value);
-  if (!qty || qty <= 0) { toast('Enter a valid quantity.', 'err'); return; }
-
-  const mode  = document.getElementById('ordMode').value.toUpperCase();
-
-  // ── LIMIT ORDER: register client-side watcher ──
+  const qty = parseFloat(document.getElementById('qtyInp')?.value);
+  if (!qty || qty <= 0) { toast('Entrez une quantité valide.', 'err'); return; }
+ 
+  const mode = document.getElementById('ordMode')?.value.toUpperCase();
+ 
+  // ── LIMIT ORDER ──
   if (mode === 'LIMIT') {
-    const targetPrice = parseFloat(document.getElementById('limitPriceInp').value);
-    if (!targetPrice || targetPrice <= 0) { toast('Enter a valid target price for LIMIT order.', 'err'); return; }
-
-    // Direction: BUY when price drops AT_OR_BELOW, SELL when price rises AT_OR_ABOVE
+    const targetPrice = parseFloat(document.getElementById('limitPriceInp')?.value);
+    if (!targetPrice || targetPrice <= 0) { toast('Entrez un prix cible valide.', 'err'); return; }
     const direction = curTab === 'BUY' ? 'AT_OR_BELOW' : 'AT_OR_ABOVE';
-    const dirLabel  = curTab === 'BUY' ? '↓ trigger when ≤' : '↑ trigger when ≥';
-
-    const order = { id: limitOrderCounter++, sym: curSym, type: curTab, qty, targetPrice, direction };
-    limitOrders.push(order);
+    limitOrders.push({ id: limitOrderCounter++, sym: curSym, type: curTab, qty, targetPrice, direction });
     renderLimitOrders();
-
-    // Also persist to server (PENDING status)
     fetch('{{ path('app_trading_api_execute_trade') }}', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ symbol: curSym, tradeType: curTab, quantity: qty, orderMode: 'LIMIT', targetPrice, currentPrice: curPx }),
     }).then(r => r.json()).then(d => {
-      if (d.error) toast(d.error, 'err');
+      // ✅ FIX: mettre à jour le wallet même pour les LIMIT (solde non débité mais on affiche la réponse)
+      if (d.newBalance !== undefined && !isNaN(parseFloat(d.newBalance))) {
+        updateBalanceDisplay(d.newBalance);
+      }
     }).catch(()=>{});
-
-    toast(`📌 LIMIT ${curTab} registered — ${qty} ${curSym} ${dirLabel} ${fmt(targetPrice)}`, 'ok');
+    toast(`📌 LIMIT ${curTab} enregistré — ${qty} ${curSym} @ $${targetPrice}`, 'ok');
     document.getElementById('qtyInp').value = '';
     document.getElementById('limitPriceInp').value = '';
     return;
   }
-
+ 
   // ── MARKET ORDER ──
   const btn = document.getElementById('tradeBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Processing…';
-
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> En cours…'; }
+ 
   fetch('{{ path('app_trading_api_execute_trade') }}', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ symbol: curSym, tradeType: curTab, quantity: qty, orderMode: 'MARKET', currentPrice: curPx }),
-  }).then(r => r.json()).then(d => {
-    btn.disabled = false; btn.textContent = curTab + ' ' + curSym;
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (btn) { btn.disabled = false; btn.textContent = curTab + ' ' + curSym; }
     if (d.error) { toast(d.error, 'err'); return; }
-    toast(`${d.tradeType} ${d.quantity} ${d.symbol} @ ${fmt(d.price)} — Balance: $${parseFloat(d.newBalance).toFixed(2)}`, 'ok');
-    document.getElementById('balVal').textContent = '$' + parseFloat(d.newBalance).toFixed(2);
+ 
+    // ✅ FIX PRINCIPAL : mise à jour du wallet avec vérification NaN
+    const newBal = d.newBalance ?? d.balance;
+    if (newBal !== undefined && !isNaN(parseFloat(newBal))) {
+      updateBalanceDisplay(newBal);
+      // Log dans le bot activity log aussi
+      logLine('it', `💰 Wallet mis à jour: ${formatBalance(newBal)} (${curTab} ${qty} ${curSym} @ ${fmt(d.price)})`);
+    }
+ 
+    toast(`✅ ${d.tradeType} ${d.quantity} ${d.symbol} @ ${fmt(d.price)} — Solde: ${formatBalance(newBal)}`, 'ok');
     document.getElementById('qtyInp').value = '';
     updateTotal();
-  }).catch(() => { btn.disabled = false; btn.textContent = curTab + ' ' + curSym; toast('Trade failed.', 'err'); });
+    // Recharger l'historique automatiquement
+    if (document.getElementById('pg-hist')?.classList.contains('on')) loadHistory();
+  })
+  .catch(() => {
+    if (btn) { btn.disabled = false; btn.textContent = curTab + ' ' + curSym; }
+    toast('Trade échoué. Vérifiez votre connexion.', 'err');
+  });
+}
+ 
+// ✅ NOUVELLE FONCTION CENTRALISÉE pour mettre à jour le balance partout
+function updateBalanceDisplay(amount) {
+  const parsed = parseFloat(amount);
+  if (isNaN(parsed)) return;
+  const formatted = '$' + parsed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Met à jour TOUS les éléments affichant le solde
+  document.getElementById('balVal').textContent = formatted;
+  // Stocke en mémoire pour référence
+  window._currentBalance = parsed;
+}
+ 
+// ✅ HELPER format balance
+function formatBalance(amount) {
+  const parsed = parseFloat(amount);
+  if (isNaN(parsed)) return '$—';
+  return '$' + parsed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ════════════════════════════════════════════════
+// RECOMMENDER
+// ════════════════════════════════════════════════
+function fetchRecommend(sym) {
+  fetch('{{ path('app_trading_api_recommend', {symbol:'__S__'}) }}'.replace('__S__', sym))
+    .then(r => r.json()).then(d => {
+      if (d.error) return;
+      lastRec = d;
+      document.getElementById('maxQty').textContent = fmtQty(d.maxBuyQty);
+      document.getElementById('riskPill').className = 'risk-pill ' + ({LOW:'low',MEDIUM:'med',HIGH:'high'}[d.riskLevel]||'low');
+      document.getElementById('riskTxt').textContent = d.advice;
+      document.getElementById('riskLabel').textContent = d.riskLevel;
+      document.getElementById('rsiVal').textContent = parseFloat(d.rsi).toFixed(1);
+      document.getElementById('kellyVal').textContent = (d.halfKelly || 0).toFixed(1) + '%';
+      document.getElementById('kellyPct').textContent = (d.halfKelly || 0).toFixed(1) + '%';
+      document.getElementById('kellyFill').style.width = Math.min((d.halfKelly || 0), 25) / 25 * 100 + '%';
+      document.getElementById('maxBuyQty').textContent = fmtQty(d.maxBuyQty);
+      document.getElementById('maxSellQty').textContent = fmtQty(d.maxSellQty);
+      document.getElementById('tpVal').textContent = fmtPx(d.suggestedTP);
+      document.getElementById('slVal').textContent = fmtPx(d.suggestedSL);
+      document.getElementById('recAdvice').textContent = d.advice;
+      if (d.riskLevel === 'CRITICAL') document.getElementById('tradeGuardBlock').classList.add('visible');
+      else document.getElementById('tradeGuardBlock').classList.remove('visible');
+    }).catch(()=>{});
 }
 
 // ════════════════════════════════════════════════
 // HISTORY
 // ════════════════════════════════════════════════
-let allTrades = [];
-let histFilter = 'ALL';
-
+let allTrades = [], histFilter = 'ALL';
 function loadHistory() {
   const body = document.getElementById('histTableBody');
+  if (!body) return;
   body.innerHTML = '<div class="hist-empty"><div class="spin" style="width:24px;height:24px;"></div><div>Loading…</div></div>';
-
-  fetch('{{ path('app_trading_api_history') }}')
-    .then(r => r.json())
-    .then(data => {
-      allTrades = Array.isArray(data) ? data : [];
-      updateHistSummary();
-      renderHistory();
-    })
-    .catch(() => {
-      body.innerHTML = '<div class="hist-empty"><div class="he-icon">⚠️</div><div>Failed to load history.</div></div>';
-    });
+  fetch('{{ path('app_trading_api_history') }}').then(r => r.json()).then(data => {
+    allTrades = Array.isArray(data) ? data : [];
+    updateHistSummary();
+    renderHistory();
+  }).catch(() => { body.innerHTML = '<div class="hist-empty"><div>Failed to load history.</div></div>'; });
 }
-
 function updateHistSummary() {
-  const buys      = allTrades.filter(t => t.trade_type === 'BUY').length;
-  const sells     = allTrades.filter(t => t.trade_type === 'SELL').length;
-  const completed = allTrades.filter(t => t.status === 'COMPLETED').length;
-  const pending   = allTrades.filter(t => t.status === 'PENDING').length;
-
   document.getElementById('hsTotalTrades').textContent = allTrades.length;
-  document.getElementById('hsTotalBuy').textContent    = buys;
-  document.getElementById('hsTotalSell').textContent   = sells;
-  document.getElementById('hsCompleted').textContent   = completed;
-  document.getElementById('hsPending').textContent     = pending;
+  document.getElementById('hsTotalBuy').textContent = allTrades.filter(t => t.trade_type === 'BUY').length;
+  document.getElementById('hsTotalSell').textContent = allTrades.filter(t => t.trade_type === 'SELL').length;
+  document.getElementById('hsCompleted').textContent = allTrades.filter(t => t.status === 'COMPLETED').length;
+  document.getElementById('hsPending').textContent = allTrades.filter(t => t.status === 'PENDING').length;
 }
-
 function filterHistory(f, btn) {
   histFilter = f;
   document.querySelectorAll('.hf-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderHistory();
 }
-
 function renderHistory() {
-  const q    = (document.getElementById('histSearch').value || '').toLowerCase();
+  const q = (document.getElementById('histSearch')?.value || '').toLowerCase();
   const body = document.getElementById('histTableBody');
-
-  let rows = allTrades.filter(t => {
-    const matchFilter =
-      histFilter === 'ALL'       ? true :
-      histFilter === 'BUY'       ? t.trade_type === 'BUY' :
-      histFilter === 'SELL'      ? t.trade_type === 'SELL' :
-      histFilter === 'COMPLETED' ? t.status === 'COMPLETED' :
-      histFilter === 'PENDING'   ? t.status === 'PENDING' : true;
-    const matchSearch = !q || (t.symbol||'').toLowerCase().includes(q);
-    return matchFilter && matchSearch;
-  });
-
-  if (!rows.length) {
-    body.innerHTML = '<div class="hist-empty"><div class="he-icon">📭</div><div>No trades match this filter.</div></div>';
-    return;
-  }
-
-  body.innerHTML = rows.map(t => {
-    const price    = parseFloat(t.price)    || 0;
-    const qty      = parseFloat(t.quantity) || 0;
-    const total    = price * qty;
-    const typeClass = (t.trade_type||'').toLowerCase();
-    const modeClass = (t.order_mode||'market').toLowerCase();
-    const statClass = (t.status||'').toLowerCase();
-
-    return `
-    <div class="hist-row">
-      <span class="hr-id">#${t.id}</span>
-      <span class="hr-sym">${t.symbol || 'N/A'}</span>
-      <span class="hr-type ${typeClass}">${t.trade_type || '--'}</span>
-      <span class="hr-price">${price > 0 ? fmt(price) : '--'}</span>
-      <span class="hr-qty">${qty > 0 ? qty.toLocaleString('en-US', {maximumFractionDigits:6}) : '--'}</span>
-      <span class="hr-total">${total > 0 ? fmt(total) : '--'}</span>
-      <span><span class="hr-mode ${modeClass}">${(t.order_mode||'MARKET').toUpperCase()}</span></span>
-      <span><span class="hr-status ${statClass}">${t.status || '--'}</span></span>
-      <span class="hr-date">${t.date || '--'}</span>
-    </div>`;
-  }).join('');
+  if (!body) return;
+  let rows = allTrades.filter(t => (histFilter === 'ALL' ? true : histFilter === 'BUY' ? t.trade_type === 'BUY' : histFilter === 'SELL' ? t.trade_type === 'SELL' : histFilter === 'COMPLETED' ? t.status === 'COMPLETED' : histFilter === 'PENDING' ? t.status === 'PENDING' : true) && (!q || (t.symbol||'').toLowerCase().includes(q)));
+  if (!rows.length) { body.innerHTML = '<div class="hist-empty"><div>No trades match.</div></div>'; return; }
+  body.innerHTML = rows.map(t => `<div class="hist-row"><span>#${t.id}</span><span class="hr-sym">${t.symbol}</span><span class="hr-type ${(t.trade_type||'').toLowerCase()}">${t.trade_type}</span><span>${fmt(parseFloat(t.price))}</span><span>${parseFloat(t.quantity).toLocaleString()}</span><span>${fmt(parseFloat(t.price)*parseFloat(t.quantity))}</span><span><span class="hr-mode ${(t.order_mode||'market').toLowerCase()}">${(t.order_mode||'MARKET').toUpperCase()}</span></span><span><span class="hr-status ${(t.status||'').toLowerCase()}">${t.status}</span></span><span>${t.date}</span></div>`).join('');
 }
 
 // ════════════════════════════════════════════════
 // NEWS
 // ════════════════════════════════════════════════
 function fetchNews() {
+  const box = document.getElementById('newsList');
+  if (!box) return;
+  box.innerHTML = '<div style="padding:12px 14px;color:var(--muted);font-size:11px;">Chargement des news…</div>';
+ 
   fetch('{{ path('app_trading_api_news') }}')
-    .then(r => r.json()).then(arts => {
-      const box = document.getElementById('newsList');
-      if (!Array.isArray(arts)||!arts.length) { box.innerHTML='<div style="padding:12px 0;color:var(--muted);font-size:12px;">No news available.</div>'; return; }
-      box.innerHTML = arts.slice(0,6).map(a => `
-        <a class="news-card" href="${a.url}" target="_blank">
-          <div class="news-card-t">${a.title}</div>
-          <div class="news-card-m">${a.source} · ${new Date(a.publishedAt).toLocaleDateString()}</div>
-        </a>`).join('');
-    }).catch(()=>{});
+    .then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(arts => {
+      if (!Array.isArray(arts) || arts.length === 0) {
+        box.innerHTML = '<div style="padding:12px 14px;color:var(--muted);font-size:11px;">Aucune news disponible.<br><small>Vérifiez votre clé NewsAPI.</small></div>';
+        return;
+      }
+ 
+      // ✅ FIX: filtre les articles sans titre + affiche 6 news avec image optionnelle
+      const valid = arts.filter(a => a.title && a.title !== '[Removed]').slice(0, 6);
+ 
+      box.innerHTML = valid.map(a => {
+        const date = a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+        return `
+          <a class="news-card" href="${a.url || '#'}" target="_blank" rel="noopener">
+            <div class="news-card-t">${escapeHtml(a.title)}</div>
+            <div class="news-card-m">${escapeHtml(a.source || '')} · ${date}</div>
+          </a>
+        `;
+      }).join('');
+    })
+    .catch(err => {
+      box.innerHTML = `<div style="padding:12px 14px;color:var(--muted);font-size:11px;">Erreur chargement news.<br><small>${err.message}</small></div>`;
+      console.warn('News fetch error:', err);
+    });
+}
+ 
+// Helper XSS protection
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ════════════════════════════════════════════════
-// CHATBOT
+// CHAT
 // ════════════════════════════════════════════════
 function quickAsk(msg) { document.getElementById('chatInp').value = msg; sendMsg(); }
 function sendMsg() {
   const inp = document.getElementById('chatInp');
-  const msg = inp.value.trim();
+  const msg = inp?.value.trim();
   if (!msg) return;
   addBubble(msg, 'usr');
   inp.value = '';
@@ -1047,162 +962,425 @@ function sendMsg() {
   fetch('{{ path('app_trading_api_chatbot') }}', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({message: msg}),
-  }).then(r => r.json()).then(d => {
-    tp.remove(); addBubble(d.reply || d.error || 'No response.', 'bot');
-  }).catch(() => { tp.remove(); addBubble('Connection error.', 'bot'); });
+  }).then(r => r.json()).then(d => { tp.remove(); addBubble(d.reply || 'No response.', 'bot'); })
+    .catch(() => { tp.remove(); addBubble('Connection error.', 'bot'); });
 }
 function addBubble(text, role, typing=false) {
   const box = document.getElementById('msgs');
-  const w   = document.createElement('div');
+  if (!box) return null;
+  const w = document.createElement('div');
   w.className = 'bubble ' + role + (typing ? ' typing' : '');
-  w.innerHTML = `<div class="av ${role}">${role==='bot'?'🤖':'👤'}</div>
-    <div class="bc">${typing ? '<div class="td"></div><div class="td"></div><div class="td"></div>' : text}</div>`;
-  box.appendChild(w); box.scrollTop = box.scrollHeight; return w;
+  w.innerHTML = `<div class="av ${role}">${role==='bot'?'🤖':'👤'}</div><div class="bc">${typing ? '<div class="td"></div><div class="td"></div><div class="td"></div>' : text}</div>`;
+  box.appendChild(w); box.scrollTop = box.scrollHeight;
+  return w;
 }
 
 // ════════════════════════════════════════════════
 // BOT
 // ════════════════════════════════════════════════
-let botOn=false, botTimer=null;
-let bTrades=0, bWins=0, bPnl=0, bStrat='ma';
+
+let botOn = false, botTimer = null;
+let bTrades = 0, bWins = 0, bPnl = 0, bStrat = 'ma';
+let botPosition = null;  // Position actuelle du bot
+let botPendingOrders = []; // Ordres pending du bot
+
 const priceHistory = {};
-const HISTORY_MAX  = 50;
+const HISTORY_MAX = 50;
 
 function recordPrice(sym, price) {
-  if (!priceHistory[sym]) priceHistory[sym] = [];
-  priceHistory[sym].push(price);
-  if (priceHistory[sym].length > HISTORY_MAX) priceHistory[sym].shift();
+    if (!priceHistory[sym]) priceHistory[sym] = [];
+    priceHistory[sym].push(price);
+    if (priceHistory[sym].length > HISTORY_MAX) priceHistory[sym].shift();
 }
 
 function pickStrat(el) {
-  document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('sel'));
-  el.classList.add('sel');
-  bStrat = el.dataset.s;
+    document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('sel'));
+    el.classList.add('sel');
+    bStrat = el.dataset.s;
+    botPosition = null; // Reset position quand on change de stratégie
+    logLine('it', `Stratégie changée: ${bStrat.toUpperCase()}`);
 }
 
 function toggleBot() {
-  botOn = !botOn;
-  const btn = document.getElementById('botBtn');
-  const dot = document.getElementById('lDot');
-  document.getElementById('sStat').textContent = botOn ? '🟢 Running' : 'Idle';
-  document.getElementById('sStat').style.color = botOn ? 'var(--green)' : 'var(--muted)';
-  btn.textContent = botOn ? '⏹ Stop Bot' : '▶ Start Bot';
-  btn.classList.toggle('stop', botOn);
-  dot.classList.toggle('live', botOn);
-  if (botOn) {
-    const asset = document.getElementById('botAsset').value;
-    logLine('it', `Bot started | Asset: ${asset}/USDT | Strategy: ${bStrat.toUpperCase()} | SL: ${document.getElementById('botSL').value}% | TP: ${document.getElementById('botTP').value}%`);
-    botTimer = setInterval(botTick, 8000);
-    botTick();
-  } else {
-    clearInterval(botTimer);
-    logLine('wt', 'Bot stopped by user.');
-  }
+    botOn = !botOn;
+    const btn = document.getElementById('botBtn');
+    const dot = document.getElementById('lDot');
+    const sStat = document.getElementById('sStat');
+    
+    if (sStat) {
+        sStat.textContent = botOn ? '🟢 Running' : 'Idle';
+        sStat.style.color = botOn ? 'var(--green)' : 'var(--muted)';
+    }
+    if (btn) {
+        btn.textContent = botOn ? '⏹ Stop Bot' : '▶ Start Bot';
+        btn.classList.toggle('stop', botOn);
+    }
+    if (dot) dot.classList.toggle('live', botOn);
+    
+    if (botOn) {
+        botPosition = null;
+        logLine('it', `Bot démarré | Stratégie: ${bStrat.toUpperCase()}`);
+        // Charger les ordres pending existants
+        loadBotPendingOrders();
+        botTimer = setInterval(botTick, 15000); // Vérification toutes les 15 secondes
+        botTick();
+    } else {
+        clearInterval(botTimer);
+        logLine('wt', 'Bot arrêté');
+    }
+}
+
+// Charger les ordres pending du bot depuis la BDD
+function loadBotPendingOrders() {
+    fetch('{{ path('app_trading_api_bot_pending_orders') }}')
+        .then(r => r.json())
+        .then(orders => {
+            botPendingOrders = orders;
+            if (orders.length > 0) {
+                logLine('it', `${orders.length} ordre(s) LIMIT pending chargé(s) depuis la BDD`);
+                displayBotPendingOrders();
+            }
+        })
+        .catch(err => console.error('Error loading pending orders:', err));
+}
+
+// Afficher les ordres pending du bot dans l'UI
+function displayBotPendingOrders() {
+    const section = document.getElementById('limitOrdersSection');
+    const list = document.getElementById('limitPendingList');
+    if (!section || !list) return;
+    
+    if (!botPendingOrders.length) {
+        section.style.display = 'none';
+        return;
+    }
+    
+    section.style.display = 'flex';
+    list.innerHTML = botPendingOrders.map(o => `
+        <div class="limit-order-item" id="bot-order-${o.id}">
+            <span class="li-sym">${o.symbol}/USDT</span>
+            <span>${o.trade_type} ${o.quantity} @ ${fmt(o.target_price)}</span>
+            <span style="font-size:9px;color:var(--muted)">bot</span>
+        </div>
+    `).join('');
+}
+
+// Vérifier et exécuter les ordres pending
+function checkBotPendingOrders(asset, currentPrice) {
+    const pendingForAsset = botPendingOrders.filter(o => 
+        o.symbol === asset && o.status !== 'COMPLETED'
+    );
+    
+    for (const order of pendingForAsset) {
+        let shouldExecute = false;
+        
+        if (order.trade_type === 'BUY' && currentPrice <= order.target_price) {
+            shouldExecute = true;
+            logLine('wt', `Condition remplie pour ordre LIMIT #${order.id}: prix marché (${fmt(currentPrice)}) ≤ prix cible (${fmt(order.target_price)})`);
+        } else if (order.trade_type === 'SELL' && currentPrice >= order.target_price) {
+            shouldExecute = true;
+            logLine('wt', `Condition remplie pour ordre LIMIT #${order.id}: prix marché (${fmt(currentPrice)}) ≥ prix cible (${fmt(order.target_price)})`);
+        }
+        
+        if (shouldExecute) {
+            // Exécuter l'ordre via l'API
+            fetch('{{ path('app_trading_api_bot_check_execute') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: order.id, currentPrice: currentPrice })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    logLine('bt', `✅ ORDRE LIMIT EXÉCUTÉ: ${order.trade_type} ${order.quantity} ${order.symbol} @ ${fmt(currentPrice)}`);
+                    toast(`🎯 LIMIT ${order.trade_type} exécuté!`, 'ok');
+                    document.getElementById('balVal').textContent = '$' + d.newBalance.toFixed(2);
+                    
+                    // Mettre à jour la position du bot
+                    if (order.trade_type === 'BUY') {
+                        botPosition = {
+                            symbol: order.symbol,
+                            entryPrice: currentPrice,
+                            quantity: order.quantity,
+                            entryTime: new Date()
+                        };
+                    } else if (order.trade_type === 'SELL') {
+                        botPosition = null;
+                    }
+                    
+                    // Retirer de la liste locale
+                    botPendingOrders = botPendingOrders.filter(o => o.id !== order.id);
+                    displayBotPendingOrders();
+                    loadHistory();
+                }
+            })
+            .catch(err => logLine('wt', `Erreur exécution ordre #${order.id}: ${err.message}`));
+        }
+    }
 }
 
 function botTick() {
-  const asset   = document.getElementById('botAsset').value;
-  const amt     = parseFloat(document.getElementById('botAmt').value) || 100;
-  const liveData = priceMap[asset];
-  if (!liveData) { logLine('it', `Waiting for live price of ${asset}/USDT…`); return; }
-  const price   = liveData.price;
-  const history = priceHistory[asset] || [];
-  recordPrice(asset, price);
-  let signal = 'HOLD', reason = '';
-
-  if (bStrat === 'ma') {
-    if (history.length >= 20) {
-      const ma5 = avg(history.slice(-5)), ma20 = avg(history.slice(-20));
-      const prev5 = history.length>=21?avg(history.slice(-6,-1)):ma5;
-      const prev20= history.length>=21?avg(history.slice(-21,-1)):ma20;
-      if (ma5>ma20&&prev5<=prev20)      { signal='BUY';  reason=`MA5(${ma5.toFixed(4)}) crossed above MA20`; }
-      else if (ma5<ma20&&prev5>=prev20) { signal='SELL'; reason=`MA5(${ma5.toFixed(4)}) crossed below MA20`; }
-      else reason=`MA5=${ma5.toFixed(4)} MA20=${ma20.toFixed(4)} — no cross`;
-    } else reason=`Accumulating data (${history.length}/20 candles)…`;
-  } else if (bStrat === 'rsi') {
-    if (history.length >= 15) {
-      const rsi = calcRSI(history.slice(-15));
-      if (rsi<30)      { signal='BUY';  reason=`RSI=${rsi.toFixed(1)} — Oversold`; }
-      else if (rsi>70) { signal='SELL'; reason=`RSI=${rsi.toFixed(1)} — Overbought`; }
-      else               reason=`RSI=${rsi.toFixed(1)} — Neutral`;
-    } else reason=`Accumulating data (${history.length}/15 periods)…`;
-  } else if (bStrat === 'dca') {
-    signal='BUY'; reason=`DCA buy @ ${fmt(price)}`;
-  }
-
-  logLine('it', `[${bStrat.toUpperCase()}] ${asset}/USDT @ ${fmt(price)} | ${reason}`);
-  if (signal !== 'HOLD') executeBotTrade(asset, signal, price, amt);
+    if (!botOn) return;
+    
+    const assetEl = document.getElementById('botAsset');
+    if (!assetEl) return;
+    const asset = assetEl.value;
+    const amtEl = document.getElementById('botAmt');
+    const amt = amtEl ? (parseFloat(amtEl.value) || 100) : 100;
+    const liveData = priceMap[asset];
+    
+    if (!liveData) {
+        logLine('it', `En attente du prix pour ${asset}/USDT...`);
+        return;
+    }
+    
+    const price = liveData.price;
+    recordPrice(asset, price);
+    
+    // Vérifier d'abord les ordres pending existants en BDD
+    checkBotPendingOrders(asset, price);
+    
+    let signal = 'HOLD';
+    let reason = '';
+    const history = priceHistory[asset] || [];
+    
+    // Vérifier si on a déjà une position ouverte
+    const hasPosition = botPosition && botPosition.symbol === asset;
+    
+    // ── STRATÉGIE MA CROSSOVER ──
+    if (bStrat === 'ma' && history.length >= 20) {
+        const ma5 = history.slice(-5).reduce((a, b) => a + b, 0) / 5;
+        const ma20 = history.slice(-20).reduce((a, b) => a + b, 0) / 20;
+        const prevMa5 = history.length >= 21 ? history.slice(-6, -1).reduce((a, b) => a + b, 0) / 5 : ma5;
+        const prevMa20 = history.length >= 21 ? history.slice(-21, -1).reduce((a, b) => a + b, 0) / 20 : ma20;
+        
+        if (ma5 > ma20 && prevMa5 <= prevMa20 && !hasPosition) {
+            signal = 'BUY';
+            reason = `MA5(${ma5.toFixed(2)}) croise au-dessus MA20(${ma20.toFixed(2)})`;
+        } else if (ma5 < ma20 && prevMa5 >= prevMa20 && hasPosition) {
+            signal = 'SELL';
+            reason = `MA5(${ma5.toFixed(2)}) croise en-dessous MA20(${ma20.toFixed(2)})`;
+        }
+    }
+    // ── STRATÉGIE RSI ──
+    else if (bStrat === 'rsi' && history.length >= 14) {
+        let gains = 0, losses = 0;
+        for (let i = history.length - 14; i < history.length; i++) {
+            if (i === 0) continue;
+            const diff = history[i] - history[i - 1];
+            if (diff > 0) gains += diff;
+            else losses += Math.abs(diff);
+        }
+        const rs = (gains / 14) / (losses / 14 || 0.001);
+        const rsi = 100 - (100 / (1 + rs));
+        
+        if (rsi < 30 && !hasPosition) {
+            signal = 'BUY';
+            reason = `RSI=${rsi.toFixed(1)} — Zone survendue`;
+        } else if (rsi > 70 && hasPosition) {
+            signal = 'SELL';
+            reason = `RSI=${rsi.toFixed(1)} — Zone surachetée (fermeture)`;
+        }
+    }
+    // ── STRATÉGIE DCA ──
+    else if (bStrat === 'dca' && !hasPosition) {
+        signal = 'BUY';
+        reason = 'DCA achat programmé';
+    }
+    
+    // ⚠️ IMPORTANT: Créer un ordre LIMIT (PENDING) au lieu d'exécuter MARKET
+    if (signal === 'BUY' && !hasPosition) {
+        // Prix cible = prix actuel - 0.5% (pour acheter moins cher)
+        const targetPrice = price * 0.995;
+        const qty = amt / price;
+        
+        logLine('bt', `📌 Création ordre LIMIT BUY: ${qty.toFixed(6)} ${asset} @ ${fmt(targetPrice)} (marché: ${fmt(price)})`);
+        
+        fetch('{{ path('app_trading_api_execute_trade') }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                symbol: asset,
+                tradeType: 'BUY',
+                quantity: qty,
+                orderMode: 'LIMIT',
+                targetPrice: targetPrice,
+                currentPrice: price
+            })
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                logLine('bt', `✅ Ordre LIMIT BUY créé (ID: ${d.tradeId}) - En attente du marché @ ${fmt(targetPrice)}`);
+                toast(`📌 Ordre LIMIT BUY créé pour ${asset}`, 'ok');
+                // Recharger les ordres pending
+                loadBotPendingOrders();
+            } else if (d.error) {
+                logLine('wt', `Erreur: ${d.error}`);
+            }
+        })
+        .catch(err => logLine('wt', `Erreur API: ${err.message}`));
+    }
+    else if (signal === 'SELL' && hasPosition) {
+        // Prix cible = prix actuel + 0.5% (pour vendre plus cher)
+        const targetPrice = price * 1.005;
+        const qty = botPosition.quantity;
+        
+        logLine('st', `📌 Création ordre LIMIT SELL: ${qty.toFixed(6)} ${asset} @ ${fmt(targetPrice)} (marché: ${fmt(price)})`);
+        
+        fetch('{{ path('app_trading_api_execute_trade') }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                symbol: asset,
+                tradeType: 'SELL',
+                quantity: qty,
+                orderMode: 'LIMIT',
+                targetPrice: targetPrice,
+                currentPrice: price
+            })
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                logLine('st', `✅ Ordre LIMIT SELL créé (ID: ${d.tradeId}) - En attente du marché @ ${fmt(targetPrice)}`);
+                toast(`📌 Ordre LIMIT SELL créé pour ${asset}`, 'ok');
+                loadBotPendingOrders();
+            } else if (d.error) {
+                logLine('wt', `Erreur: ${d.error}`);
+            }
+        })
+        .catch(err => logLine('wt', `Erreur API: ${err.message}`));
+    }
+}
+function updateBotStats() {
+    // Utiliser la nouvelle route
+    fetch('{{ path('app_trading_api_bot_stats_real') }}')
+        .then(r => r.json())
+        .then(stats => {
+            const sTrades = document.getElementById('sTrades');
+            const sWin = document.getElementById('sWin');
+            const sPnl = document.getElementById('sPnl');
+            const sStat = document.getElementById('sStat');
+            
+            if (sTrades && stats.tradesToday) sTrades.textContent = stats.tradesToday;
+            if (sWin && stats.winRate) sWin.textContent = stats.winRate + '%';
+            if (sPnl && stats.pnl) {
+                sPnl.textContent = (stats.pnl >= 0 ? '+' : '') + '$' + stats.pnl.toFixed(2);
+                sPnl.className = 'stat-v ' + (stats.pnl >= 0 ? 'g' : 'r');
+            }
+            if (sStat && stats.pendingOrders > 0) {
+                sStat.innerHTML = `🟢 Running (${stats.pendingOrders} pending)`;
+            }
+        })
+        .catch(() => {});
 }
 
-function executeBotTrade(asset, signal, entryPrice, amt) {
-  const qty = amt / entryPrice;
-  const pnl = amt * ((Math.random() * 8) - 3) / 100;
-  bTrades++; if (pnl>0) bWins++; bPnl += pnl;
-  const sign = pnl>=0?'+':'';
-  logLine(signal==='BUY'?'bt':'st', `${signal} ${asset}/USDT | Qty: ${qty.toFixed(6)} | Entry: ${fmt(entryPrice)} | P&L: ${sign}$${pnl.toFixed(2)}`);
-  document.getElementById('sTrades').textContent = bTrades;
-  document.getElementById('sWin').textContent    = Math.round(bWins/bTrades*100) + '%';
-  const pe = document.getElementById('sPnl');
-  pe.textContent = (bPnl>=0?'+':'')+'$'+bPnl.toFixed(2);
-  pe.className   = 'stat-v ' + (bPnl>=0?'g':'r');
-  fetch('{{ path('app_trading_api_execute_trade') }}', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ symbol:asset, tradeType:signal, quantity:parseFloat(qty.toFixed(6)), currentPrice: entryPrice }),
-  }).then(r=>r.json()).then(d=>{
-    if(d.success) document.getElementById('balVal').textContent = '$'+d.newBalance.toFixed(2);
-  }).catch(()=>{});
-}
 
-function avg(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
-function calcRSI(prices) {
-  let g=0,l=0;
-  for(let i=1;i<prices.length;i++){const d=prices[i]-prices[i-1]; d>=0?g+=d:l-=d;}
-  const n=prices.length-1; const rs=(g/n)/((l/n)||.001);
-  return 100-(100/(1+rs));
-}
-
-// ════════════════════════════════════════════════
-// MARKET SEARCH
-// ════════════════════════════════════════════════
-document.getElementById('mktSearch').addEventListener('input', function() {
-  const q = this.value.toLowerCase();
-  document.querySelectorAll('.mkt-row').forEach(r => {
-    r.style.display = r.dataset.symbol.toLowerCase().includes(q)?'':'none';
-  });
-});
-
-// ════════════════════════════════════════════════
-// LOG & TOAST
-// ════════════════════════════════════════════════
 function logLine(cls, msg) {
   const box = document.getElementById('logList');
-  const now = new Date().toLocaleTimeString('en-US', {hour12:false});
-  const map = {bt:'bt',st:'st',it:'it',wt:'wt'};
-  const lbl = {bt:'[BUY]',st:'[SELL]',it:'[INFO]',wt:'[WARN]'};
-  const d   = document.createElement('div');
+  if (!box) return;
+ 
+  const now = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+  const map = { bt: 'bt', st: 'st', it: 'it', wt: 'wt' };
+  const lbl = { bt: '[BUY]', st: '[SELL]', it: '[INFO]', wt: '[WARN]' };
+ 
+  const d = document.createElement('div');
   d.className = 'll';
-  d.innerHTML = `<span class="ts">${now}</span><span class="${map[cls]||'it'}">${lbl[cls]||'[INFO]'}</span> ${msg}`;
-  box.appendChild(d); box.scrollTop = box.scrollHeight;
-}
-function toast(msg, type='ok') {
-  const box = document.getElementById('toastBox');
-  const el  = document.createElement('div');
-  el.className = 'toast ' + type; el.textContent = msg;
-  box.appendChild(el); setTimeout(()=>el.remove(), 4500);
+  d.innerHTML = `<span class="ts">${now}</span><span class="${map[cls] || 'it'}">${lbl[cls] || '[INFO]'}</span> ${escapeHtml(msg)}`;
+  box.appendChild(d);
+ 
+  // ✅ FIX: scroll automatique vers le bas
+  box.scrollTop = box.scrollHeight;
+ 
+  // ✅ Limite à 200 lignes pour éviter la surcharge mémoire
+  const lines = box.querySelectorAll('.ll');
+  if (lines.length > 200) lines[0].remove();
 }
 
-// ════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════
+function executeBotTradeWithLog(asset, signal, entryPrice, amt, reason) {
+  const qty = amt / entryPrice;
+ 
+  logLine(signal === 'BUY' ? 'bt' : 'st',
+    `${signal} ${asset}/USDT | Qty: ${qty.toFixed(6)} | Prix: ${fmt(entryPrice)} | Raison: ${reason}`
+  );
+ 
+  fetch('{{ path('app_trading_api_execute_trade') }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      symbol: asset,
+      tradeType: signal,
+      quantity: parseFloat(qty.toFixed(6)),
+      orderMode: 'MARKET',
+      currentPrice: entryPrice,
+    }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.error) {
+      logLine('wt', `❌ Erreur trade bot: ${d.error}`);
+      toast(d.error, 'err');
+      return;
+    }
+ 
+    // ✅ FIX WALLET: mise à jour immédiate après trade bot
+    const newBal = d.newBalance ?? d.balance;
+    if (newBal !== undefined && !isNaN(parseFloat(newBal))) {
+      updateBalanceDisplay(newBal);
+      logLine('it', `💰 Wallet mis à jour: ${formatBalance(newBal)}`);
+    }
+ 
+    // Mise à jour stats bot
+    bTrades++;
+    const pnl = (Math.random() * 6 - 2); // simulation P&L %
+    bPnl += amt * pnl / 100;
+    if (pnl > 0) bWins++;
+ 
+    const pnlEl = document.getElementById('sPnl');
+    if (pnlEl) {
+      pnlEl.textContent = (bPnl >= 0 ? '+' : '') + '$' + bPnl.toFixed(2);
+      pnlEl.className = 'stat-v ' + (bPnl >= 0 ? 'g' : 'r');
+    }
+    const tradesEl = document.getElementById('sTrades');
+    if (tradesEl) tradesEl.textContent = bTrades;
+    const winEl = document.getElementById('sWin');
+    if (winEl) winEl.textContent = Math.round(bWins / bTrades * 100) + '%';
+ 
+    logLine('it', `P&L session: ${bPnl >= 0 ? '+' : ''}$${bPnl.toFixed(2)} | Win rate: ${Math.round(bWins/bTrades*100)}%`);
+  })
+  .catch(err => {
+    logLine('wt', `❌ Erreur réseau bot: ${err.message}`);
+  });
+}
+
+
 if (curSym) {
-  document.getElementById('chartLbl').textContent = curSym + ' / USDT';
-  document.getElementById('navSym').textContent   = curSym + '/USDT';
-  document.getElementById('tradeBtn').textContent = 'BUY ' + curSym;
+  const chartLbl = document.getElementById('chartLbl');
+  const navSym = document.getElementById('navSym');
+  const tradeBtn = document.getElementById('tradeBtn');
+  if (chartLbl) chartLbl.textContent = curSym + ' / USDT';
+  if (navSym) navSym.textContent = curSym + '/USDT';
+  if (tradeBtn) tradeBtn.textContent = 'BUY ' + curSym;
   initChart(curSym, curIv);
   fetchRecommend(curSym);
 }
+ 
+// Chargement initial
 fetchBinanceSnapshot();
 fetchNews();
-setInterval(()=>{ if(!ws||ws.readyState!==WebSocket.OPEN) fetchBinanceSnapshot(); }, 60000);
+ 
+// ✅ Rafraîchissement des news toutes les 5 minutes
+setInterval(fetchNews, 5 * 60 * 1000);
+ 
+// ✅ Fallback WebSocket toutes les 60 secondes
+setInterval(() => {
+  if (!ws || ws.readyState !== WebSocket.OPEN) fetchBinanceSnapshot();
+}, 60000);
+ 
+// ✅ Mise à jour stats bot toutes les 30 secondes si le bot tourne
+setInterval(() => {
+  if (botOn && typeof updateBotStats === 'function') updateBotStats();
+}, 30000);
 </script>
 {% endblock %}
