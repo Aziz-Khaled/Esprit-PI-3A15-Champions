@@ -757,7 +757,7 @@
     </div>
 </div>
 
-{# MODAL: RECHARGE WALLET #}
+{# MODAL 1: RECHARGE WALLET #}
 <div class="modal fade" id="rechargeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 bg-dark text-white">
@@ -772,13 +772,12 @@
                     <div class="mb-3">
                         <label class="small fw-bold text-muted mb-1">SELECT CURRENCY</label>
                         <select name="currency_id" class="form-select bg-secondary text-white border-0">
-    {% for currency in all_available_currencies %}
-        {# On utilise le nom exact de la propriété définie dans l'entité #}
-        {% if currency.typeCurrency == 'fiat' %}
-            <option value="{{ currency.id }}">{{ currency.nom }}</option>
-        {% endif %}
-    {% endfor %}
-</select>
+                            {% for currency in all_available_currencies %}
+                                {% if currency.typeCurrency == 'fiat' %}
+                                    <option value="{{ currency.id }}">{{ currency.nom }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
                     </div>
 
                     <div class="mb-3">
@@ -787,7 +786,34 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0">
-                    <button type="submit" class="btn btn-info w-100 py-2 fw-bold">Confirm Recharge</button>
+                    <button type="submit" class="btn btn-info w-100 py-2 fw-bold">Send Verification Code</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# MODAL 2: SECURITY VERIFICATION (Le code de mail) #}
+<div class="modal fade" id="verifyCodeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 bg-dark text-white">
+            <form action="{{ path('app_wallet_recharge_confirm') }}" method="POST">
+                <div class="modal-header border-0">
+                    <h5 class="fw-bold text-warning">Security Check</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-shield-alt fa-3x text-warning mb-3"></i>
+                        <p class="text-muted">A 6-digit verification code has been sent to your email. Please enter it below to authorize the transaction.</p>
+                    </div>
+                    <input type="text" name="verification_code" 
+                           class="form-control form-control-lg bg-secondary text-white border-0 text-center fw-bold" 
+                           placeholder="000000" maxlength="6" required 
+                           style="letter-spacing: 8px; font-size: 1.8rem;">
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-warning w-100 py-2 fw-bold text-dark">Verify & Confirm Payment</button>
                 </div>
             </form>
         </div>
@@ -959,139 +985,174 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    // --- GESTION DU GRAPHIQUE ---
     document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. LOGIQUE DE VÉRIFICATION PAR MAIL (POPUP AUTO) ---
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('verify')) {
+            const verifyModalElement = document.getElementById('verifyCodeModal');
+            if (verifyModalElement) {
+                const verifyModal = new bootstrap.Modal(verifyModalElement);
+                verifyModal.show();
+            }
+        }
+
+        // --- 2. GESTION DU GRAPHIQUE ---
         const canvas = document.getElementById('walletChart');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        
-        fetch('{{ path('app_wallet_chart_data') }}')
-            .then(response => response.json())
-            .then(data => {
-                if (!data || data.length === 0) {
-                    document.getElementById('chart-legend').innerHTML = '<span class="text-muted small italic">No balance data available yet.</span>';
-                    return;
-                }
-
-                const labels = data.map(item => item.name);
-                const values = data.map(item => item.total);
-                
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: values,
-                            backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#f43f5e', '#8b5cf6'],
-                            borderWidth: 0,
-                            hoverOffset: 10
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        cutout: '70%'
-                    }
-                });
-
-                const legendDiv = document.getElementById('chart-legend');
-                legendDiv.innerHTML = ''; 
-                const colors = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#f43f5e', '#8b5cf6'];
-                
-                data.forEach((item, index) => {
-                    const color = colors[index % colors.length];
-                    legendDiv.innerHTML += `
-                        <div class="d-flex align-items-center">
-                            <div style="width: 12px; height: 12px; background: ${color}; border-radius: 3px; margin-right: 8px;"></div>
-                            <span class="small fw-bold">${item.name}</span>
-                            <span class="small text-muted ms-2">${parseFloat(item.total).toFixed(2)}</span>
-                        </div>
-                    `;
-                });
-            });
-    });
-
-    // --- LOGIQUE HISTORY MODAL ---
-    const historyModal = document.getElementById('historyModal');
-    if (historyModal) {
-        historyModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const walletId = button.getAttribute('data-id');
-            const rib = button.getAttribute('data-rib');
-            const tableBody = document.getElementById('history-table-body');
-            const loader = document.getElementById('history-loader');
-            const ribTitle = document.getElementById('history-rib-title');
-
-            ribTitle.innerText = "Wallet: " + rib;
-            tableBody.innerHTML = '';
-            loader.classList.remove('d-none');
-
-            fetch(`/wallet/${walletId}/history-json`)
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            
+            fetch('{{ path('app_wallet_chart_data') }}')
                 .then(response => response.json())
                 .then(data => {
-                    loader.classList.add('d-none');
-                    if (data.length === 0) {
-                        tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-3">No transactions found.</td></tr>';
+                    if (!data || data.length === 0) {
+                        const legendDiv = document.getElementById('chart-legend');
+                        if (legendDiv) legendDiv.innerHTML = '<span class="text-muted small italic">No balance data available yet.</span>';
                         return;
                     }
-                    data.forEach(tx => {
-                        const isOut = tx.direction === 'out'; 
-                        const amountClass = isOut ? 'text-danger' : 'text-success';
-                        const prefix = isOut ? '-' : '+';
 
-                        tableBody.innerHTML += `
-                            <tr>
-                                <td class="small">${tx.date}</td>
-                                <td><span class="badge bg-light text-dark text-uppercase" style="font-size:0.7rem;">${tx.type}</span></td>
-                                <td class="small text-muted">${tx.counterparty}</td>
-                                <td class="text-end fw-bold ${amountClass}">${prefix}${tx.amount} ${tx.currency}</td>
-                            </tr>
-                        `;
+                    const labels = data.map(item => item.name);
+                    const values = data.map(item => item.total);
+                    
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#f43f5e', '#8b5cf6'],
+                                borderWidth: 0,
+                                hoverOffset: 10
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            cutout: '70%'
+                        }
                     });
-                })
-                .catch(() => {
-                    loader.classList.add('d-none');
-                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading history.</td></tr>';
-                });
-        });
-    }
 
-    // --- LOGIQUE DES AUTRES MODALES ---
-    const addCurrencyModal = document.getElementById('addCurrencyModal');
-    if (addCurrencyModal) {
-        addCurrencyModal.addEventListener('show.bs.modal', function (event) {
-            const btn = event.relatedTarget;
-            const walletId = btn.getAttribute('data-id');
-            const walletType = btn.getAttribute('data-type'); 
-            document.getElementById('form-add-currency').action = '/wallet/' + walletId + '/add-currency';
-            const select = document.getElementById('select-currency');
-            [...select.options].forEach(opt => {
-                const cType = opt.getAttribute('data-type');
-                const isTrading = opt.getAttribute('data-trading');
-                let visible = (walletType === 'trading') ? (cType === 'crypto' && isTrading === 'true') : (cType === walletType);
-                opt.style.display = visible ? 'block' : 'none';
-                opt.disabled = !visible;
+                    const legendDiv = document.getElementById('chart-legend');
+                    if (legendDiv) {
+                        legendDiv.innerHTML = ''; 
+                        const colors = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#f43f5e', '#8b5cf6'];
+                        
+                        data.forEach((item, index) => {
+                            const color = colors[index % colors.length];
+                            legendDiv.innerHTML += `
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 12px; height: 12px; background: ${color}; border-radius: 3px; margin-right: 8px;"></div>
+                                    <span class="small fw-bold">${item.name}</span>
+                                    <span class="small text-muted ms-2">${parseFloat(item.total).toFixed(2)}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                });
+        }
+
+        // --- 3. LOGIQUE RECHARGE MODAL (SET WALLET ID) ---
+        const rechargeModal = document.getElementById('rechargeModal');
+        if (rechargeModal) {
+            rechargeModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const walletId = button.getAttribute('data-id');
+                const inputId = document.getElementById('recharge_wallet_id');
+                if (inputId) inputId.value = walletId;
             });
-            const first = [...select.options].find(o => !o.disabled);
-            if (first) { select.value = first.value; updateNom(select); }
-        });
-    }
+        }
+
+        // --- 4. LOGIQUE HISTORY MODAL ---
+        const historyModal = document.getElementById('historyModal');
+        if (historyModal) {
+            historyModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const walletId = button.getAttribute('data-id');
+                const rib = button.getAttribute('data-rib');
+                const tableBody = document.getElementById('history-table-body');
+                const loader = document.getElementById('history-loader');
+                const ribTitle = document.getElementById('history-rib-title');
+
+                if (ribTitle) ribTitle.innerText = "Wallet: " + rib;
+                if (tableBody) tableBody.innerHTML = '';
+                if (loader) loader.classList.remove('d-none');
+
+                fetch(`/wallet/${walletId}/history-json`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (loader) loader.classList.add('d-none');
+                        if (!tableBody) return;
+
+                        if (data.length === 0) {
+                            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-3">No transactions found.</td></tr>';
+                            return;
+                        }
+                        data.forEach(tx => {
+                            const isOut = tx.direction === 'out'; 
+                            const amountClass = isOut ? 'text-danger' : 'text-success';
+                            const prefix = isOut ? '-' : '+';
+
+                            tableBody.innerHTML += `
+                                <tr>
+                                    <td class="small">${tx.date}</td>
+                                    <td><span class="badge bg-light text-dark text-uppercase" style="font-size:0.7rem;">${tx.type}</span></td>
+                                    <td class="small text-muted">${tx.counterparty}</td>
+                                    <td class="text-end fw-bold ${amountClass}">${prefix}${tx.amount} ${tx.currency}</td>
+                                </tr>
+                            `;
+                        });
+                    })
+                    .catch(() => {
+                        if (loader) loader.classList.add('d-none');
+                        if (tableBody) tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading history.</td></tr>';
+                    });
+            });
+        }
+
+        // --- 5. LOGIQUE DES AUTRES MODALES (Add Currency / Edit) ---
+        const addCurrencyModal = document.getElementById('addCurrencyModal');
+        if (addCurrencyModal) {
+            addCurrencyModal.addEventListener('show.bs.modal', function (event) {
+                const btn = event.relatedTarget;
+                const walletId = btn.getAttribute('data-id');
+                const walletType = btn.getAttribute('data-type'); 
+                const form = document.getElementById('form-add-currency');
+                if (form) form.action = '/wallet/' + walletId + '/add-currency';
+                
+                const select = document.getElementById('select-currency');
+                if (select) {
+                    [...select.options].forEach(opt => {
+                        const cType = opt.getAttribute('data-type');
+                        const isTrading = opt.getAttribute('data-trading');
+                        let visible = (walletType === 'trading') ? (cType === 'crypto' && isTrading === 'true') : (cType === walletType);
+                        opt.style.display = visible ? 'block' : 'none';
+                        opt.disabled = !visible;
+                    });
+                    const first = [...select.options].find(o => !o.disabled);
+                    if (first) { select.value = first.value; updateNom(select); }
+                }
+            });
+        }
+
+        const editModal = document.getElementById('editModal');
+        if (editModal) {
+            editModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const id = button.getAttribute('data-id');
+                const typeInput = document.getElementById('modal-type');
+                const statutInput = document.getElementById('modal-statut');
+                const form = document.getElementById('edit-form');
+                
+                if (typeInput) typeInput.value = button.getAttribute('data-type').toUpperCase();
+                if (statutInput) statutInput.value = button.getAttribute('data-statut');
+                if (form) form.action = '/wallet/' + id + '/edit';
+            });
+        }
+    });
 
     function updateNom(select) {
         const selected = select.options[select.selectedIndex];
         const input = document.getElementById('hidden-nom-currency');
         if (input) input.value = selected ? selected.getAttribute('data-nom') : '';
-    }
-
-    const editModal = document.getElementById('editModal');
-    if (editModal) {
-        editModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const id = button.getAttribute('data-id');
-            document.getElementById('modal-type').value = button.getAttribute('data-type').toUpperCase();
-            document.getElementById('modal-statut').value = button.getAttribute('data-statut');
-            document.getElementById('edit-form').action = '/wallet/' + id + '/edit';
-        });
     }
 </script>
 {% endblock %}

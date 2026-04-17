@@ -261,30 +261,78 @@ public function getHistoryJson(int $id, WalletRepository $walletRepository, Tran
     return new JsonResponse($data);
 }
 
-  #[Route('/recharge', name: 'app_wallet_recharge', methods: ['POST'])]
-public function recharge(
+ // STEP 1: Send the email and store data in session
+#[Route('/recharge', name: 'app_wallet_recharge', methods: ['POST'])]
+public function initiateRecharge(
     Request $request, 
-    StripeService $stripeService, 
-    EntityManagerInterface $em,
-    \App\Service\BlockchainService $blockchainService // Injection du service Blockchain
+    \App\Service\MailService $mailService, 
+    EntityManagerInterface $em
 ): Response {
     $walletId = $request->request->get('wallet_id');
     $currencyId = $request->request->get('currency_id');
     $amount = (float)$request->request->get('amount');
 
+    // Generate 6-digit verification code
+    $verificationCode = random_int(100000, 999999);
+
+    // Save data in session
+    $session = $request->getSession();
+    $session->set('pending_recharge', [
+        'wallet_id' => $walletId,
+        'currency_id' => $currencyId,
+        'amount' => $amount,
+        'code' => $verificationCode
+    ]);
+
+    // Send the email
+    $user = $this->getUser() ?: $em->getRepository(Utilisateur::class)->find(1);
+    try {
+        $mailService->sendVerificationCode($user->getEmail(), $verificationCode);
+        $this->addFlash('info', 'A verification code has been sent to your email.');
+    } catch (\Exception $e) {
+        $this->addFlash('error', 'Failed to send verification email: ' . $e->getMessage());
+        return $this->redirectToRoute('app_wallet_index');
+    }
+
+    // Redirect to index with a trigger for the popup
+    return $this->redirectToRoute('app_wallet_index', ['verify' => 1]);
+}
+
+// STEP 2: Verify the code and execute Stripe/Blockchain logic
+#[Route('/recharge/confirm', name: 'app_wallet_recharge_confirm', methods: ['POST'])]
+public function confirmRecharge(
+    Request $request, 
+    StripeService $stripeService, 
+    EntityManagerInterface $em,
+    \App\Service\BlockchainService $blockchainService
+): Response {
+    $session = $request->getSession();
+    $pending = $session->get('pending_recharge');
+    $inputCode = $request->request->get('verification_code');
+
+    // Security check
+    if (!$pending || $inputCode != $pending['code']) {
+        $this->addFlash('error', 'Invalid verification code. Please try again.');
+        return $this->redirectToRoute('app_wallet_index');
+    }
+
+    // Recover data from session
+    $walletId = $pending['wallet_id'];
+    $currencyId = $pending['currency_id'];
+    $amount = $pending['amount'];
+
+    // --- YOUR ORIGINAL STRIPE & BLOCKCHAIN LOGIC ---
     $user = $this->getUser() ?: $em->getRepository(Utilisateur::class)->find(1);
     $wallet = $em->getRepository(Wallet::class)->find($walletId);
     $currency = $em->getRepository(Currency::class)->find($currencyId);
-    
     $card = $em->getRepository(CreditCard::class)->findOneBy(['utilisateur' => $user, 'statut' => 'ACTIVE']);
-    
+
     if (!$card || !$card->getStripePaymentMethodId()) {
         $this->addFlash('error', 'No active card found.');
         return $this->redirectToRoute('app_wallet_index');
     }
 
     try {
-        // ... (Logique Stripe inchangée) ...
         if (!$card->getStripeCustomerId()) {
             $customer = $stripeService->createCustomer($user->getEmail() ?? 'user@example.com');
             $card->setStripeCustomerId($customer->id);
@@ -299,14 +347,14 @@ public function recharge(
         );
 
         if ($intent->status === 'succeeded') {
-            // 1. Mise à jour du solde WalletCurrency
+            // 1. Update WalletCurrency balance
             $walletCurrency = $em->getRepository(WalletCurrency::class)->findOneBy([
                 'wallet' => $wallet,
                 'currency' => $currency
             ]);
 
             if (!$walletCurrency) {
-                $walletCurrency = new WalletCurrency();
+                $walletCurrency = new \App\Entity\WalletCurrency();
                 $walletCurrency->setWallet($wallet);
                 $walletCurrency->setCurrency($currency);
                 $walletCurrency->setNomCurrency($currency->getNom());
@@ -316,10 +364,10 @@ public function recharge(
                 $walletCurrency->setSolde($walletCurrency->getSolde() + $amount);
             }
 
-            // 2. Création de l'entité Transaction
+            // 2. Create Transaction entity
             $transaction = new \App\Entity\Transaction();
             $transaction->setWalletDestination($wallet);
-            $transaction->setWalletSource(null); // Pas de source car c'est une recharge externe
+            $transaction->setWalletSource(null);
             $transaction->setCreditCard($card);
             $transaction->setMontant($amount);
             $transaction->setCurrency($currency);
@@ -328,19 +376,17 @@ public function recharge(
             $transaction->setDateTransaction(new \DateTime());
 
             $em->persist($transaction);
-            
-            // 3. Persistance en base de données
             $em->flush(); 
 
-            // 4. LOGIQUE BLOCKCHAIN : Ajout de la transaction dans la chaîne
-            // On le fait après le flush pour être sûr que la transaction a un ID
+            // 3. Blockchain Logic
             try {
                 $blockchainService->addBlock($transaction);
             } catch (\Exception $e) {
-                // On log l'erreur mais on ne bloque pas la recharge Stripe si la blockchain échoue
-                // facultatif : $this->addFlash('warning', 'Transaction saved but blockchain failed.');
+                // Blockchain error is optional, we don't block the successful recharge
             }
-            
+
+            // Clean session and success message
+            $session->remove('pending_recharge');
             $this->addFlash('success', 'Wallet recharged and transaction secured in Blockchain!');
         }
     } catch (\Exception $e) {
