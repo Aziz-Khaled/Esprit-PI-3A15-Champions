@@ -151,4 +151,273 @@ public function deleteUser(
         ]);
     }
 
+    #[Route('/users/face-check/{id}', name: 'app_admin_face_check', methods: ['GET'])]
+public function faceCheck(
+    Utilisateur $user,
+    Request $request
+): JsonResponse {
+    $projectDir = $this->getParameter('kernel.project_dir');
+
+    $selfiePath = $projectDir . '/public/uploads/users/selfies/' . $user->getUserImage();
+    $idPath     = $projectDir . '/public/uploads/users/ids/'     . $user->getPieceIdentite();
+
+    // Guard: files must exist
+    if (!file_exists($selfiePath) || !file_exists($idPath)) {
+        return new JsonResponse([
+            'success' => false,
+            'error'   => 'One or both image files not found on disk.',
+        ], 404);
+    }
+
+    $apiKey    = $_ENV['FACEPP_API_KEY'];
+    $apiSecret = $_ENV['FACEPP_API_SECRET'];
+
+    // Call Face++ /compare endpoint using multipart/form-data
+    $ch = curl_init('https://api-us.faceplusplus.com/facepp/v3/compare');
+
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => [
+            'api_key'        => $apiKey,
+            'api_secret'     => $apiSecret,
+            'image_file1'    => new \CURLFile($selfiePath),
+            'image_file2'    => new \CURLFile($idPath),
+        ],
+        CURLOPT_TIMEOUT        => 20,
+    ]);
+
+    $raw      = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr  = curl_error($ch);
+    curl_close($ch);
+
+    if ($curlErr) {
+        return new JsonResponse(['success' => false, 'error' => 'cURL error: ' . $curlErr], 500);
+    }
+
+    $data = json_decode($raw, true);
+
+    // Face++ returns error_message on failure (e.g. no face detected)
+    if (isset($data['error_message'])) {
+        return new JsonResponse([
+            'success' => false,
+            'error'   => $data['error_message'],
+        ], 200);
+    }
+
+    $confidence = round($data['confidence'] ?? 0, 1);
+    $threshold  = $data['thresholds']['1e-5'] ?? 73.975; // Face++ recommended threshold
+
+    return new JsonResponse([
+        'success'    => true,
+        'confidence' => $confidence,   // 0–100 float
+        'threshold'  => $threshold,
+        'match'      => $confidence >= $threshold,
+    ]);
+}
+
+#[Route('/users/extract-id/{id}', name: 'app_admin_extract_id', methods: ['GET'])]
+public function extractId(Utilisateur $user): JsonResponse
+{
+    $projectDir = $this->getParameter('kernel.project_dir');
+    $idPath     = $projectDir . '/public/uploads/users/ids/' . $user->getPieceIdentite();
+
+    if (!file_exists($idPath)) {
+        return new JsonResponse(['success' => false, 'error' => 'ID file not found.'], 404);
+    }
+
+    $tesseractBin = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe';
+    $tessdataDir  = $projectDir . '\\tessdata';
+    $outputBase   = sys_get_temp_dir() . '\\ocr_' . $user->getIdUser();
+
+    // Windows-safe command: use double quotes around paths, redirect stderr to NUL
+    $cmd = sprintf(
+        '"%s" "%s" "%s" --tessdata-dir "%s" -l fra+ara 2>NUL',
+        $tesseractBin,
+        $idPath,
+        $outputBase,
+        $tessdataDir
+    );
+
+    exec($cmd, $out, $code);
+
+    $txtFile = $outputBase . '.txt';
+
+    if (!file_exists($txtFile)) {
+        // Return debug info so you can see what went wrong
+        return new JsonResponse([
+            'success' => false,
+            'error'   => 'OCR failed.',
+            'debug'   => [
+                'exit_code' => $code,
+                'cmd'       => $cmd,
+                'tmp_dir'   => sys_get_temp_dir(),
+                'id_exists' => file_exists($idPath),
+            ]
+        ], 500);
+    }
+
+    $rawText = file_get_contents($txtFile);
+    unlink($txtFile);
+
+    $parsed = $this->parseIdCard($rawText);
+
+    return new JsonResponse(['success' => true, 'raw' => $rawText, 'parsed' => $parsed]);
+}
+
+private function parseIdCard(string $text): array
+{
+    $text  = str_replace(["\r\n", "\r"], "\n", $text);
+    $lines = array_values(array_filter(
+        array_map('trim', explode("\n", $text)),
+        fn($l) => $l !== ''
+    ));
+
+    $data = [
+        'cin'      => null,
+        'nom'      => null,
+        'prenom'   => null,
+        'dob'      => null,
+        'expiry'   => null,
+        'mrz_line' => null,
+    ];
+
+    $monthMap = [
+        'jan'=>'01','feb'=>'02','mar'=>'03','apr'=>'04',
+        'may'=>'05','jun'=>'06','jul'=>'07','aug'=>'08',
+        'sep'=>'09','oct'=>'10','nov'=>'11','dec'=>'12',
+    ];
+
+    // Helper: try to parse "DD Mon YYYY" or "DD/MM/YYYY" into "DD/MM/YYYY"
+    $parseDate = function(string $raw) use ($monthMap): ?string {
+        $raw = trim($raw);
+        // DD Mon YYYY  (e.g. "31 Mar 2028")
+        if (preg_match('/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/', $raw, $m)) {
+            $mon = $monthMap[strtolower($m[2])] ?? null;
+            if ($mon) return sprintf('%02d/%s/%s', $m[1], $mon, $m[3]);
+        }
+        // DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY
+        if (preg_match('/(\d{2})[\/\.\-](\d{2})[\/\.\-](\d{4})/', $raw, $m)) {
+            return "{$m[1]}/{$m[2]}/{$m[3]}";
+        }
+        return null;
+    };
+
+    $total = count($lines);
+
+    for ($i = 0; $i < $total; $i++) {
+        $line = $lines[$i];
+        $lineUpper = strtoupper($line);
+
+        // ── Name block: grab the 2 lines after "Name"
+        if ($lineUpper === 'NAME' && !$data['prenom']) {
+            if (isset($lines[$i + 1])) $data['prenom'] = $lines[$i + 1];
+            if (isset($lines[$i + 2])) $data['nom']    = $lines[$i + 2];
+        }
+
+        // ── DoB label → next non-empty line is the date
+        if (preg_match('/^dob$/i', $line) || str_contains($lineUpper, 'DATE OF BIRTH')) {
+            // Look ahead up to 3 lines for a date
+            for ($j = $i + 1; $j <= $i + 3 && $j < $total; $j++) {
+                $candidate = $lines[$j];
+                // OCR often garbles month names in DoB — try direct parse first
+                $parsed = $parseDate($candidate);
+                if ($parsed) { $data['dob'] = $parsed; break; }
+
+                // Fallback: if line looks like "14380 2000", extract the year
+                // and mark dob as partially extracted
+                if (preg_match('/\b(\d{4})\b/', $candidate, $m) && (int)$m[1] > 1920) {
+                    $data['dob'] = '??/?? /' . $m[1] . ' (OCR unclear)';
+                    break;
+                }
+            }
+        }
+
+        // ── Expiry: "Expires on" / "Expiry" / "Valid until"
+        if (preg_match('/expir|valid until/i', $line)) {
+            for ($j = $i + 1; $j <= $i + 3 && $j < $total; $j++) {
+                $parsed = $parseDate($lines[$j]);
+                if ($parsed) { $data['expiry'] = $parsed; break; }
+            }
+            // Also try parsing the rest of the same line
+            if (!$data['expiry']) {
+                $rest = trim(preg_replace('/expir\w*\s*(on)?/i', '', $line));
+                $parsed = $parseDate($rest);
+                if ($parsed) $data['expiry'] = $parsed;
+            }
+        }
+
+        // ── Card number: 16 digits in groups (like "5843 2166 1964 8792")
+        if (!$data['cin']) {
+            $digits = preg_replace('/\s/', '', $line);
+            if (preg_match('/^\d{16}$/', $digits)) {
+                $data['cin'] = $digits;
+            }
+            // Also try Tunisian CIN: exactly 8 digits
+            elseif (preg_match('/(?<!\d)(\d{8})(?!\d)/', $digits, $m)) {
+                $data['cin'] = $m[1];
+            }
+        }
+
+        // ── MRZ (Tunisian CIN cards)
+        if (preg_match('/^(IDTUN|ID TUN|I<TUN)[<A-Z0-9 ]{5,}/', $line)) {
+            $data['mrz_line'] = $line;
+            if (preg_match('/(\d{6})[MF<](\d{6})/', $line, $mrzM)) {
+                $data['dob']    = $this->mrzDateToHuman($mrzM[1]);
+                $data['expiry'] = $this->mrzDateToHuman($mrzM[2]);
+            }
+        }
+    }
+
+    return $data;
+}
+
+private function mrzDateToHuman(string $mrzDate): string
+{
+    $yy   = substr($mrzDate, 0, 2);
+    $mm   = substr($mrzDate, 2, 2);
+    $dd   = substr($mrzDate, 4, 2);
+    $year = (int)$yy > (int)date('y') ? '19' . $yy : '20' . $yy;
+    return "$dd/$mm/$year";
+}
+
+#[Route('/users/tesseract-debug', name: 'app_admin_tesseract_debug', methods: ['GET'])]
+public function tesseractDebug(): JsonResponse
+{
+    $projectDir  = $this->getParameter('kernel.project_dir');
+    $tessdataDir = $projectDir . '/tessdata';
+
+    $tesseractBin = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe';
+
+exec('"' . $tesseractBin . '" --version 2>&1', $verOut);
+
+return new JsonResponse([
+    'bin_exists' => file_exists($tesseractBin),  // must be true
+    'version'    => $verOut,
+    'tessdata_path' => $tessdataDir,
+    'tessdata_files' => array_diff(scandir($tessdataDir), ['.', '..']), // list files
+]);
+}
+
+#[Route('/users/extract-id-raw/{id}', name: 'app_admin_extract_id_raw', methods: ['GET'])]
+public function extractIdRaw(Utilisateur $user): JsonResponse
+{
+    $projectDir   = $this->getParameter('kernel.project_dir');
+    $idPath       = $projectDir . '/public/uploads/users/ids/' . $user->getPieceIdentite();
+    $tesseractBin = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe';
+    $tessdataDir  = $projectDir . '\\tessdata';
+    $outputBase   = sys_get_temp_dir() . '\\ocr_raw_' . $user->getIdUser();
+
+    $cmd = sprintf('"%s" "%s" "%s" --tessdata-dir "%s" -l fra+ara 2>NUL',
+        $tesseractBin, $idPath, $outputBase, $tessdataDir);
+    exec($cmd, $out, $code);
+
+    $txtFile = $outputBase . '.txt';
+    $raw = file_exists($txtFile) ? file_get_contents($txtFile) : '(no output)';
+    if (file_exists($txtFile)) unlink($txtFile);
+
+    return new JsonResponse(['raw' => $raw, 'lines' => explode("\n", $raw)]);
+}
+
 }

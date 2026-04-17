@@ -17,6 +17,8 @@ security:
             user_checker: App\Security\UserChecker
             lazy: true
             provider: app_user_provider
+            custom_authenticators:
+                - App\Security\Auth0Authenticator
             form_login:
                 login_path: app_login
                 check_path: app_login
@@ -31,7 +33,10 @@ security:
     access_control:
         - { path: ^/login,    roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/connect,  roles: PUBLIC_ACCESS } 
         - { path: ^/$,        roles: PUBLIC_ACCESS }
+        - { path: ^/admin/users/tesseract-debug,  roles: PUBLIC_ACCESS }
+        - { path: ^/admin/users/extract-id-raw,  roles: PUBLIC_ACCESS }
         - { path: ^/admin/search, roles: ROLE_ADMIN }
         - { path: ^/admin,    roles: ROLE_ADMIN }
         - { path: ^/, roles: [ROLE_CLIENT, ROLE_ADMIN, ROLE_COMMERCANT, ROLE_INVESTISSEUR] }

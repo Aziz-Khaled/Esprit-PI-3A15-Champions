@@ -21,11 +21,46 @@
             transition: transform 0.2s;
         }
         .id-thumb:hover { transform: scale(1.05); }
-        .badge-pending  { background: #f6c23e; color: #fff; }
-        .card-counter {
-            font-size: 2rem; font-weight: 700;
-            color: #4e73df;
+        .badge-pending { background: #f6c23e; color: #fff; }
+
+        /* ── Face Match Badge ── */
+        .face-score {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 0.82rem; font-weight: 700;
+            padding: 4px 10px; border-radius: 20px;
+            border: 2px solid transparent;
+            white-space: nowrap;
         }
+        .face-score.match    { background: #d4edda; border-color: #28a745; color: #155724; }
+        .face-score.no-match { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        .face-score.error    { background: #fff3cd; border-color: #ffc107; color: #856404; }
+
+        /* Circular progress ring */
+        .face-ring-wrap {
+            display: inline-flex; flex-direction: column;
+            align-items: center; gap: 4px;
+        }
+        .face-ring svg { transform: rotate(-90deg); }
+        .face-ring circle.track { fill: none; stroke: #e9ecef; stroke-width: 5; }
+        .face-ring circle.fill  { fill: none; stroke-width: 5;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.8s ease; }
+        .face-ring-label {
+            font-size: 10px; font-weight: 700; color: #5a5c69;
+            text-align: center; line-height: 1.2;
+        }
+
+        .btn-check {
+            background: #4e73df; color: #fff;
+            border: none; border-radius: 6px;
+            padding: 5px 12px; font-size: 0.8rem;
+            cursor: pointer; transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .btn-check:hover   { background: #2e59d9; }
+        .btn-check:disabled { background: #b7c3e8; cursor: not-allowed; }
+
+        .face-cell { min-width: 120px; text-align: center; }
     </style>
 </head>
 <body id="page-top">
@@ -51,18 +86,16 @@
             </a>
         </li>
         <li class="nav-item">
-    <a class="nav-link" href="{{ path('app_admin_users_list') }}">
-        <i class="fas fa-fw fa-users"></i>
-        <span>Users</span>
-    </a>
-</li>
+            <a class="nav-link" href="{{ path('app_admin_users_list') }}">
+                <i class="fas fa-fw fa-users"></i><span>Users</span>
+            </a>
+        </li>
         <hr class="sidebar-divider d-none d-md-block">
         <div class="text-center d-none d-md-inline">
             <button class="rounded-circle border-0" id="sidebarToggle"></button>
         </div>
     </ul>
 
-    {# ── CONTENT WRAPPER ── #}
     <div id="content-wrapper" class="d-flex flex-column">
         <div id="content">
 
@@ -74,30 +107,25 @@
                 <ul class="navbar-nav ml-auto">
                     <div class="topbar-divider d-none d-sm-block"></div>
                     <li class="nav-item dropdown no-arrow">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                        data-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
                             <span class="mr-2 d-none d-lg-inline text-gray-600 small">
                                 {{ app.user.prenom }} {{ app.user.nom }}
                             </span>
                             <img class="img-profile rounded-circle"
-                                src="/uploads/users/selfies/{{ app.user.userImage }}"
-                                style="width:32px;height:32px;object-fit:cover;">
+                                 src="/uploads/users/selfies/{{ app.user.userImage }}"
+                                 style="width:32px;height:32px;object-fit:cover;">
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                            aria-labelledby="userDropdown">
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
                             <a class="dropdown-item" href="{{ path('app_logout') }}">
-                                <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                                Logout
+                                <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>Logout
                             </a>
                         </div>
                     </li>
                 </ul>
             </nav>
 
-            {# ── PAGE CONTENT ── #}
             <div class="container-fluid">
 
-                {# Page Heading #}
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <h1 class="h3 mb-0 text-gray-800">
                         <i class="fas fa-user-clock mr-2 text-warning"></i>Pending Approvals
@@ -107,20 +135,16 @@
                     </span>
                 </div>
 
-                {# Flash Messages #}
                 {% for label, messages in app.flashes %}
                     {% for message in messages %}
                         <div class="alert alert-{{ label == 'success' ? 'success' : 'warning' }} alert-dismissible fade show" role="alert">
                             <i class="fas fa-{{ label == 'success' ? 'check-circle' : 'exclamation-triangle' }} mr-2"></i>
                             {{ message }}
-                            <button type="button" class="close" data-dismiss="alert">
-                                <span>&times;</span>
-                            </button>
+                            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
                         </div>
                     {% endfor %}
                 {% endfor %}
 
-                {# Empty State #}
                 {% if users is empty %}
                     <div class="card shadow mb-4">
                         <div class="card-body text-center py-5">
@@ -131,14 +155,12 @@
                     </div>
                 {% else %}
                     <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex align-items-center justify-content-between">
-                            <h6 class="m-0 font-weight-bold text-primary">
-                                Users awaiting verification
-                            </h6>
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Users awaiting verification</h6>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-hover mb-0" style="min-width:800px">
+                                <table class="table table-hover mb-0" style="min-width:960px">
                                     <thead class="thead-light">
                                         <tr>
                                             <th style="width:56px"></th>
@@ -147,84 +169,83 @@
                                             <th>Role</th>
                                             <th>Registered</th>
                                             <th>ID Document</th>
+                                            <th class="text-center">ID Info</th>
+                                            <th class="text-center">Face Match</th>
                                             <th class="text-center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for user in users %}
-                                        <tr>
+                                        <tr id="row-{{ user.idUser }}">
+
                                             {# Avatar #}
                                             <td class="align-middle text-center">
                                                 <img class="user-avatar"
-                                                    src="/uploads/users/selfies/{{ user.userImage }}"
-                                                    alt="{{ user.prenom }}">
+                                                     src="/uploads/users/selfies/{{ user.userImage }}"
+                                                     alt="{{ user.prenom }}">
                                             </td>
 
                                             {# Name #}
                                             <td class="align-middle">
-                                                <div class="font-weight-bold text-gray-800">
-                                                    {{ user.prenom }} {{ user.nom }}
-                                                </div>
-                                                <div class="small text-gray-500">
-                                                    {{ user.telephone }}
-                                                </div>
+                                                <div class="font-weight-bold text-gray-800">{{ user.prenom }} {{ user.nom }}</div>
+                                                <div class="small text-gray-500">{{ user.telephone }}</div>
                                             </td>
 
                                             {# Email #}
                                             <td class="align-middle">
-                                                <a href="mailto:{{ user.email }}" class="text-primary">
-                                                    {{ user.email }}
-                                                </a>
+                                                <a href="mailto:{{ user.email }}" class="text-primary">{{ user.email }}</a>
                                             </td>
 
                                             {# Role #}
                                             <td class="align-middle">
-                                                {% set roleColors = {
-                                                    'CLIENT': 'primary',
-                                                    'INVESTISSEUR': 'success',
-                                                    'COMMERCANT': 'info',
-                                                    'ADMIN': 'danger'
-                                                } %}
-                                                <span class="badge badge-{{ roleColors[user.role] ?? 'secondary' }}">
-                                                    {{ user.role }}
-                                                </span>
+                                                {% set roleColors = {'CLIENT':'primary','INVESTISSEUR':'success','COMMERCANT':'info','ADMIN':'danger'} %}
+                                                <span class="badge badge-{{ roleColors[user.role] ?? 'secondary' }}">{{ user.role }}</span>
                                             </td>
 
-                                            {# Registered date #}
+                                            {# Date #}
                                             <td class="align-middle small text-gray-600">
                                                 {{ user.dateCreation|date('d M Y') }}<br>
                                                 <span class="text-gray-400">{{ user.dateCreation|date('H:i') }}</span>
                                             </td>
 
-                                            {# ID Document — clickable thumbnail #}
+                                            {# ID Document #}
                                             <td class="align-middle">
-                                                <a href="/uploads/users/ids/{{ user.pieceIdentite }}"
-                                                   target="_blank" title="View full ID document">
+                                                <a href="/uploads/users/ids/{{ user.pieceIdentite }}" target="_blank">
                                                     <img class="id-thumb"
                                                          src="/uploads/users/ids/{{ user.pieceIdentite }}"
                                                          alt="ID Document">
                                                 </a>
                                             </td>
 
+                                            <td class="align-middle text-center" id="id-cell-{{ user.idUser }}">
+                                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                            </td>
+
+                                            {# ── FACE MATCH CELL ── #}
+                                            <td class="align-middle face-cell" id="face-cell-{{ user.idUser }}">
+                                                <button class="btn-check"
+                                                        onclick="faceCheck({{ user.idUser }}, this)"
+                                                        title="Compare selfie vs ID photo with Face++">
+                                                    <i class="fas fa-user-check mr-1"></i> Check
+                                                </button>
+                                            </td>
+
                                             {# Actions #}
-                                            <td class="align-middle text-center">
+                                            <td class="align-middle text-center" style="white-space:nowrap">
                                                 <form method="POST"
                                                       action="{{ path('app_admin_approve_user', {id: user.idUser}) }}"
                                                       style="display:inline"
                                                       onsubmit="return confirm('Approve {{ user.prenom }} {{ user.nom }}?')">
-                                                    <input type="hidden" name="_token"
-                                                           value="{{ csrf_token('approve_' ~ user.idUser) }}">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('approve_' ~ user.idUser) }}">
                                                     <button type="submit" class="btn btn-success btn-sm px-3">
                                                         <i class="fas fa-check mr-1"></i> Approve
                                                     </button>
                                                 </form>
-
                                                 <form method="POST"
                                                       action="{{ path('app_admin_reject_user', {id: user.idUser}) }}"
                                                       style="display:inline;margin-left:6px"
-                                                      onsubmit="return confirm('Reject {{ user.prenom }} {{ user.nom }}? This will ban their account.')">
-                                                    <input type="hidden" name="_token"
-                                                           value="{{ csrf_token('reject_' ~ user.idUser) }}">
+                                                      onsubmit="return confirm('Reject {{ user.prenom }} {{ user.nom }}?')">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('reject_' ~ user.idUser) }}">
                                                     <button type="submit" class="btn btn-danger btn-sm px-3">
                                                         <i class="fas fa-times mr-1"></i> Reject
                                                     </button>
@@ -256,5 +277,143 @@
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
 <script src="/js/sb-admin-2.min.js"></script>
+
+<script>
+/**
+ * faceCheck — calls the Symfony JSON endpoint, then renders
+ * a circular progress ring + match/no-match badge in the cell.
+ */
+async function faceCheck(userId, btn) {
+    const cell = document.getElementById('face-cell-' + userId);
+
+    // Show spinner
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Checking…';
+
+    let data;
+    try {
+        const res = await fetch(`/admin/users/face-check/${userId}`);
+        data = await res.json();
+    } catch (e) {
+        cell.innerHTML = buildBadge(null, 'Network error');
+        return;
+    }
+
+    if (!data.success) {
+        cell.innerHTML = buildBadge(null, data.error ?? 'API error');
+        return;
+    }
+
+    cell.innerHTML = buildRing(data.confidence, data.match);
+}
+
+/**
+ * buildRing — SVG circular ring showing confidence %
+ * Green = match, Red = no match (based on Face++ threshold)
+ */
+function buildRing(score, isMatch) {
+    const radius = 22;
+    const circ   = 2 * Math.PI * radius;           // circumference
+    const offset = circ - (score / 100) * circ;    // dashoffset
+    const color  = isMatch ? '#28a745' : '#dc3545';
+    const icon   = isMatch ? '✔' : '✘';
+    const label  = isMatch ? 'Match' : 'No Match';
+
+    return `
+    <div class="face-ring-wrap">
+      <svg width="54" height="54" viewBox="0 0 54 54" class="face-ring">
+        <circle class="track" cx="27" cy="27" r="${radius}"/>
+        <circle class="fill" cx="27" cy="27" r="${radius}"
+          stroke="${color}"
+          stroke-dasharray="${circ}"
+          stroke-dashoffset="${offset}"
+          style="transition: stroke-dashoffset 0.9s ease;"
+        />
+      </svg>
+      <div style="margin-top:-42px; margin-bottom:10px;
+                  font-size:11px; font-weight:700; color:${color}; pointer-events:none;">
+        ${score}%
+      </div>
+      <span class="face-score ${isMatch ? 'match' : 'no-match'}">
+        ${icon} ${label}
+      </span>
+      <div class="face-ring-label" style="margin-top:3px; color:#888; font-size:10px;">
+        Face++ confidence
+      </div>
+    </div>`;
+}
+
+/**
+ * buildBadge — shown when Face++ returns an error
+ * (no face detected, file unreadable, API key wrong, etc.)
+ */
+function buildBadge(score, message) {
+    return `
+    <span class="face-score error" title="${message}">
+        ⚠ ${message.length > 28 ? message.substring(0,28)+'…' : message}
+    </span>
+    <div style="font-size:10px;color:#888;margin-top:3px;">Click row to retry</div>`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[id^="id-cell-"]').forEach(cell => {
+        const userId = cell.id.replace('id-cell-', '');
+        fetchIdInfo(userId, cell);
+    });
+});
+
+async function fetchIdInfo(userId, cell) {
+    try {
+        const res  = await fetch(`/admin/users/extract-id/${userId}`);
+        const data = await res.json();
+        cell.innerHTML = data.success ? buildIdCard(data.parsed, data.raw) : buildIdError(data.error);
+    } catch (e) {
+        cell.innerHTML = buildIdError('Network error');
+    }
+}
+
+function buildIdCard(parsed, raw) {
+    const p = parsed;
+
+    const hasData = Object.values(p).some(v => v);
+    if (!hasData) return `<span style="font-size:11px;color:#aaa">⚠ No data extracted</span>`;
+
+    const row = (icon, label, val) => val
+        ? `<tr>
+                <td style="color:#999;font-size:10px;padding:2px 5px;white-space:nowrap">${icon} ${label}</td>
+                <td style="font-weight:600;font-size:11px;padding:2px 5px">${val}</td>
+            </tr>`
+        : '';
+
+    return `
+    ${p.card_type ? `
+        <div style="font-size:10px;background:#e8f4fd;color:#1a6fa8;padding:3px 7px;
+                    border-radius:4px;margin-bottom:5px;font-weight:600">
+            🪪 ${p.card_type}
+        </div>` : ''}
+    <table style="border-collapse:collapse;text-align:left;width:100%">
+        ${row('#️⃣', 'CIN',    p.cin)}
+        ${row('👤', 'Nom',    p.nom)}
+        ${row('✏️', 'Prénom', p.prenom)}
+        ${row('🎂', 'DoB',    p.dob)}
+        ${row('📅', 'Expiry', p.expiry)}
+    </table>
+    <details style="margin-top:5px">
+        <summary style="font-size:10px;color:#bbb;cursor:pointer">Raw OCR</summary>
+        <pre style="font-size:9px;max-width:220px;overflow:auto;background:#f8f9fc;
+                    padding:4px;border-radius:4px;max-height:80px;margin-top:4px">${raw}</pre>
+    </details>`;
+}
+
+function buildIdError(msg) {
+    return `
+    <div style="text-align:center">
+        <span style="font-size:11px;color:#e74a3b;font-weight:600" title="${msg}">
+            ⚠ ${msg.length > 35 ? msg.substring(0, 35) + '…' : msg}
+        </span>
+        <div style="font-size:10px;color:#aaa;margin-top:2px">ID extraction failed</div>
+    </div>`;
+}
+</script>
 </body>
 </html>

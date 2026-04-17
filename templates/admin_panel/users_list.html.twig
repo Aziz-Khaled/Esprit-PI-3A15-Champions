@@ -169,8 +169,8 @@
                                     <tr>
                                         <td class="align-middle text-center">
                                             <img class="user-avatar"
-                                                 src="/uploads/users/selfies/{{ user.userImage }}"
-                                                 alt="{{ user.prenom }}">
+                                                    src="/uploads/users/selfies/{{ user.userImage }}"
+                                                    alt="{{ user.prenom }}">
                                         </td>
                                         <td class="align-middle font-weight-bold text-gray-800">
                                             {{ user.prenom }} {{ user.nom }}
@@ -194,6 +194,10 @@
                                             {{ user.dateCreation|date('d M Y') }}
                                         </td>
                                         <td class="align-middle text-center">
+                                        <button class="btn btn-info btn-sm px-3 mr-1"
+                                                onclick="openDetails({{ user.idUser }}, '{{ user.prenom }} {{ user.nom }}')">
+                                            <i class="fas fa-id-card mr-1"></i> Details
+                                        </button>
                                             {# Edit #}
                                             <a href="{{ path('app_admin_edit_user', {id: user.idUser}) }}"
                                                class="btn btn-primary btn-sm px-3 mr-1">
@@ -215,6 +219,22 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
+                                                <div class="modal fade" id="idModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="fas fa-id-card mr-2 text-info"></i>ID Card Info — <span id="modal-username"></span></h5>
+                            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body" id="modal-body">
+                            <div class="text-center py-4">
+                            <div class="spinner-border text-primary"></div>
+                            <p class="mt-2 text-gray-500">Extracting ID card data…</p>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
                         </div>
                     </div>
                 </div>
@@ -236,5 +256,63 @@
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
 <script src="/js/sb-admin-2.min.js"></script>
+<script>
+const idCache = {};
+
+async function openDetails(userId, name) {
+    document.getElementById('modal-username').textContent = name;
+    document.getElementById('modal-body').innerHTML = `
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary"></div>
+          <p class="mt-2 text-gray-500">Extracting ID card data…</p>
+        </div>`;
+    $('#idModal').modal('show');
+
+    if (idCache[userId]) {
+        renderModal(idCache[userId]);
+        return;
+    }
+
+    try {
+        const res  = await fetch(`/admin/users/extract-id/${userId}`);
+        const data = await res.json();
+        idCache[userId] = data;
+        renderModal(data);
+    } catch (e) {
+        document.getElementById('modal-body').innerHTML =
+            `<div class="alert alert-danger">Network error</div>`;
+    }
+}
+
+function renderModal(data) {
+    const body = document.getElementById('modal-body');
+    if (!data.success) {
+        body.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle mr-2"></i>${data.error}</div>`;
+        return;
+    }
+    const p = data.parsed;
+    body.innerHTML = `
+    ${p.card_type ? `
+    <div class="alert alert-info py-2 mb-3" style="font-size:13px">
+        <i class="fas fa-id-card mr-1"></i> <strong>Card type:</strong> ${p.card_type}
+    </div>` : ''}
+    <table class="table table-sm table-bordered">
+      <tbody>
+        <tr><th style="width:110px">CIN / Card No.</th><td>${p.cin    ?? '<em class="text-muted">—</em>'}</td></tr>
+        <tr><th>Nom</th>          <td>${p.nom    ?? '<em class="text-muted">—</em>'}</td></tr>
+        <tr><th>Prénom</th>       <td>${p.prenom ?? '<em class="text-muted">—</em>'}</td></tr>
+        <tr><th>Date of Birth</th><td>${p.dob    ?? '<em class="text-muted">—</em>'}</td></tr>
+        <tr><th>Expiry</th>       <td>${p.expiry ?? '<em class="text-muted">—</em>'}</td></tr>
+        ${p.mrz_line ? `<tr><th>MRZ</th><td><code style="font-size:11px">${p.mrz_line}</code></td></tr>` : ''}
+      </tbody>
+    </table>
+    <details>
+      <summary class="text-muted small" style="cursor:pointer">Raw OCR output</summary>
+      <pre style="font-size:11px;background:#f8f9fc;padding:8px;border-radius:4px;
+                  max-height:150px;overflow:auto;margin-top:6px">${data.raw}</pre>
+    </details>`;
+}
+</script>
+
 </body>
 </html>
