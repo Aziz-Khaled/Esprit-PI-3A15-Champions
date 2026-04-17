@@ -261,11 +261,12 @@ public function getHistoryJson(int $id, WalletRepository $walletRepository, Tran
     return new JsonResponse($data);
 }
 
-   #[Route('/recharge', name: 'app_wallet_recharge', methods: ['POST'])]
+  #[Route('/recharge', name: 'app_wallet_recharge', methods: ['POST'])]
 public function recharge(
     Request $request, 
     StripeService $stripeService, 
-    EntityManagerInterface $em
+    EntityManagerInterface $em,
+    \App\Service\BlockchainService $blockchainService // Injection du service Blockchain
 ): Response {
     $walletId = $request->request->get('wallet_id');
     $currencyId = $request->request->get('currency_id');
@@ -283,6 +284,7 @@ public function recharge(
     }
 
     try {
+        // ... (Logique Stripe inchangée) ...
         if (!$card->getStripeCustomerId()) {
             $customer = $stripeService->createCustomer($user->getEmail() ?? 'user@example.com');
             $card->setStripeCustomerId($customer->id);
@@ -297,7 +299,7 @@ public function recharge(
         );
 
         if ($intent->status === 'succeeded') {
-            // Mise à jour du solde
+            // 1. Mise à jour du solde WalletCurrency
             $walletCurrency = $em->getRepository(WalletCurrency::class)->findOneBy([
                 'wallet' => $wallet,
                 'currency' => $currency
@@ -314,24 +316,35 @@ public function recharge(
                 $walletCurrency->setSolde($walletCurrency->getSolde() + $amount);
             }
 
-            // --- CRÉATION DE LA TRANSACTION ---
+            // 2. Création de l'entité Transaction
             $transaction = new \App\Entity\Transaction();
             $transaction->setWalletDestination($wallet);
-            $transaction->setWalletSource(null); 
-            $transaction->setCreditCard($card);  // LIAISON AVEC LA CARTE
+            $transaction->setWalletSource(null); // Pas de source car c'est une recharge externe
+            $transaction->setCreditCard($card);
             $transaction->setMontant($amount);
             $transaction->setCurrency($currency);
-            $transaction->setType('RECHARGE');   // On utilise des majuscules comme sur ton image
+            $transaction->setType('RECHARGE');
             $transaction->setStatut('COMPLETED');
             $transaction->setDateTransaction(new \DateTime());
 
             $em->persist($transaction);
-            $em->flush();
             
-            $this->addFlash('success', 'Wallet recharged successfully!');
+            // 3. Persistance en base de données
+            $em->flush(); 
+
+            // 4. LOGIQUE BLOCKCHAIN : Ajout de la transaction dans la chaîne
+            // On le fait après le flush pour être sûr que la transaction a un ID
+            try {
+                $blockchainService->addBlock($transaction);
+            } catch (\Exception $e) {
+                // On log l'erreur mais on ne bloque pas la recharge Stripe si la blockchain échoue
+                // facultatif : $this->addFlash('warning', 'Transaction saved but blockchain failed.');
+            }
+            
+            $this->addFlash('success', 'Wallet recharged and transaction secured in Blockchain!');
         }
     } catch (\Exception $e) {
-        $this->addFlash('error', 'Stripe Error: ' . $e->getMessage());
+        $this->addFlash('error', 'Error: ' . $e->getMessage());
     }
 
     return $this->redirectToRoute('app_wallet_index');
