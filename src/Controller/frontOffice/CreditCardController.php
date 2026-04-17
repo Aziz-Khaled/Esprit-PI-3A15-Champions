@@ -10,12 +10,13 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Service\StripeService;
 
 #[Route('/credit-card')]
 class CreditCardController extends AbstractController
 {
-    #[Route('/new', name: 'app_card_new', methods: ['POST'])]
-public function new(Request $request, EntityManagerInterface $em): Response
+#[Route('/new', name: 'app_card_new', methods: ['POST'])]
+public function new(Request $request, EntityManagerInterface $em, StripeService $stripeService): Response
 {
     $card = new CreditCard();
     $user = $this->getUser() ?: $em->getRepository(Utilisateur::class)->find(1);
@@ -24,23 +25,34 @@ public function new(Request $request, EntityManagerInterface $em): Response
     $form->handleRequest($request);
 
     if ($form->isSubmitted() && $form->isValid()) {
-        $card->setUtilisateur($user);
-        $card->setStatut('ACTIVE');
-        $em->persist($card);
-        $em->flush();
+        try {
+            // 1. On crée un VRAI client dans ton Dashboard Stripe via le service
+            // Cela générera un ID unique comme "cus_ABC123"
+            $stripeCustomer = $stripeService->createCustomer($user->getEmail());
+            $card->setStripeCustomerId($stripeCustomer->id);
 
-        $this->addFlash('success', 'Card added successfully.');
+            // 2. On utilise 'pm_card_visa' pour la carte de test
+            // Note : Pour avoir un pm_ unique, il faudra intégrer Stripe.js plus tard
+            $card->setStripePaymentMethodId('pm_card_visa'); 
+            
+            $card->setUtilisateur($user);
+            $card->setStatut('ACTIVE');
+            
+            $em->persist($card);
+            $em->flush();
+
+            $this->addFlash('success', 'Card added and linked to Stripe with Customer ID: ' . $stripeCustomer->id);
+        } catch (\Exception $e) {
+            $this->addFlash('danger', 'Stripe Error: ' . $e->getMessage());
+        }
     } else {
-        // Si erreurs (ex: pas 16 chiffres), on les passe en flash
         foreach ($form->getErrors(true) as $error) {
             $this->addFlash('danger', $error->getMessage());
         }
     }
 
-    // On redirige TOUJOURS vers le wallet
     return $this->redirectToRoute('app_wallet_index');
 }
-
     #[Route('/{id}/edit', name: 'app_card_edit', methods: ['POST'])]
     public function edit(CreditCard $card, Request $request, EntityManagerInterface $em): Response
     {

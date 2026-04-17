@@ -386,6 +386,18 @@
         </div>
 
         <div class="btn-action-group d-flex gap-2">
+            {# --- BOUTON RECHARGE STRIPE (Uniquement pour Fiat) --- #}
+            {% if wallet.typeWallet|lower == 'fiat' %}
+                <button class="btn-mini" 
+                        style="background: #e0f7fa; color: #00acc1;" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#rechargeModal" 
+                        onclick="document.getElementById('recharge_wallet_id').value = '{{ wallet.idWallet }}'"
+                        title="Recharge with Stripe">
+                    <i class="fas fa-bolt"></i>
+                </button>
+            {% endif %}
+
             <button class="btn-mini btn-mini-add" data-bs-toggle="modal" data-bs-target="#addCurrencyModal"
                     data-id="{{ wallet.idWallet }}" data-type="{{ wallet.typeWallet|lower }}">
                 <i class="fas fa-plus"></i>
@@ -741,6 +753,43 @@
                     {{ form_end(newCardForm) }}
                 {% endif %}
             </div>
+        </div>
+    </div>
+</div>
+
+{# MODAL: RECHARGE WALLET #}
+<div class="modal fade" id="rechargeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 bg-dark text-white">
+            <form action="{{ path('app_wallet_recharge') }}" method="POST">
+                <div class="modal-header border-0">
+                    <h5 class="fw-bold text-info">Recharge Wallet</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" name="wallet_id" id="recharge_wallet_id">
+                    
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1">SELECT CURRENCY</label>
+                        <select name="currency_id" class="form-select bg-secondary text-white border-0">
+    {% for currency in all_available_currencies %}
+        {# On utilise le nom exact de la propriété définie dans l'entité #}
+        {% if currency.typeCurrency == 'fiat' %}
+            <option value="{{ currency.id }}">{{ currency.nom }}</option>
+        {% endif %}
+    {% endfor %}
+</select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1">AMOUNT</label>
+                        <input type="number" name="amount" step="0.01" class="form-control bg-secondary text-white border-0" placeholder="0.00" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-info w-100 py-2 fw-bold">Confirm Recharge</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

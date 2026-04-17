@@ -41,7 +41,7 @@ class CreditCard
     #[ORM\Column(name: "date_ajout", type: "datetime")]
     private ?\DateTimeInterface $dateAjout = null;
 
-    #[ORM\Column(name: "statut", type: "string", columnDefinition: "ENUM('ACTIVE', 'EXPIRED', 'DELETED')")]
+    #[ORM\Column(name: "statut", type: "string", length: 20)]
     private string $statut = 'ACTIVE';
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
@@ -53,23 +53,20 @@ class CreditCard
         $this->dateAjout = new \DateTime();
     }
 
-    /**
-     * Validation personnalisée : La date d'expiration doit être dans le futur.
-     */
     #[Assert\Callback]
-public function validateExpiration(ExecutionContextInterface $context): void
-{
-    $currentYear = (int)date('Y');
-    $currentMonth = (int)date('m');
+    public function validateExpiration(ExecutionContextInterface $context): void
+    {
+        $currentYear = (int)date('Y');
+        $currentMonth = (int)date('m');
 
-    if ($this->expiryYear < $currentYear || 
-       ($this->expiryYear === $currentYear && $this->expiryMonth < $currentMonth)) {
-        
-        $context->buildViolation("The expiration date must be in the future.") // Message en anglais ici
-            ->atPath('expiryMonth')
-            ->addViolation();
+        if ($this->expiryYear < $currentYear || 
+           ($this->expiryYear === $currentYear && $this->expiryMonth < $currentMonth)) {
+            
+            $context->buildViolation("The expiration date must be in the future.")
+                ->atPath('expiryMonth')
+                ->addViolation();
+        }
     }
-}
 
     // --- Getters & Setters ---
 
@@ -98,6 +95,21 @@ public function validateExpiration(ExecutionContextInterface $context): void
         $this->expiryYear = $year;
         return $this;
     }
+
+    // AJOUT DES MÉTHODES MANQUANTES POUR STRIPE
+    public function getStripeCustomerId(): ?string { return $this->stripeCustomerId; }
+    public function setStripeCustomerId(?string $id): self {
+        $this->stripeCustomerId = $id;
+        return $this;
+    }
+
+    public function getStripePaymentMethodId(): ?string { return $this->stripePaymentMethodId; }
+    public function setStripePaymentMethodId(?string $id): self {
+        $this->stripePaymentMethodId = $id;
+        return $this;
+    }
+
+    public function getDateAjout(): ?\DateTimeInterface { return $this->dateAjout; }
 
     public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): self {

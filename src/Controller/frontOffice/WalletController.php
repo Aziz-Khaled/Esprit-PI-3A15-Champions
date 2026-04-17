@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use App\Service\StripeService;
 
 #[Route('/wallet')]
 class WalletController extends AbstractController
@@ -207,35 +208,132 @@ class WalletController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/history-json', name: 'app_wallet_history_json', methods: ['GET'])]
-    public function getHistoryJson(int $id, WalletRepository $walletRepository, TransactionRepository $transactionRepository): JsonResponse
-    {
-        $wallet = $walletRepository->find($id);
-        if (!$wallet) return new JsonResponse(['error' => 'Wallet not found'], 404);
+#[Route('/{id}/history-json', name: 'app_wallet_history_json', methods: ['GET'])]
+public function getHistoryJson(int $id, WalletRepository $walletRepository, TransactionRepository $transactionRepository): JsonResponse
+{
+    $wallet = $walletRepository->find($id);
+    if (!$wallet) return new JsonResponse(['error' => 'Wallet not found'], 404);
 
-        $transactions = $transactionRepository->createQueryBuilder('t')
-            ->where('t.walletSource = :wallet OR t.walletDestination = :wallet')
-            ->setParameter('wallet', $wallet)
-            ->orderBy('t.dateTransaction', 'DESC')
-            ->getQuery()
-            ->getResult();
+    $transactions = $transactionRepository->createQueryBuilder('t')
+        ->where('t.walletSource = :wallet OR t.walletDestination = :wallet')
+        ->setParameter('wallet', $wallet)
+        ->orderBy('t.dateTransaction', 'DESC')
+        ->getQuery()
+        ->getResult();
 
-        $data = [];
-        foreach ($transactions as $t) {
-            $isDebit = ($t->getWalletSource() && $t->getWalletSource()->getIdWallet() === $wallet->getIdWallet());
+    $data = [];
+    foreach ($transactions as $t) {
+        $isDebit = ($t->getWalletSource() && $t->getWalletSource()->getIdWallet() === $wallet->getIdWallet());
+        
+        $counterparty = 'N/A';
+
+        // 1. Gestion des RECHARGES par carte
+        if (strtolower($t->getType()) === 'recharge') {
+            if ($t->getCreditCard()) {
+                // CORRECTION ICI : Utilisation de getLast4Digits() selon ton entité
+                $last4 = $t->getCreditCard()->getLast4Digits(); 
+                
+                if ($last4) {
+                    $counterparty = "**** **** " . $last4;
+                } else {
+                    $counterparty = "Credit Card";
+                }
+            } else {
+                $counterparty = "External Source"; 
+            }
+        } 
+        // 2. Gestion des TRANSFERTS entre wallets
+        else {
             $counterparty = $isDebit ? 
                 ($t->getWalletDestination() ? $t->getWalletDestination()->getRib() : 'N/A') :
                 ($t->getWalletSource() ? $t->getWalletSource()->getRib() : 'N/A');
-
-            $data[] = [
-                'date' => $t->getDateTransaction() ? $t->getDateTransaction()->format('d/m/Y H:i') : 'N/A',
-                'type' => $t->getType(),
-                'amount' => number_format($t->getMontant(), 2),
-                'currency' => $t->getCurrency() ? $t->getCurrency()->getNom() : '',
-                'counterparty' => $counterparty,
-                'direction' => $isDebit ? 'out' : 'in'
-            ];
         }
-        return new JsonResponse($data);
+
+        $data[] = [
+            'date' => $t->getDateTransaction() ? $t->getDateTransaction()->format('d/m/Y H:i') : 'N/A',
+            'type' => strtoupper($t->getType()), 
+            'amount' => number_format($t->getMontant(), 2),
+            'currency' => $t->getCurrency() ? $t->getCurrency()->getNom() : '',
+            'counterparty' => $counterparty,
+            'direction' => $isDebit ? 'out' : 'in'
+        ];
     }
+    return new JsonResponse($data);
+}
+
+   #[Route('/recharge', name: 'app_wallet_recharge', methods: ['POST'])]
+public function recharge(
+    Request $request, 
+    StripeService $stripeService, 
+    EntityManagerInterface $em
+): Response {
+    $walletId = $request->request->get('wallet_id');
+    $currencyId = $request->request->get('currency_id');
+    $amount = (float)$request->request->get('amount');
+
+    $user = $this->getUser() ?: $em->getRepository(Utilisateur::class)->find(1);
+    $wallet = $em->getRepository(Wallet::class)->find($walletId);
+    $currency = $em->getRepository(Currency::class)->find($currencyId);
+    
+    $card = $em->getRepository(CreditCard::class)->findOneBy(['utilisateur' => $user, 'statut' => 'ACTIVE']);
+    
+    if (!$card || !$card->getStripePaymentMethodId()) {
+        $this->addFlash('error', 'No active card found.');
+        return $this->redirectToRoute('app_wallet_index');
+    }
+
+    try {
+        if (!$card->getStripeCustomerId()) {
+            $customer = $stripeService->createCustomer($user->getEmail() ?? 'user@example.com');
+            $card->setStripeCustomerId($customer->id);
+            $em->flush();
+        }
+
+        $intent = $stripeService->createPaymentIntent(
+            $amount, 
+            $currency->getNom(), 
+            $card->getStripeCustomerId(), 
+            $card->getStripePaymentMethodId()
+        );
+
+        if ($intent->status === 'succeeded') {
+            // Mise à jour du solde
+            $walletCurrency = $em->getRepository(WalletCurrency::class)->findOneBy([
+                'wallet' => $wallet,
+                'currency' => $currency
+            ]);
+
+            if (!$walletCurrency) {
+                $walletCurrency = new WalletCurrency();
+                $walletCurrency->setWallet($wallet);
+                $walletCurrency->setCurrency($currency);
+                $walletCurrency->setNomCurrency($currency->getNom());
+                $walletCurrency->setSolde($amount);
+                $em->persist($walletCurrency);
+            } else {
+                $walletCurrency->setSolde($walletCurrency->getSolde() + $amount);
+            }
+
+            // --- CRÉATION DE LA TRANSACTION ---
+            $transaction = new \App\Entity\Transaction();
+            $transaction->setWalletDestination($wallet);
+            $transaction->setWalletSource(null); 
+            $transaction->setCreditCard($card);  // LIAISON AVEC LA CARTE
+            $transaction->setMontant($amount);
+            $transaction->setCurrency($currency);
+            $transaction->setType('RECHARGE');   // On utilise des majuscules comme sur ton image
+            $transaction->setStatut('COMPLETED');
+            $transaction->setDateTransaction(new \DateTime());
+
+            $em->persist($transaction);
+            $em->flush();
+            
+            $this->addFlash('success', 'Wallet recharged successfully!');
+        }
+    } catch (\Exception $e) {
+        $this->addFlash('error', 'Stripe Error: ' . $e->getMessage());
+    }
+
+    return $this->redirectToRoute('app_wallet_index');
+}
 }
