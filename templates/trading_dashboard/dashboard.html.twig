@@ -37,6 +37,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .ns-l{font-size:10px;color:var(--muted)}
 .ns-v{font-family:var(--font-m);font-size:11px;color:var(--text)}
 .nav-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+.wallet-selector select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--font-m);cursor:pointer;min-width:280px}
+.wallet-selector select:hover{border-color:var(--yellow)}
+.wallet-selector select:focus{outline:none;border-color:var(--yellow)}
 .bal-chip{display:flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(0,214,143,.07);border:1px solid rgba(0,214,143,.18);border-radius:8px;font-size:13px;color:var(--muted)}
 .bal-chip .v{font-family:var(--font-m);font-weight:700;font-size:14px;color:var(--green)}
 .admin-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-family:var(--font-h);font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s}
@@ -87,12 +90,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .iv-btn.on{background:var(--bg4);color:var(--yellow)}
 #tv{flex:1;min-height:0}
 
-/* Order panel - REFONDU */
+/* Order panel */
 .ord-panel{width:320px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
 .ord-panel::-webkit-scrollbar{width:3px}
 .ord-panel::-webkit-scrollbar-thumb{background:var(--border)}
-
-/* Formulaire d'achat/vente - EN PREMIER */
 .trade-form-section{background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
 .ord-tabs{display:flex;border-bottom:1px solid var(--border)}
 .ord-tab{flex:1;padding:11px;text-align:center;font-weight:700;font-size:13px;cursor:pointer;background:none;border:none;color:var(--muted);font-family:var(--font-h);transition:all .2s;position:relative}
@@ -100,8 +101,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .ord-tab.buy.on{color:var(--green)}.ord-tab.buy.on::after{background:var(--green);transform:scaleX(1)}
 .ord-tab.sell.on{color:var(--red)}.ord-tab.sell.on::after{background:var(--red);transform:scaleX(1)}
 .ord-body{padding:14px;display:flex;flex-direction:column;gap:10px}
-
-/* RECOMMANDEUR - APRÈS LE FORMULAIRE */
 .rec-panel{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 14px;flex-shrink:0}
 .rec-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px}
 .rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
@@ -134,8 +133,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .t-chip.tp .t-chip-val{color:var(--green)}
 .t-chip.sl .t-chip-val{color:var(--red)}
 .t-chip.sup .t-chip-val{color:var(--blue)}
-
-/* Security bundle & news - EN BAS */
 .sec-bundle{background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0}
 .sec-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer}
 .sec-header-left{display:flex;align-items:center;gap:7px}
@@ -297,16 +294,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 <div class="toast-box" id="toastBox"></div>
 <div class="app">
 
-<!-- ══ NAVBAR ══ -->
+<!-- ══ NAVBAR AVEC COMBOBOX RIB ══ -->
 <nav class="navbar">
-  <a href="#" class="nav-logo">
-    Champions-Trading
-  </a>
+  <a href="#" class="nav-logo">Champions-Trading</a>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="goPage('dash',this)"><span></span> Dashboard</button>
-    <button class="nav-tab" onclick="goPage('bot',this)"><span></span> Trading Bot</button>
-    <button class="nav-tab" onclick="goPage('chat',this)"><span></span> AI Assistant</button>
-    <button class="nav-tab" onclick="goPage('hist',this)"><span></span> History</button>
+    <button class="nav-tab active" onclick="goPage('dash',this)"> Dashboard</button>
+    <button class="nav-tab" onclick="goPage('bot',this)"> Trading Bot</button>
+    <button class="nav-tab" onclick="goPage('chat',this)"> AI Assistant</button>
+    <button class="nav-tab" onclick="goPage('hist',this)"> History</button>
   </div>
   <div class="nav-pair" id="navPair">
     <span class="nav-pair-sym" id="navSym">--/USDT</span>
@@ -318,9 +313,18 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
   </div>
   <div class="nav-r">
-    <div class="bal-chip" style="flex-direction:column;gap:2px;padding:5px 14px">
+    <div class="wallet-selector">
+      <select id="walletSelect">
+        {% for wallet in wallets %}
+          <option value="{{ wallet.id }}" data-balance="{{ wallet.solde }}" data-type="{{ wallet.type }}" data-rib="{{ wallet.rib }}">
+            💳 RIB: {{ wallet.rib }} ({{ wallet.type|upper }}) - {{ wallet.solde|number_format(2) }} USDT
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="bal-chip">
       <span style="font-size:9px;letter-spacing:.08em;color:var(--muted)">💰 BALANCE</span>
-      <span class="v" id="balVal">${{ solde|default(0)|number_format(2, '.', ',') }}</span>
+      <span class="v" id="balVal">${{ totalSolde|default(0)|number_format(2, '.', ',') }}</span>
     </div>
   </div>
 </nav>
@@ -340,7 +344,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 <!-- ══ CONTENT ══ -->
 <div class="content">
 
-  <!-- ── DASHBOARD ── -->
+  <!-- DASHBOARD PAGE -->
   <div class="page on" id="pg-dash">
     <aside class="mkt-panel">
       <div class="pnl-hd">Markets</div>
@@ -370,7 +374,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </main>
 
     <aside class="ord-panel">
-      <!-- SECTION FORMULAIRE D'ACHAT/VENTE - EN PREMIER -->
       <div class="trade-form-section">
         <div class="ord-tabs">
           <button class="ord-tab buy on" onclick="pickTab('BUY',this)">BUY</button>
@@ -408,7 +411,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         </div>
       </div>
 
-      <!-- SECTION RECOMMANDEUR - APRÈS LE FORMULAIRE -->
       <div class="rec-panel" id="recPanel">
         <div class="rec-title">Analyse & Recommandation</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -422,10 +424,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
           <div class="rec-kpi"><div class="rec-kpi-lbl">MA20</div><div class="rec-kpi-val" id="ma20Val">—</div></div>
         </div>
         <div class="kelly-meter">
-          <div style="display:flex;justify-content:space-between;">
-            <span style="font-size:9px;color:var(--muted);">Exposition recommandée</span>
-            <span class="rec-kpi-val y" id="kellyPct" style="font-size:11px">—</span>
-          </div>
+          <div style="display:flex;justify-content:space-between;"><span style="font-size:9px;color:var(--muted);">Exposition recommandée</span><span class="rec-kpi-val y" id="kellyPct" style="font-size:11px">—</span></div>
           <div class="kelly-track"><div class="kelly-fill" id="kellyFill" style="width:0%"></div></div>
         </div>
         <div class="sizing-box buy-box">
@@ -447,22 +446,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
             <div class="t-chip tp"><div class="t-chip-lbl">RESIST.</div><div class="t-chip-val" id="res1Val">—</div></div>
           </div>
         </div>
-        <div id="recAdvice" style="font-size:11px;color:var(--muted);padding:6px 8px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--yellow)">
-          Chargement de l'analyse…
-        </div>
+        <div id="recAdvice" style="font-size:11px;color:var(--muted);padding:6px 8px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--yellow)">Chargement de l'analyse…</div>
       </div>
 
-      <!-- SECTION SÉCURITÉ & NEWS - EN BAS -->
       <div class="sec-bundle">
         <div class="sec-header" onclick="toggleSecBundle()">
           <div class="sec-header-left">
-            <div class="sec-score-ring">
-              <svg viewBox="0 0 32 32">
-                <circle cx="16" cy="16" r="13" fill="none" stroke="var(--border)" stroke-width="3"/>
-                <circle cx="16" cy="16" r="13" fill="none" id="secRingFill" stroke="var(--green)" stroke-width="3" stroke-dasharray="81.68" stroke-dashoffset="81.68" stroke-linecap="round" transform="rotate(-90 16 16)"/>
-              </svg>
-              <div class="sec-score-num" id="secScoreNum">—</div>
-            </div>
+            <div class="sec-score-ring"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="var(--border)" stroke-width="3"/><circle cx="16" cy="16" r="13" fill="none" id="secRingFill" stroke="var(--green)" stroke-width="3" stroke-dasharray="81.68" stroke-dashoffset="81.68" stroke-linecap="round" transform="rotate(-90 16 16)"/></svg><div class="sec-score-num" id="secScoreNum">—</div></div>
             <div><div class="sec-title-txt">Security Bundle</div><div style="font-size:9px;color:var(--muted)" id="secSummaryTxt">Protection du capital</div></div>
           </div>
           <div class="sec-toggle-btn" id="secToggleIcon">▼</div>
@@ -521,469 +511,535 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
   </div>
 
-</div><!-- .content -->
-</div><!-- .app -->
+</div>
+</div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
-// ════════════════════════════════════════════════
+// ============================================
 // STATE
-// ════════════════════════════════════════════════
+// ============================================
 const dbAssets = {{ assets|map(a => a.symbol|upper)|json_encode|raw }};
-let curSym  = (dbAssets && dbAssets[0]) ? dbAssets[0] : 'BTC';
-let curIv   = '5';
-let curTab  = 'BUY';
-let curPx   = 0;
+let curSym = (dbAssets && dbAssets[0]) ? dbAssets[0] : 'BTC';
+let curIv = '5';
+let curTab = 'BUY';
+let curPx = 0;
 const priceMap = {};
 let limitOrders = [];
 let limitOrderCounter = 1;
 let lastRec = null;
 
-// ════════════════════════════════════════════════
+// Wallet selection
+let currentWalletId = null;
+let currentWalletBalance = 0;
+
+// ============================================
+// WALLET SELECTOR
+// ============================================
+function initWalletSelector() {
+    const walletSelect = document.getElementById('walletSelect');
+    if (!walletSelect) return;
+    
+    currentWalletId = walletSelect.value;
+    updateWalletDisplay();
+    
+    walletSelect.addEventListener('change', function() {
+        currentWalletId = this.value;
+        updateWalletDisplay();
+        refreshWalletBalance();
+        toast('Wallet changé: ' + getSelectedWalletRib(), 'ok');
+    });
+}
+
+function updateWalletDisplay() {
+    const walletSelect = document.getElementById('walletSelect');
+    if (!walletSelect) return;
+    
+    const selectedOption = walletSelect.options[walletSelect.selectedIndex];
+    if (selectedOption) {
+        currentWalletBalance = parseFloat(selectedOption.dataset.balance) || 0;
+        const balVal = document.getElementById('balVal');
+        if (balVal) {
+            balVal.textContent = '$' + currentWalletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    }
+}
+
+function getSelectedWalletRib() {
+    const walletSelect = document.getElementById('walletSelect');
+    if (!walletSelect) return '';
+    const selectedOption = walletSelect.options[walletSelect.selectedIndex];
+    return selectedOption ? selectedOption.dataset.rib : '';
+}
+
+function refreshWalletBalance() {
+    if (!currentWalletId) return;
+    
+    fetch('{{ path('app_trading_api_wallet_usdt_balance', {'id': '__ID__'}) }}'.replace('__ID__', currentWalletId))
+        .then(r => r.json())
+        .then(data => {
+            if (data.usdt_balance !== undefined) {
+                currentWalletBalance = data.usdt_balance;
+                const balVal = document.getElementById('balVal');
+                if (balVal) {
+                    balVal.textContent = '$' + currentWalletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                
+                const walletSelect = document.getElementById('walletSelect');
+                if (walletSelect && walletSelect.selectedIndex >= 0) {
+                    const selectedOption = walletSelect.options[walletSelect.selectedIndex];
+                    selectedOption.dataset.balance = currentWalletBalance;
+                    selectedOption.text = `💳 RIB: ${data.rib} (${selectedOption.dataset.type || ''}) - ${currentWalletBalance.toFixed(2)} USDT`;
+                }
+            }
+        })
+        .catch(err => console.error('Error refreshing balance:', err));
+}
+
+// ============================================
 // NAVIGATION
-// ════════════════════════════════════════════════
+// ============================================
 function goPage(id, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  const page = document.getElementById('pg-' + id);
-  if (page) page.classList.add('on');
-  btn.classList.add('active');
-  const navPair = document.getElementById('navPair');
-  if (navPair) navPair.style.display = id === 'dash' ? 'flex' : 'none';
-  if (id === 'hist' && typeof loadHistory === 'function') loadHistory();
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    const page = document.getElementById('pg-' + id);
+    if (page) page.classList.add('on');
+    btn.classList.add('active');
+    const navPair = document.getElementById('navPair');
+    if (navPair) navPair.style.display = id === 'dash' ? 'flex' : 'none';
+    if (id === 'hist' && typeof loadHistory === 'function') loadHistory();
 }
 
-// ════════════════════════════════════════════════
+// ============================================
 // TRADINGVIEW CHART
-// ════════════════════════════════════════════════
+// ============================================
 function initChart(sym, iv) {
-  const el = document.getElementById('tv');
-  if (!el) return;
-  el.innerHTML = '';
-  if (typeof TradingView !== 'undefined') {
-    new TradingView.widget({
-      container_id: 'tv', symbol: 'BINANCE:' + sym + 'USDT',
-      interval: iv, timezone: 'Etc/UTC', theme: 'dark', style: '1', locale: 'en',
-      toolbar_bg: '#0d0f14', allow_symbol_change: true, width: '100%', height: '100%',
-    });
-  }
-}
-function pickIv(iv, btn) {
-  document.querySelectorAll('.iv-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  curIv = {'1m':'1','5m':'5','1h':'60','4h':'240','1d':'D'}[iv] || '5';
-  if (curSym) initChart(curSym, curIv);
-}
-
-// ════════════════════════════════════════════════
-// ASSET SELECTION
-// ════════════════════════════════════════════════
-function pickAsset(sym, el) {
-  document.querySelectorAll('.mkt-row').forEach(r => r.classList.remove('on'));
-  el.classList.add('on');
-  curSym = sym;
-  const chartLbl = document.getElementById('chartLbl');
-  const navSym = document.getElementById('navSym');
-  const tradeBtn = document.getElementById('tradeBtn');
-  if (chartLbl) chartLbl.textContent = sym + ' / USDT';
-  if (navSym) navSym.textContent = sym + '/USDT';
-  if (tradeBtn) tradeBtn.textContent = curTab + ' ' + sym;
-  if (curSym) initChart(sym, curIv);
-  if (priceMap[sym]) { updateNavbar(priceMap[sym]); updateLimitPriceBadge(); }
-  if (typeof fetchRecommend === 'function') fetchRecommend(sym);
-  if (typeof reconnectWS === 'function') reconnectWS();
-}
-
-// ════════════════════════════════════════════════
-// FORMAT
-// ════════════════════════════════════════════════
-function dec(v) { return v < 1 ? 6 : v < 100 ? 4 : 2; }
-function fmt(v)  { return v ? '$' + parseFloat(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:dec(v)}) : '$0.00'; }
-function fmtQty(v) { if (!v || isNaN(v)) return '—'; return parseFloat(v).toLocaleString('en-US', {maximumFractionDigits: v < 1 ? 6 : 4}); }
-function fmtPx(v) { if (!v || isNaN(v)) return '—'; const dec = v < 1 ? 6 : v < 100 ? 4 : 2; return '$' + parseFloat(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: dec}); }
-
-// ════════════════════════════════════════════════
-// LIMIT ORDER FUNCTIONS
-// ════════════════════════════════════════════════
-function toggleLimitField() {
-  const mode = document.getElementById('ordMode');
-  if (!mode) return;
-  const wrap = document.getElementById('limitPriceWrap');
-  if (mode.value === 'limit') {
-    if (wrap) wrap.classList.add('show');
-    updateLimitPriceBadge();
-  } else {
-    if (wrap) wrap.classList.remove('show');
-  }
-  const btn = document.getElementById('tradeBtn');
-  if (btn) {
-    btn.textContent = mode.value === 'limit' ? 'Place LIMIT ' + curTab + ' Order' : curTab + ' ' + curSym;
-  }
-}
-function updateLimitPriceBadge() {
-  const el = document.getElementById('limitCurrentPx');
-  if (el && curPx > 0) el.textContent = fmt(curPx);
-}
-function renderLimitOrders() {
-  const section = document.getElementById('limitOrdersSection');
-  const list = document.getElementById('limitPendingList');
-  if (!section || !list) return;
-  if (!limitOrders.length) { section.style.display = 'none'; return; }
-  section.style.display = 'flex';
-  list.innerHTML = limitOrders.map(o => `<div class="limit-order-item" id="lo-${o.id}"><span class="li-sym">${o.sym}/USDT</span><span>${o.type} ${o.qty} @ ${fmt(o.targetPrice)}</span><button class="li-cancel" onclick="cancelLimitOrder(${o.id})">✕</button></div>`).join('');
-}
-function cancelLimitOrder(id) {
-  limitOrders = limitOrders.filter(o => o.id !== id);
-  renderLimitOrders();
-  toast('Limit order cancelled.', 'ok');
-}
-function checkLimitOrders(sym, price) {
-  const toExecute = limitOrders.filter(o => o.sym === sym && ((o.direction === 'AT_OR_BELOW' && price <= o.targetPrice) || (o.direction === 'AT_OR_ABOVE' && price >= o.targetPrice)));
-  toExecute.forEach(o => {
-    limitOrders = limitOrders.filter(x => x.id !== o.id);
-    renderLimitOrders();
-    toast(`🎯 LIMIT ${o.type} triggered! ${o.sym} @ ${fmt(price)}`, 'ok');
-    logLine('wt', `LIMIT ORDER TRIGGERED: ${o.type} ${o.qty} ${o.sym}/USDT @ ${fmt(price)}`);
-    fetch('{{ path('app_trading_api_execute_trade') }}', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ symbol: o.sym, tradeType: o.type, quantity: o.qty, orderMode: 'LIMIT', currentPrice: price, targetPrice: o.targetPrice }),
-    }).then(r => r.json()).then(d => {
-      if (d.error) { toast('Limit exec error: ' + d.error, 'err'); return; }
-      document.getElementById('balVal').textContent = '$' + parseFloat(d.newBalance).toFixed(2);
-      toast(`✅ LIMIT ${d.tradeType} executed: ${d.quantity} ${d.symbol} @ ${fmt(d.price)}`, 'ok');
-      loadHistory();
-    }).catch(() => toast('Failed to execute limit order.', 'err'));
-  });
-}
-
-// ════════════════════════════════════════════════
-// BINANCE WEBSOCKET & PRICES
-// ════════════════════════════════════════════════
-let ws = null, wsReconnectTimer = null;
-function fetchBinanceSnapshot() {
-  if (!dbAssets || !dbAssets.length) return;
-  const syms = dbAssets.map(s => '"' + s + 'USDT"').join(',');
-  fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=[${syms}]`).then(r => r.json()).then(data => {
-    if (!Array.isArray(data)) return;
-    data.forEach(item => {
-      const sym = item.symbol.replace('USDT','');
-      const d = { price: parseFloat(item.lastPrice), change: parseFloat(item.priceChangePercent), high: parseFloat(item.highPrice), low: parseFloat(item.lowPrice) };
-      priceMap[sym] = d;
-      updateMarketRow(sym, d);
-      if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
-    });
-    updateTickerAll();
-    startWebSocket();
-  }).catch(() => fetchServerPrices());
-}
-function startWebSocket() {
-  if (ws) ws.close();
-  clearTimeout(wsReconnectTimer);
-  if (!dbAssets || !dbAssets.length) return;
-  const streams = dbAssets.map(s => s.toLowerCase() + 'usdt@ticker').join('/');
-  ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
-  ws.onopen = () => logLine('it', 'WebSocket connected');
-  ws.onmessage = (event) => {
-    try {
-      const tick = JSON.parse(event.data).data;
-      if (!tick || !tick.s) return;
-      const sym = tick.s.replace('USDT','');
-      const d = { price: parseFloat(tick.c), change: parseFloat(tick.P), high: parseFloat(tick.h), low: parseFloat(tick.l) };
-      priceMap[sym] = d;
-      updateMarketRow(sym, d);
-      updateTickerItem(sym, d);
-      if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
-      checkLimitOrders(sym, d.price);
-    } catch(e) {}
-  };
-  ws.onclose = () => { wsReconnectTimer = setTimeout(startWebSocket, 5000); };
-}
-function reconnectWS() { clearTimeout(wsReconnectTimer); startWebSocket(); }
-function fetchServerPrices() {
-  fetch('{{ path('app_trading_api_prices') }}').then(r => r.json()).then(data => {
-    if (!Array.isArray(data)) return;
-    data.forEach(item => {
-      const sym = item.symbol.replace('USDT','');
-      const d = { price:item.price, change:item.change, high:item.high, low:item.low };
-      priceMap[sym] = d;
-      updateMarketRow(sym, d);
-      if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
-      checkLimitOrders(sym, d.price);
-    });
-    updateTickerAll();
-  }).catch(()=>{});
-}
-function updateMarketRow(sym, d) {
-  const pr = document.getElementById('mp-'+sym);
-  const ch = document.getElementById('mc-'+sym);
-  if (pr) pr.textContent = fmt(d.price);
-  if (ch) { ch.textContent = (d.change>=0?'+':'')+d.change.toFixed(2)+'%'; ch.className='mkt-ch '+(d.change>=0?'up':'dn'); }
-}
-function updateNavbar(d) {
-  const navPrice = document.getElementById('navPrice');
-  const navChg = document.getElementById('navChg');
-  const navHi = document.getElementById('navHi');
-  const navLo = document.getElementById('navLo');
-  if (navPrice) { navPrice.textContent = fmt(d.price); navPrice.className = 'nav-price' + (d.change>=0?'':' dn'); }
-  if (navChg) { navChg.textContent = (d.change>=0?'+':'')+d.change.toFixed(2)+'%'; navChg.style.color = d.change>=0?'var(--green)':'var(--red)'; }
-  if (navHi) navHi.textContent = fmt(d.high);
-  if (navLo) navLo.textContent = fmt(d.low);
-}
-function updateTickerItem(sym, d) {
-  const ticks = document.querySelectorAll('.tick');
-  const i = dbAssets.indexOf(sym);
-  if (i < 0) return;
-  [ticks[i], ticks[i + dbAssets.length]].forEach(el => {
+    const el = document.getElementById('tv');
     if (!el) return;
-    const p = el.querySelector('.tick-p'), c = el.querySelector('.tick-c');
-    if (p) p.textContent = fmt(d.price);
-    if (c) { c.textContent=(d.change>=0?'+':'')+d.change.toFixed(2)+'%'; c.className='tick-c '+(d.change>=0?'up':'dn'); }
-  });
+    el.innerHTML = '';
+    if (typeof TradingView !== 'undefined') {
+        new TradingView.widget({
+            container_id: 'tv', symbol: 'BINANCE:' + sym + 'USDT',
+            interval: iv, timezone: 'Etc/UTC', theme: 'dark', style: '1', locale: 'en',
+            toolbar_bg: '#0d0f14', allow_symbol_change: true, width: '100%', height: '100%',
+        });
+    }
 }
+
+function pickIv(iv, btn) {
+    document.querySelectorAll('.iv-btn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    curIv = {'1m':'1','5m':'5','1h':'60','4h':'240','1d':'D'}[iv] || '5';
+    if (curSym) initChart(curSym, curIv);
+}
+
+// ============================================
+// ASSET SELECTION
+// ============================================
+function pickAsset(sym, el) {
+    document.querySelectorAll('.mkt-row').forEach(r => r.classList.remove('on'));
+    el.classList.add('on');
+    curSym = sym;
+    const chartLbl = document.getElementById('chartLbl');
+    const navSym = document.getElementById('navSym');
+    const tradeBtn = document.getElementById('tradeBtn');
+    if (chartLbl) chartLbl.textContent = sym + ' / USDT';
+    if (navSym) navSym.textContent = sym + '/USDT';
+    if (tradeBtn) tradeBtn.textContent = curTab + ' ' + sym;
+    if (curSym) initChart(sym, curIv);
+    if (priceMap[sym]) { updateNavbar(priceMap[sym]); updateLimitPriceBadge(); }
+    if (typeof fetchRecommend === 'function') fetchRecommend(sym);
+    if (typeof reconnectWS === 'function') reconnectWS();
+}
+
+// ============================================
+// FORMAT
+// ============================================
+function dec(v) { return v < 1 ? 6 : v < 100 ? 4 : 2; }
+function fmt(v) { return v ? '$' + parseFloat(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:dec(v)}) : '$0.00'; }
+function fmtQty(v) { if (!v || isNaN(v)) return '—'; return parseFloat(v).toLocaleString('en-US', {maximumFractionDigits: v < 1 ? 6 : 4}); }
+function fmtPx(v) { if (!v || isNaN(v)) return '—'; const d = v < 1 ? 6 : v < 100 ? 4 : 2; return '$' + parseFloat(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: d}); }
+
+// ============================================
+// LIMIT ORDER FUNCTIONS
+// ============================================
+function toggleLimitField() {
+    const mode = document.getElementById('ordMode');
+    if (!mode) return;
+    const wrap = document.getElementById('limitPriceWrap');
+    if (mode.value === 'limit') {
+        if (wrap) wrap.classList.add('show');
+        updateLimitPriceBadge();
+    } else {
+        if (wrap) wrap.classList.remove('show');
+    }
+    const btn = document.getElementById('tradeBtn');
+    if (btn) {
+        btn.textContent = mode.value === 'limit' ? 'Place LIMIT ' + curTab + ' Order' : curTab + ' ' + curSym;
+    }
+}
+
+function updateLimitPriceBadge() {
+    const el = document.getElementById('limitCurrentPx');
+    if (el && curPx > 0) el.textContent = fmt(curPx);
+}
+
+function renderLimitOrders() {
+    const section = document.getElementById('limitOrdersSection');
+    const list = document.getElementById('limitPendingList');
+    if (!section || !list) return;
+    if (!limitOrders.length) { section.style.display = 'none'; return; }
+    section.style.display = 'flex';
+    list.innerHTML = limitOrders.map(o => `<div class="limit-order-item" id="lo-${o.id}"><span class="li-sym">${o.sym}/USDT</span><span>${o.type} ${o.qty} @ ${fmt(o.targetPrice)}</span><button class="li-cancel" onclick="cancelLimitOrder(${o.id})">✕</button></div>`).join('');
+}
+
+function cancelLimitOrder(id) {
+    limitOrders = limitOrders.filter(o => o.id !== id);
+    renderLimitOrders();
+    toast('Limit order cancelled.', 'ok');
+}
+
+function checkLimitOrders(sym, price) {
+    const toExecute = limitOrders.filter(o => o.sym === sym && ((o.direction === 'AT_OR_BELOW' && price <= o.targetPrice) || (o.direction === 'AT_OR_ABOVE' && price >= o.targetPrice)));
+    toExecute.forEach(o => {
+        limitOrders = limitOrders.filter(x => x.id !== o.id);
+        renderLimitOrders();
+        toast(`🎯 LIMIT ${o.type} triggered! ${o.sym} @ ${fmt(price)}`, 'ok');
+        logLine('wt', `LIMIT ORDER TRIGGERED: ${o.type} ${o.qty} ${o.sym}/USDT @ ${fmt(price)}`);
+        fetch('{{ path('app_trading_api_execute_trade') }}', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ symbol: o.sym, tradeType: o.type, quantity: o.qty, orderMode: 'LIMIT', currentPrice: price, targetPrice: o.targetPrice, walletId: currentWalletId }),
+        }).then(r => r.json()).then(d => {
+            if (d.error) { toast('Limit exec error: ' + d.error, 'err'); return; }
+            document.getElementById('balVal').textContent = '$' + parseFloat(d.newBalance).toFixed(2);
+            toast(`✅ LIMIT ${d.tradeType} executed: ${d.quantity} ${d.symbol} @ ${fmt(d.price)}`, 'ok');
+            loadHistory();
+            refreshWalletBalance();
+        }).catch(() => toast('Failed to execute limit order.', 'err'));
+    });
+}
+
+// ============================================
+// BINANCE WEBSOCKET & PRICES
+// ============================================
+let ws = null, wsReconnectTimer = null;
+
+function fetchBinanceSnapshot() {
+    if (!dbAssets || !dbAssets.length) return;
+    const syms = dbAssets.map(s => '"' + s + 'USDT"').join(',');
+    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=[${syms}]`).then(r => r.json()).then(data => {
+        if (!Array.isArray(data)) return;
+        data.forEach(item => {
+            const sym = item.symbol.replace('USDT','');
+            const d = { price: parseFloat(item.lastPrice), change: parseFloat(item.priceChangePercent), high: parseFloat(item.highPrice), low: parseFloat(item.lowPrice) };
+            priceMap[sym] = d;
+            updateMarketRow(sym, d);
+            if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
+        });
+        updateTickerAll();
+        startWebSocket();
+    }).catch(() => fetchServerPrices());
+}
+
+function startWebSocket() {
+    if (ws) ws.close();
+    clearTimeout(wsReconnectTimer);
+    if (!dbAssets || !dbAssets.length) return;
+    const streams = dbAssets.map(s => s.toLowerCase() + 'usdt@ticker').join('/');
+    ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
+    ws.onopen = () => logLine('it', 'WebSocket connected');
+    ws.onmessage = (event) => {
+        try {
+            const tick = JSON.parse(event.data).data;
+            if (!tick || !tick.s) return;
+            const sym = tick.s.replace('USDT','');
+            const d = { price: parseFloat(tick.c), change: parseFloat(tick.P), high: parseFloat(tick.h), low: parseFloat(tick.l) };
+            priceMap[sym] = d;
+            updateMarketRow(sym, d);
+            updateTickerItem(sym, d);
+            if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
+            checkLimitOrders(sym, d.price);
+        } catch(e) {}
+    };
+    ws.onclose = () => { wsReconnectTimer = setTimeout(startWebSocket, 5000); };
+}
+
+function reconnectWS() { clearTimeout(wsReconnectTimer); startWebSocket(); }
+
+function fetchServerPrices() {
+    fetch('{{ path('app_trading_api_prices') }}').then(r => r.json()).then(data => {
+        if (!Array.isArray(data)) return;
+        data.forEach(item => {
+            const sym = item.symbol.replace('USDT','');
+            const d = { price:item.price, change:item.change, high:item.high, low:item.low };
+            priceMap[sym] = d;
+            updateMarketRow(sym, d);
+            if (sym === curSym) { curPx = d.price; updateNavbar(d); updateTotal(); updateLimitPriceBadge(); }
+            checkLimitOrders(sym, d.price);
+        });
+        updateTickerAll();
+    }).catch(()=>{});
+}
+
+function updateMarketRow(sym, d) {
+    const pr = document.getElementById('mp-'+sym);
+    const ch = document.getElementById('mc-'+sym);
+    if (pr) pr.textContent = fmt(d.price);
+    if (ch) { ch.textContent = (d.change>=0?'+':'')+d.change.toFixed(2)+'%'; ch.className='mkt-ch '+(d.change>=0?'up':'dn'); }
+}
+
+function updateNavbar(d) {
+    const navPrice = document.getElementById('navPrice');
+    const navChg = document.getElementById('navChg');
+    const navHi = document.getElementById('navHi');
+    const navLo = document.getElementById('navLo');
+    if (navPrice) { navPrice.textContent = fmt(d.price); navPrice.className = 'nav-price' + (d.change>=0?'':' dn'); }
+    if (navChg) { navChg.textContent = (d.change>=0?'+':'')+d.change.toFixed(2)+'%'; navChg.style.color = d.change>=0?'var(--green)':'var(--red)'; }
+    if (navHi) navHi.textContent = fmt(d.high);
+    if (navLo) navLo.textContent = fmt(d.low);
+}
+
+function updateTickerItem(sym, d) {
+    const ticks = document.querySelectorAll('.tick');
+    const i = dbAssets.indexOf(sym);
+    if (i < 0) return;
+    [ticks[i], ticks[i + dbAssets.length]].forEach(el => {
+        if (!el) return;
+        const p = el.querySelector('.tick-p'), c = el.querySelector('.tick-c');
+        if (p) p.textContent = fmt(d.price);
+        if (c) { c.textContent=(d.change>=0?'+':'')+d.change.toFixed(2)+'%'; c.className='tick-c '+(d.change>=0?'up':'dn'); }
+    });
+}
+
 function updateTickerAll() { dbAssets.forEach(sym => { if (priceMap[sym]) updateTickerItem(sym, priceMap[sym]); }); }
 
-// ════════════════════════════════════════════════
+// ============================================
 // ORDER EXECUTION
-// ════════════════════════════════════════════════
+// ============================================
 function pickTab(tab, btn) {
-  curTab = tab;
-  document.querySelectorAll('.ord-tab').forEach(t => t.classList.remove('on'));
-  btn.classList.add('on');
-  const b = document.getElementById('tradeBtn');
-  const mode = document.getElementById('ordMode');
-  if (b && mode) {
-    b.textContent = mode.value === 'limit' ? 'Place LIMIT ' + tab + ' Order' : tab + ' ' + curSym;
-    b.className = 'trade-btn ' + tab.toLowerCase();
-  }
-}
-function updateTotal() {
-  const qty = parseFloat(document.getElementById('qtyInp')?.value) || 0;
-  const totalVal = document.getElementById('totalVal');
-  if (totalVal) totalVal.textContent = '$' + (qty * curPx).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-document.getElementById('qtyInp')?.addEventListener('input', updateTotal);
-function execTrade() {
-  const qty = parseFloat(document.getElementById('qtyInp')?.value);
-  if (!qty || qty <= 0) { toast('Entrez une quantité valide.', 'err'); return; }
- 
-  const mode = document.getElementById('ordMode')?.value.toUpperCase();
- 
-  // ── LIMIT ORDER ──
-  if (mode === 'LIMIT') {
-    const targetPrice = parseFloat(document.getElementById('limitPriceInp')?.value);
-    if (!targetPrice || targetPrice <= 0) { toast('Entrez un prix cible valide.', 'err'); return; }
-    const direction = curTab === 'BUY' ? 'AT_OR_BELOW' : 'AT_OR_ABOVE';
-    limitOrders.push({ id: limitOrderCounter++, sym: curSym, type: curTab, qty, targetPrice, direction });
-    renderLimitOrders();
-    fetch('{{ path('app_trading_api_execute_trade') }}', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ symbol: curSym, tradeType: curTab, quantity: qty, orderMode: 'LIMIT', targetPrice, currentPrice: curPx }),
-    }).then(r => r.json()).then(d => {
-      // ✅ FIX: mettre à jour le wallet même pour les LIMIT (solde non débité mais on affiche la réponse)
-      if (d.newBalance !== undefined && !isNaN(parseFloat(d.newBalance))) {
-        updateBalanceDisplay(d.newBalance);
-      }
-    }).catch(()=>{});
-    toast(`📌 LIMIT ${curTab} enregistré — ${qty} ${curSym} @ $${targetPrice}`, 'ok');
-    document.getElementById('qtyInp').value = '';
-    document.getElementById('limitPriceInp').value = '';
-    return;
-  }
- 
-  // ── MARKET ORDER ──
-  const btn = document.getElementById('tradeBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> En cours…'; }
- 
-  fetch('{{ path('app_trading_api_execute_trade') }}', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ symbol: curSym, tradeType: curTab, quantity: qty, orderMode: 'MARKET', currentPrice: curPx }),
-  })
-  .then(r => r.json())
-  .then(d => {
-    if (btn) { btn.disabled = false; btn.textContent = curTab + ' ' + curSym; }
-    if (d.error) { toast(d.error, 'err'); return; }
- 
-    // ✅ FIX PRINCIPAL : mise à jour du wallet avec vérification NaN
-    const newBal = d.newBalance ?? d.balance;
-    if (newBal !== undefined && !isNaN(parseFloat(newBal))) {
-      updateBalanceDisplay(newBal);
-      // Log dans le bot activity log aussi
-      logLine('it', `💰 Wallet mis à jour: ${formatBalance(newBal)} (${curTab} ${qty} ${curSym} @ ${fmt(d.price)})`);
+    curTab = tab;
+    document.querySelectorAll('.ord-tab').forEach(t => t.classList.remove('on'));
+    btn.classList.add('on');
+    const b = document.getElementById('tradeBtn');
+    const mode = document.getElementById('ordMode');
+    if (b && mode) {
+        b.textContent = mode.value === 'limit' ? 'Place LIMIT ' + tab + ' Order' : tab + ' ' + curSym;
+        b.className = 'trade-btn ' + tab.toLowerCase();
     }
- 
-    toast(`✅ ${d.tradeType} ${d.quantity} ${d.symbol} @ ${fmt(d.price)} — Solde: ${formatBalance(newBal)}`, 'ok');
-    document.getElementById('qtyInp').value = '';
-    updateTotal();
-    // Recharger l'historique automatiquement
-    if (document.getElementById('pg-hist')?.classList.contains('on')) loadHistory();
-  })
-  .catch(() => {
-    if (btn) { btn.disabled = false; btn.textContent = curTab + ' ' + curSym; }
-    toast('Trade échoué. Vérifiez votre connexion.', 'err');
-  });
-}
- 
-// ✅ NOUVELLE FONCTION CENTRALISÉE pour mettre à jour le balance partout
-function updateBalanceDisplay(amount) {
-  const parsed = parseFloat(amount);
-  if (isNaN(parsed)) return;
-  const formatted = '$' + parsed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  // Met à jour TOUS les éléments affichant le solde
-  document.getElementById('balVal').textContent = formatted;
-  // Stocke en mémoire pour référence
-  window._currentBalance = parsed;
-}
- 
-// ✅ HELPER format balance
-function formatBalance(amount) {
-  const parsed = parseFloat(amount);
-  if (isNaN(parsed)) return '$—';
-  return '$' + parsed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// ════════════════════════════════════════════════
-// RECOMMENDER
-// ════════════════════════════════════════════════
-function fetchRecommend(sym) {
-  fetch('{{ path('app_trading_api_recommend', {symbol:'__S__'}) }}'.replace('__S__', sym))
-    .then(r => r.json()).then(d => {
-      if (d.error) return;
-      lastRec = d;
-      document.getElementById('maxQty').textContent = fmtQty(d.maxBuyQty);
-      document.getElementById('riskPill').className = 'risk-pill ' + ({LOW:'low',MEDIUM:'med',HIGH:'high'}[d.riskLevel]||'low');
-      document.getElementById('riskTxt').textContent = d.advice;
-      document.getElementById('riskLabel').textContent = d.riskLevel;
-      document.getElementById('rsiVal').textContent = parseFloat(d.rsi).toFixed(1);
-      document.getElementById('kellyVal').textContent = (d.halfKelly || 0).toFixed(1) + '%';
-      document.getElementById('kellyPct').textContent = (d.halfKelly || 0).toFixed(1) + '%';
-      document.getElementById('kellyFill').style.width = Math.min((d.halfKelly || 0), 25) / 25 * 100 + '%';
-      document.getElementById('maxBuyQty').textContent = fmtQty(d.maxBuyQty);
-      document.getElementById('maxSellQty').textContent = fmtQty(d.maxSellQty);
-      document.getElementById('tpVal').textContent = fmtPx(d.suggestedTP);
-      document.getElementById('slVal').textContent = fmtPx(d.suggestedSL);
-      document.getElementById('recAdvice').textContent = d.advice;
-      if (d.riskLevel === 'CRITICAL') document.getElementById('tradeGuardBlock').classList.add('visible');
-      else document.getElementById('tradeGuardBlock').classList.remove('visible');
-    }).catch(()=>{});
+function updateTotal() {
+    const qty = parseFloat(document.getElementById('qtyInp')?.value) || 0;
+    const totalVal = document.getElementById('totalVal');
+    if (totalVal) totalVal.textContent = '$' + (qty * curPx).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
-// ════════════════════════════════════════════════
-// HISTORY
-// ════════════════════════════════════════════════
-let allTrades = [], histFilter = 'ALL';
-function loadHistory() {
-  const body = document.getElementById('histTableBody');
-  if (!body) return;
-  body.innerHTML = '<div class="hist-empty"><div class="spin" style="width:24px;height:24px;"></div><div>Loading…</div></div>';
-  fetch('{{ path('app_trading_api_history') }}').then(r => r.json()).then(data => {
-    allTrades = Array.isArray(data) ? data : [];
-    updateHistSummary();
-    renderHistory();
-  }).catch(() => { body.innerHTML = '<div class="hist-empty"><div>Failed to load history.</div></div>'; });
-}
-function updateHistSummary() {
-  document.getElementById('hsTotalTrades').textContent = allTrades.length;
-  document.getElementById('hsTotalBuy').textContent = allTrades.filter(t => t.trade_type === 'BUY').length;
-  document.getElementById('hsTotalSell').textContent = allTrades.filter(t => t.trade_type === 'SELL').length;
-  document.getElementById('hsCompleted').textContent = allTrades.filter(t => t.status === 'COMPLETED').length;
-  document.getElementById('hsPending').textContent = allTrades.filter(t => t.status === 'PENDING').length;
-}
-function filterHistory(f, btn) {
-  histFilter = f;
-  document.querySelectorAll('.hf-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderHistory();
-}
-function renderHistory() {
-  const q = (document.getElementById('histSearch')?.value || '').toLowerCase();
-  const body = document.getElementById('histTableBody');
-  if (!body) return;
-  let rows = allTrades.filter(t => (histFilter === 'ALL' ? true : histFilter === 'BUY' ? t.trade_type === 'BUY' : histFilter === 'SELL' ? t.trade_type === 'SELL' : histFilter === 'COMPLETED' ? t.status === 'COMPLETED' : histFilter === 'PENDING' ? t.status === 'PENDING' : true) && (!q || (t.symbol||'').toLowerCase().includes(q)));
-  if (!rows.length) { body.innerHTML = '<div class="hist-empty"><div>No trades match.</div></div>'; return; }
-  body.innerHTML = rows.map(t => `<div class="hist-row"><span>#${t.id}</span><span class="hr-sym">${t.symbol}</span><span class="hr-type ${(t.trade_type||'').toLowerCase()}">${t.trade_type}</span><span>${fmt(parseFloat(t.price))}</span><span>${parseFloat(t.quantity).toLocaleString()}</span><span>${fmt(parseFloat(t.price)*parseFloat(t.quantity))}</span><span><span class="hr-mode ${(t.order_mode||'market').toLowerCase()}">${(t.order_mode||'MARKET').toUpperCase()}</span></span><span><span class="hr-status ${(t.status||'').toLowerCase()}">${t.status}</span></span><span>${t.date}</span></div>`).join('');
-}
+document.getElementById('qtyInp')?.addEventListener('input', updateTotal);
 
-// ════════════════════════════════════════════════
-// NEWS
-// ════════════════════════════════════════════════
-function fetchNews() {
-  const box = document.getElementById('newsList');
-  if (!box) return;
-  box.innerHTML = '<div style="padding:12px 14px;color:var(--muted);font-size:11px;">Chargement des news…</div>';
- 
-  fetch('{{ path('app_trading_api_news') }}')
-    .then(r => {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(arts => {
-      if (!Array.isArray(arts) || arts.length === 0) {
-        box.innerHTML = '<div style="padding:12px 14px;color:var(--muted);font-size:11px;">Aucune news disponible.<br><small>Vérifiez votre clé NewsAPI.</small></div>';
+function execTrade() {
+    const qty = parseFloat(document.getElementById('qtyInp')?.value);
+    if (!qty || qty <= 0) { toast('Entrez une quantité valide.', 'err'); return; }
+    
+    if (!currentWalletId) {
+        toast('Veuillez sélectionner un wallet.', 'err');
         return;
-      }
- 
-      // ✅ FIX: filtre les articles sans titre + affiche 6 news avec image optionnelle
-      const valid = arts.filter(a => a.title && a.title !== '[Removed]').slice(0, 6);
- 
-      box.innerHTML = valid.map(a => {
-        const date = a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-        return `
-          <a class="news-card" href="${a.url || '#'}" target="_blank" rel="noopener">
-            <div class="news-card-t">${escapeHtml(a.title)}</div>
-            <div class="news-card-m">${escapeHtml(a.source || '')} · ${date}</div>
-          </a>
-        `;
-      }).join('');
+    }
+    
+    const mode = document.getElementById('ordMode')?.value.toUpperCase();
+    
+    if (mode === 'LIMIT') {
+        const targetPrice = parseFloat(document.getElementById('limitPriceInp')?.value);
+        if (!targetPrice || targetPrice <= 0) { toast('Entrez un prix cible valide.', 'err'); return; }
+        
+        fetch('{{ path('app_trading_api_execute_trade') }}', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                symbol: curSym, tradeType: curTab, quantity: qty, orderMode: 'LIMIT', 
+                targetPrice, currentPrice: curPx, walletId: currentWalletId
+            }),
+        }).then(r => r.json()).then(d => {
+            if (d.success) {
+                toast(`📌 LIMIT ${curTab} enregistré — ${qty} ${curSym} @ $${targetPrice}`, 'ok');
+                document.getElementById('qtyInp').value = '';
+                document.getElementById('limitPriceInp').value = '';
+                loadBotPendingOrders();
+            } else if (d.error) { toast(d.error, 'err'); }
+        }).catch(() => toast('Erreur lors de l\'enregistrement', 'err'));
+        return;
+    }
+    
+    const btn = document.getElementById('tradeBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> En cours…'; }
+    
+    fetch('{{ path('app_trading_api_execute_trade') }}', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+            symbol: curSym, tradeType: curTab, quantity: qty, orderMode: 'MARKET', 
+            currentPrice: curPx, walletId: currentWalletId
+        }),
     })
-    .catch(err => {
-      box.innerHTML = `<div style="padding:12px 14px;color:var(--muted);font-size:11px;">Erreur chargement news.<br><small>${err.message}</small></div>`;
-      console.warn('News fetch error:', err);
+    .then(r => r.json())
+    .then(d => {
+        if (btn) { btn.disabled = false; btn.textContent = curTab + ' ' + curSym; }
+        if (d.error) { toast(d.error, 'err'); return; }
+        
+        const newBal = d.newBalance ?? d.balance;
+        if (newBal !== undefined && !isNaN(parseFloat(newBal))) {
+            currentWalletBalance = parseFloat(newBal);
+            const balVal = document.getElementById('balVal');
+            if (balVal) balVal.textContent = '$' + currentWalletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            refreshWalletBalance();
+        }
+        
+        toast(`✅ ${d.tradeType} ${d.quantity} ${d.symbol} @ ${fmt(d.price)}`, 'ok');
+        document.getElementById('qtyInp').value = '';
+        updateTotal();
+        if (document.getElementById('pg-hist')?.classList.contains('on')) loadHistory();
+    })
+    .catch(() => {
+        if (btn) { btn.disabled = false; btn.textContent = curTab + ' ' + curSym; }
+        toast('Trade échoué. Vérifiez votre connexion.', 'err');
     });
 }
- 
-// Helper XSS protection
+
+function updateBalanceDisplay(amount) {
+    const parsed = parseFloat(amount);
+    if (isNaN(parsed)) return;
+    document.getElementById('balVal').textContent = '$' + parsed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    window._currentBalance = parsed;
+}
+
+function formatBalance(amount) {
+    const parsed = parseFloat(amount);
+    if (isNaN(parsed)) return '$—';
+    return '$' + parsed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ============================================
+// RECOMMENDER
+// ============================================
+function fetchRecommend(sym) {
+    fetch('{{ path('app_trading_api_recommend', {symbol:'__S__'}) }}'.replace('__S__', sym))
+        .then(r => r.json()).then(d => {
+            if (d.error) return;
+            lastRec = d;
+            document.getElementById('maxQty').textContent = fmtQty(d.maxBuyQty);
+            document.getElementById('riskPill').className = 'risk-pill ' + ({LOW:'low',MEDIUM:'med',HIGH:'high'}[d.riskLevel]||'low');
+            document.getElementById('riskTxt').textContent = d.advice;
+            document.getElementById('riskLabel').textContent = d.riskLevel;
+            document.getElementById('maxBuyQty').textContent = fmtQty(d.maxBuyQty);
+            document.getElementById('maxSellQty').textContent = fmtQty(d.maxSellQty);
+            document.getElementById('recAdvice').textContent = d.advice;
+            if (d.riskLevel === 'CRITICAL') document.getElementById('tradeGuardBlock').classList.add('visible');
+            else document.getElementById('tradeGuardBlock').classList.remove('visible');
+        }).catch(()=>{});
+}
+
+// ============================================
+// HISTORY
+// ============================================
+let allTrades = [], histFilter = 'ALL';
+
+function loadHistory() {
+    const body = document.getElementById('histTableBody');
+    if (!body) return;
+    body.innerHTML = '<div class="hist-empty"><div class="spin" style="width:24px;height:24px;"></div><div>Loading…</div></div>';
+    fetch('{{ path('app_trading_api_history') }}').then(r => r.json()).then(data => {
+        allTrades = Array.isArray(data) ? data : [];
+        updateHistSummary();
+        renderHistory();
+    }).catch(() => { body.innerHTML = '<div class="hist-empty"><div>Failed to load history.</div></div>'; });
+}
+
+function updateHistSummary() {
+    document.getElementById('hsTotalTrades').textContent = allTrades.length;
+    document.getElementById('hsTotalBuy').textContent = allTrades.filter(t => t.trade_type === 'BUY').length;
+    document.getElementById('hsTotalSell').textContent = allTrades.filter(t => t.trade_type === 'SELL').length;
+    document.getElementById('hsCompleted').textContent = allTrades.filter(t => t.status === 'COMPLETED').length;
+    document.getElementById('hsPending').textContent = allTrades.filter(t => t.status === 'PENDING').length;
+}
+
+function filterHistory(f, btn) {
+    histFilter = f;
+    document.querySelectorAll('.hf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderHistory();
+}
+
+function renderHistory() {
+    const q = (document.getElementById('histSearch')?.value || '').toLowerCase();
+    const body = document.getElementById('histTableBody');
+    if (!body) return;
+    let rows = allTrades.filter(t => (histFilter === 'ALL' ? true : histFilter === 'BUY' ? t.trade_type === 'BUY' : histFilter === 'SELL' ? t.trade_type === 'SELL' : histFilter === 'COMPLETED' ? t.status === 'COMPLETED' : histFilter === 'PENDING' ? t.status === 'PENDING' : true) && (!q || (t.symbol||'').toLowerCase().includes(q)));
+    if (!rows.length) { body.innerHTML = '<div class="hist-empty"><div>No trades match.</div></div>'; return; }
+    body.innerHTML = rows.map(t => `<div class="hist-row"><span>#${t.id}</span><span class="hr-sym">${t.symbol}</span><span class="hr-type ${(t.trade_type||'').toLowerCase()}">${t.trade_type}</span><span>${fmt(parseFloat(t.price))}</span><span>${parseFloat(t.quantity).toLocaleString()}</span><span>${fmt(parseFloat(t.price)*parseFloat(t.quantity))}</span><span><span class="hr-mode ${(t.order_mode||'market').toLowerCase()}">${(t.order_mode||'MARKET').toUpperCase()}</span></span><span><span class="hr-status ${(t.status||'').toLowerCase()}">${t.status}</span></span><span>${t.date}</span></div>`).join('');
+}
+
+// ============================================
+// NEWS
+// ============================================
+function fetchNews() {
+    const box = document.getElementById('newsList');
+    if (!box) return;
+    box.innerHTML = '<div style="padding:12px 14px;color:var(--muted);font-size:11px;">Chargement des news…</div>';
+    fetch('{{ path('app_trading_api_news') }}')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(arts => {
+            if (!Array.isArray(arts) || arts.length === 0) {
+                box.innerHTML = '<div style="padding:12px 14px;color:var(--muted);font-size:11px;">Aucune news disponible.</div>';
+                return;
+            }
+            const valid = arts.filter(a => a.title && a.title !== '[Removed]').slice(0, 6);
+            box.innerHTML = valid.map(a => {
+                const date = a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+                return `<a class="news-card" href="${a.url || '#'}" target="_blank" rel="noopener"><div class="news-card-t">${escapeHtml(a.title)}</div><div class="news-card-m">${escapeHtml(a.source || '')} · ${date}</div></a>`;
+            }).join('');
+        })
+        .catch(err => { box.innerHTML = `<div style="padding:12px 14px;color:var(--muted);font-size:11px;">Erreur chargement news.<br><small>${err.message}</small></div>`; });
+}
+
 function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ════════════════════════════════════════════════
+// ============================================
 // CHAT
-// ════════════════════════════════════════════════
+// ============================================
 function quickAsk(msg) { document.getElementById('chatInp').value = msg; sendMsg(); }
+
 function sendMsg() {
-  const inp = document.getElementById('chatInp');
-  const msg = inp?.value.trim();
-  if (!msg) return;
-  addBubble(msg, 'usr');
-  inp.value = '';
-  const tp = addBubble('', 'bot', true);
-  fetch('{{ path('app_trading_api_chatbot') }}', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({message: msg}),
-  }).then(r => r.json()).then(d => { tp.remove(); addBubble(d.reply || 'No response.', 'bot'); })
-    .catch(() => { tp.remove(); addBubble('Connection error.', 'bot'); });
+    const inp = document.getElementById('chatInp');
+    const msg = inp?.value.trim();
+    if (!msg) return;
+    addBubble(msg, 'usr');
+    inp.value = '';
+    const tp = addBubble('', 'bot', true);
+    fetch('{{ path('app_trading_api_chatbot') }}', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({message: msg}),
+    }).then(r => r.json()).then(d => { tp.remove(); addBubble(d.reply || 'No response.', 'bot'); })
+      .catch(() => { tp.remove(); addBubble('Connection error.', 'bot'); });
 }
+
 function addBubble(text, role, typing=false) {
-  const box = document.getElementById('msgs');
-  if (!box) return null;
-  const w = document.createElement('div');
-  w.className = 'bubble ' + role + (typing ? ' typing' : '');
-  w.innerHTML = `<div class="av ${role}">${role==='bot'?'🤖':'👤'}</div><div class="bc">${typing ? '<div class="td"></div><div class="td"></div><div class="td"></div>' : text}</div>`;
-  box.appendChild(w); box.scrollTop = box.scrollHeight;
-  return w;
+    const box = document.getElementById('msgs');
+    if (!box) return null;
+    const w = document.createElement('div');
+    w.className = 'bubble ' + role;
+    w.innerHTML = `<div class="av ${role}">${role==='bot'?'🤖':'👤'}</div><div class="bc">${text}</div>`;
+    box.appendChild(w);
+    box.scrollTop = box.scrollHeight;
+    return w;
 }
 
-// ════════════════════════════════════════════════
+// ============================================
 // BOT
-// ════════════════════════════════════════════════
-
+// ============================================
 let botOn = false, botTimer = null;
 let bTrades = 0, bWins = 0, bPnl = 0, bStrat = 'ma';
-let botPosition = null;  // Position actuelle du bot
-let botPendingOrders = []; // Ordres pending du bot
-
+let botPosition = null;
+let botPendingOrders = [];
 const priceHistory = {};
 const HISTORY_MAX = 50;
 
@@ -997,7 +1053,7 @@ function pickStrat(el) {
     document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('sel'));
     el.classList.add('sel');
     bStrat = el.dataset.s;
-    botPosition = null; // Reset position quand on change de stratégie
+    botPosition = null;
     logLine('it', `Stratégie changée: ${bStrat.toUpperCase()}`);
 }
 
@@ -1006,23 +1062,14 @@ function toggleBot() {
     const btn = document.getElementById('botBtn');
     const dot = document.getElementById('lDot');
     const sStat = document.getElementById('sStat');
-    
-    if (sStat) {
-        sStat.textContent = botOn ? '🟢 Running' : 'Idle';
-        sStat.style.color = botOn ? 'var(--green)' : 'var(--muted)';
-    }
-    if (btn) {
-        btn.textContent = botOn ? '⏹ Stop Bot' : '▶ Start Bot';
-        btn.classList.toggle('stop', botOn);
-    }
+    if (sStat) { sStat.textContent = botOn ? '🟢 Running' : 'Idle'; sStat.style.color = botOn ? 'var(--green)' : 'var(--muted)'; }
+    if (btn) { btn.textContent = botOn ? '⏹ Stop Bot' : '▶ Start Bot'; btn.classList.toggle('stop', botOn); }
     if (dot) dot.classList.toggle('live', botOn);
-    
     if (botOn) {
         botPosition = null;
         logLine('it', `Bot démarré | Stratégie: ${bStrat.toUpperCase()}`);
-        // Charger les ordres pending existants
         loadBotPendingOrders();
-        botTimer = setInterval(botTick, 15000); // Vérification toutes les 15 secondes
+        botTimer = setInterval(botTick, 15000);
         botTick();
     } else {
         clearInterval(botTimer);
@@ -1030,60 +1077,33 @@ function toggleBot() {
     }
 }
 
-// Charger les ordres pending du bot depuis la BDD
 function loadBotPendingOrders() {
     fetch('{{ path('app_trading_api_bot_pending_orders') }}')
         .then(r => r.json())
         .then(orders => {
             botPendingOrders = orders;
-            if (orders.length > 0) {
-                logLine('it', `${orders.length} ordre(s) LIMIT pending chargé(s) depuis la BDD`);
-                displayBotPendingOrders();
-            }
+            if (orders.length > 0) logLine('it', `${orders.length} ordre(s) LIMIT pending chargé(s)`);
+            displayBotPendingOrders();
         })
         .catch(err => console.error('Error loading pending orders:', err));
 }
 
-// Afficher les ordres pending du bot dans l'UI
 function displayBotPendingOrders() {
     const section = document.getElementById('limitOrdersSection');
     const list = document.getElementById('limitPendingList');
     if (!section || !list) return;
-    
-    if (!botPendingOrders.length) {
-        section.style.display = 'none';
-        return;
-    }
-    
+    if (!botPendingOrders.length) { section.style.display = 'none'; return; }
     section.style.display = 'flex';
-    list.innerHTML = botPendingOrders.map(o => `
-        <div class="limit-order-item" id="bot-order-${o.id}">
-            <span class="li-sym">${o.symbol}/USDT</span>
-            <span>${o.trade_type} ${o.quantity} @ ${fmt(o.target_price)}</span>
-            <span style="font-size:9px;color:var(--muted)">bot</span>
-        </div>
-    `).join('');
+    list.innerHTML = botPendingOrders.map(o => `<div class="limit-order-item"><span class="li-sym">${o.symbol}/USDT</span><span>${o.trade_type} ${o.quantity} @ ${fmt(o.target_price)}</span><span style="font-size:9px;color:var(--muted)">bot</span></div>`).join('');
 }
 
-// Vérifier et exécuter les ordres pending
 function checkBotPendingOrders(asset, currentPrice) {
-    const pendingForAsset = botPendingOrders.filter(o => 
-        o.symbol === asset && o.status !== 'COMPLETED'
-    );
-    
+    const pendingForAsset = botPendingOrders.filter(o => o.symbol === asset);
     for (const order of pendingForAsset) {
         let shouldExecute = false;
-        
-        if (order.trade_type === 'BUY' && currentPrice <= order.target_price) {
-            shouldExecute = true;
-            logLine('wt', `Condition remplie pour ordre LIMIT #${order.id}: prix marché (${fmt(currentPrice)}) ≤ prix cible (${fmt(order.target_price)})`);
-        } else if (order.trade_type === 'SELL' && currentPrice >= order.target_price) {
-            shouldExecute = true;
-            logLine('wt', `Condition remplie pour ordre LIMIT #${order.id}: prix marché (${fmt(currentPrice)}) ≥ prix cible (${fmt(order.target_price)})`);
-        }
-        
+        if (order.trade_type === 'BUY' && currentPrice <= order.target_price) shouldExecute = true;
+        else if (order.trade_type === 'SELL' && currentPrice >= order.target_price) shouldExecute = true;
         if (shouldExecute) {
-            // Exécuter l'ordre via l'API
             fetch('{{ path('app_trading_api_bot_check_execute') }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1094,21 +1114,7 @@ function checkBotPendingOrders(asset, currentPrice) {
                 if (d.success) {
                     logLine('bt', `✅ ORDRE LIMIT EXÉCUTÉ: ${order.trade_type} ${order.quantity} ${order.symbol} @ ${fmt(currentPrice)}`);
                     toast(`🎯 LIMIT ${order.trade_type} exécuté!`, 'ok');
-                    document.getElementById('balVal').textContent = '$' + d.newBalance.toFixed(2);
-                    
-                    // Mettre à jour la position du bot
-                    if (order.trade_type === 'BUY') {
-                        botPosition = {
-                            symbol: order.symbol,
-                            entryPrice: currentPrice,
-                            quantity: order.quantity,
-                            entryTime: new Date()
-                        };
-                    } else if (order.trade_type === 'SELL') {
-                        botPosition = null;
-                    }
-                    
-                    // Retirer de la liste locale
+                    refreshWalletBalance();
                     botPendingOrders = botPendingOrders.filter(o => o.id !== order.id);
                     displayBotPendingOrders();
                     loadHistory();
@@ -1121,266 +1127,106 @@ function checkBotPendingOrders(asset, currentPrice) {
 
 function botTick() {
     if (!botOn) return;
-    
     const assetEl = document.getElementById('botAsset');
     if (!assetEl) return;
     const asset = assetEl.value;
     const amtEl = document.getElementById('botAmt');
     const amt = amtEl ? (parseFloat(amtEl.value) || 100) : 100;
     const liveData = priceMap[asset];
-    
-    if (!liveData) {
-        logLine('it', `En attente du prix pour ${asset}/USDT...`);
-        return;
-    }
-    
+    if (!liveData) { logLine('it', `En attente du prix pour ${asset}/USDT...`); return; }
     const price = liveData.price;
     recordPrice(asset, price);
-    
-    // Vérifier d'abord les ordres pending existants en BDD
     checkBotPendingOrders(asset, price);
-    
     let signal = 'HOLD';
-    let reason = '';
     const history = priceHistory[asset] || [];
-    
-    // Vérifier si on a déjà une position ouverte
     const hasPosition = botPosition && botPosition.symbol === asset;
-    
-    // ── STRATÉGIE MA CROSSOVER ──
     if (bStrat === 'ma' && history.length >= 20) {
         const ma5 = history.slice(-5).reduce((a, b) => a + b, 0) / 5;
         const ma20 = history.slice(-20).reduce((a, b) => a + b, 0) / 20;
-        const prevMa5 = history.length >= 21 ? history.slice(-6, -1).reduce((a, b) => a + b, 0) / 5 : ma5;
-        const prevMa20 = history.length >= 21 ? history.slice(-21, -1).reduce((a, b) => a + b, 0) / 20 : ma20;
-        
-        if (ma5 > ma20 && prevMa5 <= prevMa20 && !hasPosition) {
-            signal = 'BUY';
-            reason = `MA5(${ma5.toFixed(2)}) croise au-dessus MA20(${ma20.toFixed(2)})`;
-        } else if (ma5 < ma20 && prevMa5 >= prevMa20 && hasPosition) {
-            signal = 'SELL';
-            reason = `MA5(${ma5.toFixed(2)}) croise en-dessous MA20(${ma20.toFixed(2)})`;
-        }
-    }
-    // ── STRATÉGIE RSI ──
-    else if (bStrat === 'rsi' && history.length >= 14) {
-        let gains = 0, losses = 0;
-        for (let i = history.length - 14; i < history.length; i++) {
-            if (i === 0) continue;
-            const diff = history[i] - history[i - 1];
-            if (diff > 0) gains += diff;
-            else losses += Math.abs(diff);
-        }
-        const rs = (gains / 14) / (losses / 14 || 0.001);
-        const rsi = 100 - (100 / (1 + rs));
-        
-        if (rsi < 30 && !hasPosition) {
-            signal = 'BUY';
-            reason = `RSI=${rsi.toFixed(1)} — Zone survendue`;
-        } else if (rsi > 70 && hasPosition) {
-            signal = 'SELL';
-            reason = `RSI=${rsi.toFixed(1)} — Zone surachetée (fermeture)`;
-        }
-    }
-    // ── STRATÉGIE DCA ──
-    else if (bStrat === 'dca' && !hasPosition) {
-        signal = 'BUY';
-        reason = 'DCA achat programmé';
-    }
-    
-    // ⚠️ IMPORTANT: Créer un ordre LIMIT (PENDING) au lieu d'exécuter MARKET
+        if (ma5 > ma20 && !hasPosition) signal = 'BUY';
+        else if (ma5 < ma20 && hasPosition) signal = 'SELL';
+    } else if (bStrat === 'dca' && !hasPosition) signal = 'BUY';
     if (signal === 'BUY' && !hasPosition) {
-        // Prix cible = prix actuel - 0.5% (pour acheter moins cher)
         const targetPrice = price * 0.995;
         const qty = amt / price;
-        
-        logLine('bt', `📌 Création ordre LIMIT BUY: ${qty.toFixed(6)} ${asset} @ ${fmt(targetPrice)} (marché: ${fmt(price)})`);
-        
         fetch('{{ path('app_trading_api_execute_trade') }}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                symbol: asset,
-                tradeType: 'BUY',
-                quantity: qty,
-                orderMode: 'LIMIT',
-                targetPrice: targetPrice,
-                currentPrice: price
-            })
-        })
-        .then(r => r.json())
-        .then(d => {
-            if (d.success) {
-                logLine('bt', `✅ Ordre LIMIT BUY créé (ID: ${d.tradeId}) - En attente du marché @ ${fmt(targetPrice)}`);
-                toast(`📌 Ordre LIMIT BUY créé pour ${asset}`, 'ok');
-                // Recharger les ordres pending
-                loadBotPendingOrders();
-            } else if (d.error) {
-                logLine('wt', `Erreur: ${d.error}`);
-            }
-        })
-        .catch(err => logLine('wt', `Erreur API: ${err.message}`));
-    }
-    else if (signal === 'SELL' && hasPosition) {
-        // Prix cible = prix actuel + 0.5% (pour vendre plus cher)
-        const targetPrice = price * 1.005;
-        const qty = botPosition.quantity;
-        
-        logLine('st', `📌 Création ordre LIMIT SELL: ${qty.toFixed(6)} ${asset} @ ${fmt(targetPrice)} (marché: ${fmt(price)})`);
-        
-        fetch('{{ path('app_trading_api_execute_trade') }}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                symbol: asset,
-                tradeType: 'SELL',
-                quantity: qty,
-                orderMode: 'LIMIT',
-                targetPrice: targetPrice,
-                currentPrice: price
-            })
-        })
-        .then(r => r.json())
-        .then(d => {
-            if (d.success) {
-                logLine('st', `✅ Ordre LIMIT SELL créé (ID: ${d.tradeId}) - En attente du marché @ ${fmt(targetPrice)}`);
-                toast(`📌 Ordre LIMIT SELL créé pour ${asset}`, 'ok');
-                loadBotPendingOrders();
-            } else if (d.error) {
-                logLine('wt', `Erreur: ${d.error}`);
-            }
-        })
-        .catch(err => logLine('wt', `Erreur API: ${err.message}`));
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symbol: asset, tradeType: 'BUY', quantity: qty, orderMode: 'LIMIT', targetPrice, currentPrice: price, walletId: currentWalletId })
+        }).then(r => r.json()).then(d => { if (d.success) { logLine('bt', `Ordre LIMIT BUY créé @ ${fmt(targetPrice)}`); loadBotPendingOrders(); } });
     }
 }
+
 function updateBotStats() {
-    // Utiliser la nouvelle route
     fetch('{{ path('app_trading_api_bot_stats_real') }}')
         .then(r => r.json())
         .then(stats => {
             const sTrades = document.getElementById('sTrades');
-            const sWin = document.getElementById('sWin');
             const sPnl = document.getElementById('sPnl');
-            const sStat = document.getElementById('sStat');
-            
             if (sTrades && stats.tradesToday) sTrades.textContent = stats.tradesToday;
-            if (sWin && stats.winRate) sWin.textContent = stats.winRate + '%';
-            if (sPnl && stats.pnl) {
-                sPnl.textContent = (stats.pnl >= 0 ? '+' : '') + '$' + stats.pnl.toFixed(2);
-                sPnl.className = 'stat-v ' + (stats.pnl >= 0 ? 'g' : 'r');
-            }
-            if (sStat && stats.pendingOrders > 0) {
-                sStat.innerHTML = `🟢 Running (${stats.pendingOrders} pending)`;
-            }
+            if (sPnl && stats.pnl) { sPnl.textContent = (stats.pnl >= 0 ? '+' : '') + '$' + stats.pnl.toFixed(2); sPnl.className = 'stat-v ' + (stats.pnl >= 0 ? 'g' : 'r'); }
         })
         .catch(() => {});
 }
 
-
 function logLine(cls, msg) {
-  const box = document.getElementById('logList');
-  if (!box) return;
- 
-  const now = new Date().toLocaleTimeString('fr-FR', { hour12: false });
-  const map = { bt: 'bt', st: 'st', it: 'it', wt: 'wt' };
-  const lbl = { bt: '[BUY]', st: '[SELL]', it: '[INFO]', wt: '[WARN]' };
- 
-  const d = document.createElement('div');
-  d.className = 'll';
-  d.innerHTML = `<span class="ts">${now}</span><span class="${map[cls] || 'it'}">${lbl[cls] || '[INFO]'}</span> ${escapeHtml(msg)}`;
-  box.appendChild(d);
- 
-  // ✅ FIX: scroll automatique vers le bas
-  box.scrollTop = box.scrollHeight;
- 
-  // ✅ Limite à 200 lignes pour éviter la surcharge mémoire
-  const lines = box.querySelectorAll('.ll');
-  if (lines.length > 200) lines[0].remove();
+    const box = document.getElementById('logList');
+    if (!box) return;
+    const now = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+    const map = { bt: 'bt', st: 'st', it: 'it', wt: 'wt' };
+    const lbl = { bt: '[BUY]', st: '[SELL]', it: '[INFO]', wt: '[WARN]' };
+    const d = document.createElement('div');
+    d.className = 'll';
+    d.innerHTML = `<span class="ts">${now}</span><span class="${map[cls] || 'it'}">${lbl[cls] || '[INFO]'}</span> ${escapeHtml(msg)}`;
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
+    if (box.querySelectorAll('.ll').length > 200) box.querySelector('.ll').remove();
 }
 
-function executeBotTradeWithLog(asset, signal, entryPrice, amt, reason) {
-  const qty = amt / entryPrice;
- 
-  logLine(signal === 'BUY' ? 'bt' : 'st',
-    `${signal} ${asset}/USDT | Qty: ${qty.toFixed(6)} | Prix: ${fmt(entryPrice)} | Raison: ${reason}`
-  );
- 
-  fetch('{{ path('app_trading_api_execute_trade') }}', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      symbol: asset,
-      tradeType: signal,
-      quantity: parseFloat(qty.toFixed(6)),
-      orderMode: 'MARKET',
-      currentPrice: entryPrice,
-    }),
-  })
-  .then(r => r.json())
-  .then(d => {
-    if (d.error) {
-      logLine('wt', `❌ Erreur trade bot: ${d.error}`);
-      toast(d.error, 'err');
-      return;
-    }
- 
-    // ✅ FIX WALLET: mise à jour immédiate après trade bot
-    const newBal = d.newBalance ?? d.balance;
-    if (newBal !== undefined && !isNaN(parseFloat(newBal))) {
-      updateBalanceDisplay(newBal);
-      logLine('it', `💰 Wallet mis à jour: ${formatBalance(newBal)}`);
-    }
- 
-    // Mise à jour stats bot
-    bTrades++;
-    const pnl = (Math.random() * 6 - 2); // simulation P&L %
-    bPnl += amt * pnl / 100;
-    if (pnl > 0) bWins++;
- 
-    const pnlEl = document.getElementById('sPnl');
-    if (pnlEl) {
-      pnlEl.textContent = (bPnl >= 0 ? '+' : '') + '$' + bPnl.toFixed(2);
-      pnlEl.className = 'stat-v ' + (bPnl >= 0 ? 'g' : 'r');
-    }
-    const tradesEl = document.getElementById('sTrades');
-    if (tradesEl) tradesEl.textContent = bTrades;
-    const winEl = document.getElementById('sWin');
-    if (winEl) winEl.textContent = Math.round(bWins / bTrades * 100) + '%';
- 
-    logLine('it', `P&L session: ${bPnl >= 0 ? '+' : ''}$${bPnl.toFixed(2)} | Win rate: ${Math.round(bWins/bTrades*100)}%`);
-  })
-  .catch(err => {
-    logLine('wt', `❌ Erreur réseau bot: ${err.message}`);
-  });
+function toast(msg, type) {
+    const box = document.getElementById('toastBox');
+    if (!box) return;
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.textContent = msg;
+    box.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
 }
 
+function toggleSecBundle() {
+    const body = document.getElementById('secBody');
+    const icon = document.getElementById('secToggleIcon');
+    if (!body || !icon) return;
+    if (body.style.display === 'none' || !body.style.display) {
+        body.style.display = 'flex';
+        icon.classList.add('open');
+    } else {
+        body.style.display = 'none';
+        icon.classList.remove('open');
+    }
+}
 
+// ============================================
+// INITIALIZATION
+// ============================================
 if (curSym) {
-  const chartLbl = document.getElementById('chartLbl');
-  const navSym = document.getElementById('navSym');
-  const tradeBtn = document.getElementById('tradeBtn');
-  if (chartLbl) chartLbl.textContent = curSym + ' / USDT';
-  if (navSym) navSym.textContent = curSym + '/USDT';
-  if (tradeBtn) tradeBtn.textContent = 'BUY ' + curSym;
-  initChart(curSym, curIv);
-  fetchRecommend(curSym);
+    const chartLbl = document.getElementById('chartLbl');
+    const navSym = document.getElementById('navSym');
+    const tradeBtn = document.getElementById('tradeBtn');
+    if (chartLbl) chartLbl.textContent = curSym + ' / USDT';
+    if (navSym) navSym.textContent = curSym + '/USDT';
+    if (tradeBtn) tradeBtn.textContent = 'BUY ' + curSym;
+    initChart(curSym, curIv);
+    fetchRecommend(curSym);
 }
- 
-// Chargement initial
+
+initWalletSelector();
 fetchBinanceSnapshot();
 fetchNews();
- 
-// ✅ Rafraîchissement des news toutes les 5 minutes
+loadHistory();
+
 setInterval(fetchNews, 5 * 60 * 1000);
- 
-// ✅ Fallback WebSocket toutes les 60 secondes
-setInterval(() => {
-  if (!ws || ws.readyState !== WebSocket.OPEN) fetchBinanceSnapshot();
-}, 60000);
- 
-// ✅ Mise à jour stats bot toutes les 30 secondes si le bot tourne
-setInterval(() => {
-  if (botOn && typeof updateBotStats === 'function') updateBotStats();
-}, 30000);
+setInterval(() => { if (!ws || ws.readyState !== WebSocket.OPEN) fetchBinanceSnapshot(); }, 60000);
+setInterval(() => { if (botOn && typeof updateBotStats === 'function') updateBotStats(); }, 30000);
+setInterval(refreshWalletBalance, 30000);
 </script>
 {% endblock %}
