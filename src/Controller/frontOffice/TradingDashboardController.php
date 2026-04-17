@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 #[Route('/trading', name: 'app_trading_')]
 class TradingDashboardController extends AbstractController
@@ -37,33 +38,71 @@ class TradingDashboardController extends AbstractController
         private AssetRepository          $assetRepo,
     ) {}
 
+    /**
+     * Récupérer l'utilisateur connecté
+     * @throws AccessDeniedException
+     */
+    private function getCurrentUserId(): int
+    {
+        // Récupérer l'utilisateur depuis la session Symfony
+        $user = $this->getUser();
+        
+        if (!$user) {
+            throw new AccessDeniedException('Vous devez être connecté pour accéder à cette page.');
+        }
+        
+        // Vérifier si l'utilisateur a une méthode getIdUser()
+        if (method_exists($user, 'getIdUser')) {
+            return $user->getIdUser();
+        }
+        
+        // Alternative: si la méthode s'appelle getId()
+        if (method_exists($user, 'getId')) {
+            return $user->getId();
+        }
+        
+        throw new AccessDeniedException('Impossible de récupérer l\'ID utilisateur.');
+    }
+
+    /**
+     * Récupérer l'utilisateur connecté (objet complet)
+     */
+    private function getCurrentUser(): ?object
+    {
+        return $this->getUser();
+    }
+
     // ─────────────────────────────────────────
     // 1. DASHBOARD
     // ─────────────────────────────────────────
     #[Route('/dashboard', name: 'dashboard', methods: ['GET'])]
     public function dashboard(): Response
     {
-        $userId = 1;
+        // Vérifier que l'utilisateur est connecté
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         
-      
+        $userId = $this->getCurrentUserId();
+        
+        // Récupérer uniquement les wallets de type 'trading'
         $wallets = $this->walletRepo->findBy([
             'utilisateur' => $userId,
-            'typeWallet' => ['trading']
+            'typeWallet' => 'trading'
         ]);
         
-    if (empty($wallets)) {
-        $defaultWallet = new Wallet();
-        $defaultWallet->setUtilisateur($userId);
-        $defaultWallet->setSolde('0');
-        $defaultWallet->setRib('TRADING-' . uniqid());
-        $defaultWallet->setTypeWallet('trading');
-        $defaultWallet->setStatut('actif');
-        $defaultWallet->setDateCreation(new \DateTime());
-        $defaultWallet->setDateDerniereModification(new \DateTime());
-        $this->em->persist($defaultWallet);
-        $this->em->flush();
-        $wallets = [$defaultWallet];
-    }
+        if (empty($wallets)) {
+            $defaultWallet = new Wallet();
+            $defaultWallet->setUtilisateur($userId);
+            $defaultWallet->setSolde('0');
+            $defaultWallet->setRib('TRADING-' . uniqid());
+            $defaultWallet->setTypeWallet('trading');
+            $defaultWallet->setStatut('actif');
+            $defaultWallet->setDateCreation(new \DateTime());
+            $defaultWallet->setDateDerniereModification(new \DateTime());
+            $this->em->persist($defaultWallet);
+            $this->em->flush();
+            $wallets = [$defaultWallet];
+        }
+        
         // S'assurer que la devise USDT existe (crypto uniquement)
         $usdtCurrency = $this->currencyRepo->findOneBy([
             'code' => 'USDT',
@@ -137,6 +176,7 @@ class TradingDashboardController extends AbstractController
             'symbols'             => $symbols,
             'assets'              => $assets,
             'pendingLimitOrders'  => $pendingOrders,
+            'user'                => $this->getCurrentUser(),
         ]);
     }
 
@@ -146,10 +186,15 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/wallets', name: 'api_wallets', methods: ['GET'])]
     public function getWallets(): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $wallets = $this->walletRepo->findBy([
             'utilisateur' => $userId,
-            'typeWallet' => ['trading']
+            'typeWallet' => 'trading'
         ]);
         
         $usdtCurrency = $this->currencyRepo->findOneBy([
@@ -187,11 +232,16 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/wallet/{id}/balance', name: 'api_wallet_balance', methods: ['GET'])]
     public function getWalletBalance(int $id): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $wallet = $this->walletRepo->findOneBy([
             'idWallet' => $id, 
             'utilisateur' => $userId,
-            'typeWallet' => ['trading', 'crypto']
+            'typeWallet' => 'trading'
         ]);
         
         if (!$wallet) {
@@ -227,10 +277,15 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/wallets-with-balance', name: 'api_wallets_balance', methods: ['GET'])]
     public function getWalletsWithBalance(): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $wallets = $this->walletRepo->findBy([
             'utilisateur' => $userId,
-            'typeWallet' => ['trading']
+            'typeWallet' => 'trading'
         ]);
         
         $usdtCurrency = $this->currencyRepo->findOneBy([
@@ -269,11 +324,16 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/wallet/{id}/usdt-balance', name: 'api_wallet_usdt_balance', methods: ['GET'])]
     public function getWalletUsdtBalanceById(int $id): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $wallet = $this->walletRepo->findOneBy([
             'idWallet' => $id, 
             'utilisateur' => $userId,
-            'typeWallet' => ['trading', ]
+            'typeWallet' => 'trading'
         ]);
         
         if (!$wallet) {
@@ -349,19 +409,28 @@ class TradingDashboardController extends AbstractController
                     'pageSize' => 10,
                     'apiKey'   => $this->newsApiKey,
                 ],
+                'timeout' => 10,
             ]);
+            
             $data = $response->toArray();
+            
+            // Vérifier si la réponse contient une erreur
+            if (isset($data['status']) && $data['status'] === 'error') {
+                return new JsonResponse([], 200);
+            }
+            
             $articles = array_map(fn($a) => [
-                'title'       => $a['title'],
-                'description' => $a['description'],
-                'url'         => $a['url'],
-                'image'       => $a['urlToImage'],
-                'publishedAt' => $a['publishedAt'],
-                'source'      => $a['source']['name'],
+                'title'       => $a['title'] ?? 'No title',
+                'description' => $a['description'] ?? '',
+                'url'         => $a['url'] ?? '#',
+                'image'       => $a['urlToImage'] ?? '',
+                'publishedAt' => $a['publishedAt'] ?? date('c'),
+                'source'      => $a['source']['name'] ?? 'Unknown',
             ], $data['articles'] ?? []);
+            
             return new JsonResponse($articles);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 500);
+            return new JsonResponse([], 200);
         }
     }
 
@@ -404,7 +473,12 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/recommend/{symbol}', name: 'api_recommend', methods: ['GET'])]
     public function recommend(string $symbol): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $totalSolde = $this->getTotalUsdtBalance($userId);
         $solde = $totalSolde ?: 10000;
         $sym = strtoupper(str_replace('USDT', '', $symbol));
@@ -447,8 +521,13 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/execute-trade', name: 'api_execute_trade', methods: ['POST'])]
     public function executeTrade(Request $request): JsonResponse
     {
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $data = json_decode($request->getContent(), true);
-        $userId = 1;
         $tradeType = strtoupper($data['tradeType'] ?? $data['type'] ?? '');
         $symbol = strtoupper(str_replace('USDT', '', $data['symbol'] ?? ''));
         $quantity = (float) ($data['quantity'] ?? 0);
@@ -562,6 +641,12 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/bot/check-execute', name: 'api_bot_check_execute', methods: ['POST'])]
     public function checkAndExecuteSpecificOrder(Request $request): JsonResponse
     {
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $data = json_decode($request->getContent(), true);
         $orderId = $data['orderId'] ?? null;
         $currentPrice = (float) ($data['currentPrice'] ?? 0);
@@ -570,7 +655,6 @@ class TradingDashboardController extends AbstractController
             return new JsonResponse(['error' => 'Paramètres invalides'], 400);
         }
         
-        $userId = 1;
         $order = $this->tradeRepo->findOneBy([
             'id' => $orderId,
             'userId' => $userId,
@@ -644,7 +728,12 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/bot/pending-orders', name: 'api_bot_pending_orders', methods: ['GET'])]
     public function getBotPendingOrders(): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $pendingOrders = $this->tradeRepo->findBy([
             'userId' => $userId,
             'orderMode' => 'LIMIT',
@@ -675,7 +764,12 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/bot/stats/real', name: 'api_bot_stats_real', methods: ['GET'])]
     public function getRealBotStats(): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $today = new \DateTime('today');
         
         $tradesCompleted = $this->tradeRepo->createQueryBuilder('t')
@@ -715,14 +809,21 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/bot/check-limit-orders', name: 'api_bot_check_limit', methods: ['POST'])]
     public function checkAndExecuteLimitOrders(): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $pendingOrders = $this->tradeRepo->findBy([
             'userId' => $userId,
             'orderMode' => 'LIMIT',
             'status' => 'PENDING'
         ]);
+        
         $executedOrders = [];
         $errors = [];
+        
         foreach ($pendingOrders as $order) {
             $asset = $this->assetRepo->find($order->getAssetId());
             if (!$asset) continue;
@@ -790,16 +891,23 @@ class TradingDashboardController extends AbstractController
     #[Route('/api/limit-order/{id}/cancel', name: 'api_cancel_limit_order', methods: ['DELETE'])]
     public function cancelLimitOrder(int $id): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $order = $this->tradeRepo->findOneBy([
             'id' => $id,
             'userId' => $userId,
             'orderMode' => 'LIMIT',
             'status' => 'PENDING'
         ]);
+        
         if (!$order) {
             return new JsonResponse(['error' => 'Ordre non trouvé'], 404);
         }
+        
         $order->setStatus('CANCELLED');
         $this->em->flush();
         return new JsonResponse([
@@ -812,56 +920,68 @@ class TradingDashboardController extends AbstractController
     // ─────────────────────────────────────────
     // 16. HISTORIQUE DES TRADES
     // ─────────────────────────────────────────
-   #[Route('/api/trades/history', name: 'api_history', methods: ['GET'])]
-public function getHistory(): JsonResponse
-{
-    $userId = 1;
-    $trades = $this->tradeRepo->findBy(['userId' => $userId], ['createdAt' => 'DESC']);
-    
-    $assetCache = [];
-    
-    $data = array_map(function($trade) use (&$assetCache) {
-        // Récupérer le symbole de l'asset
-        $symbol = 'N/A';
-        $assetId = $trade->getAssetId();
-        if ($assetId) {
-            if (!isset($assetCache[$assetId])) {
-                $asset = $this->assetRepo->find($assetId);
-                $assetCache[$assetId] = $asset ? strtoupper($asset->getSymbol()) : 'N/A';
-            }
-            $symbol = $assetCache[$assetId];
+    #[Route('/api/trades/history', name: 'api_history', methods: ['GET'])]
+    public function getHistory(): JsonResponse
+    {
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
         }
         
-        return [
-            'id'         => $trade->getId(),
-            'symbol'     => $symbol,
-            'trade_type' => $trade->getTradeType(),
-            'order_mode' => $trade->getOrderMode(),
-            'price'      => (float) $trade->getPrice(),
-            'quantity'   => (float) $trade->getQuantity(),
-            'status'     => $trade->getStatus(),
-            'date'       => $trade->getCreatedAt() ? $trade->getCreatedAt()->format('Y-m-d H:i:s') : '-',
-        ];
-    }, $trades);
+        $trades = $this->tradeRepo->findBy(['userId' => $userId], ['createdAt' => 'DESC']);
+        
+        $assetCache = [];
+        
+        $data = array_map(function($trade) use (&$assetCache) {
+            $symbol = 'N/A';
+            $assetId = $trade->getAssetId();
+            if ($assetId) {
+                if (!isset($assetCache[$assetId])) {
+                    $asset = $this->assetRepo->find($assetId);
+                    $assetCache[$assetId] = $asset ? strtoupper($asset->getSymbol()) : 'N/A';
+                }
+                $symbol = $assetCache[$assetId];
+            }
+            
+            return [
+                'id'         => $trade->getId(),
+                'symbol'     => $symbol,
+                'trade_type' => $trade->getTradeType(),
+                'order_mode' => $trade->getOrderMode(),
+                'price'      => (float) $trade->getPrice(),
+                'quantity'   => (float) $trade->getQuantity(),
+                'status'     => $trade->getStatus(),
+                'date'       => $trade->getCreatedAt() ? $trade->getCreatedAt()->format('Y-m-d H:i:s') : '-',
+            ];
+        }, $trades);
+        
+        return new JsonResponse($data);
+    }
     
-    return new JsonResponse($data);
-}
     // ─────────────────────────────────────────
     // 17. STATISTIQUES BOT (SIMPLE)
     // ─────────────────────────────────────────
     #[Route('/api/bot/stats', name: 'api_bot_stats', methods: ['GET'])]
     public function getBotStats(): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
+        
         $pendingCount = $this->tradeRepo->count([
             'userId' => $userId,
             'orderMode' => 'LIMIT',
             'status' => 'PENDING'
         ]);
+        
         $completedCount = $this->tradeRepo->count([
             'userId' => $userId,
             'status' => 'COMPLETED'
         ]);
+        
         return new JsonResponse([
             'tradesToday'   => $completedCount,
             'pendingOrders' => $pendingCount,
@@ -872,16 +992,20 @@ public function getHistory(): JsonResponse
     }
 
     // ─────────────────────────────────────────
-    // 18. INITIALISATION DES CRYPTOS (OPTIONNEL)
+    // 18. INITIALISATION DES CRYPTOS
     // ─────────────────────────────────────────
     #[Route('/api/init-crypto-wallets', name: 'api_init_crypto', methods: ['GET'])]
     public function initCryptoWallets(): JsonResponse
     {
-        $userId = 1;
+        try {
+            $userId = $this->getCurrentUserId();
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
+        }
         
         $cryptoWallets = $this->walletRepo->findBy([
             'utilisateur' => $userId,
-            'typeWallet' => ['trading']
+            'typeWallet' => 'trading'
         ]);
         
         if (empty($cryptoWallets)) {
@@ -958,13 +1082,13 @@ public function getHistory(): JsonResponse
             return $this->walletRepo->findOneBy([
                 'idWallet' => $walletId, 
                 'utilisateur' => $userId,
-                'typeWallet' => ['trading']
+                'typeWallet' => 'trading'
             ]);
         }
         
         $wallets = $this->walletRepo->findBy([
             'utilisateur' => $userId,
-            'typeWallet' => ['trading']
+            'typeWallet' => 'trading'
         ]);
         
         return !empty($wallets) ? $wallets[0] : null;
@@ -984,7 +1108,7 @@ public function getHistory(): JsonResponse
     {
         $wallets = $this->walletRepo->findBy([
             'utilisateur' => $userId,
-            'typeWallet' => ['trading']
+            'typeWallet' => 'trading'
         ]);
         $total = 0;
         foreach ($wallets as $wallet) {
