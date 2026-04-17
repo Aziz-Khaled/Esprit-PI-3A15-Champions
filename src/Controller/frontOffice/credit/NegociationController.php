@@ -7,6 +7,7 @@ use App\Entity\Negociation;
 use App\Entity\Utilisateur;
 use App\Form\NegociationType;
 use App\Repository\NegociationRepository;
+use App\Service\AmortissementService;
 use App\Repository\UtilisateurRepository;
 use App\Service\CreditScorer;
 use App\Service\SignatureProvider;
@@ -20,6 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -190,50 +192,127 @@ public function confirmAndSend(
         $this->addFlash('success', 'Offre supprimée.');
         return $this->redirectToRoute('app_front_negociation_received');
     }
-    #[Route('/client/sign-finish/{id}', name: 'app_front_client_sign_finish', methods: ['POST'])]
-    public function clientSignFinish(
-        #[MapEntity(mapping: ['id' => 'id_credit'])] Credit $credit, 
-        EntityManagerInterface $em,
-        ContractPdfService $pdfService,
-        SignatureProvider $signatureProvider
-    ): Response {
+   #[Route('/client/sign-finish/{id}', name: 'app_front_client_sign_finish', methods: ['POST'])]
+public function clientSignFinish(
+    Credit $credit,
+    EntityManagerInterface $em,
+    ContractPdfService $pdfService,
+    AmortissementService $amortissementService,
+    MailerInterface $mailer
+): Response {
+    $user = $this->getUser();
+
+    // 1. SÉCURITÉ : Statut
+    if ($credit->getStatus() === 'CLOSED') {
+        $this->addFlash('warning', 'Ce contrat est déjà clôturé.');
+        return $this->redirectToRoute('app_credit_index');
+    }
+
+    // Récupération sécurisée des emails
+    $borrowerEmail = $credit->getBorrower() ? $credit->getBorrower()->getEmail() : null;
+    $investorEmail = $credit->getInvestisseur() ? $credit->getInvestisseur()->getEmail() : null;
+
+    if (!$borrowerEmail || !$investorEmail) {
+        $this->addFlash('error', 'Erreur : L\'un des acteurs n\'a pas d\'adresse email renseignée.');
+        return $this->redirectToRoute('app_credit_index');
+    }
+
+    try {
+        // 2. LOGIQUE MÉTIER & HASH
+        $emailForHash = $user ? $user->getUserIdentifier() : 'client-externe@champions.tn';
+        $finalHash = hash('sha256', $credit->getIdCredit() . $emailForHash . bin2hex(random_bytes(8)) . time());
+
+        $credit->setStatus('CLOSED');
+        $credit->setContratId($finalHash);
+        $credit->setDateContrat(new \DateTime());
+
+        // 3. GÉNÉRATION DES DOCUMENTS
+        $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/contracts/';
         
-        // 1. On récupère l'utilisateur s'il existe
-        $user = $this->getUser();
+        // PDF 1 : Contrat
+        $htmlContract = $this->renderView('front_office/credit/pdf_contract.html.twig', [
+            'credit' => $credit,
+            'final_hash' => $finalHash,
+            'date' => new \DateTime(),
+            'is_preview' => false
+        ]);
+        $contractFilename = 'Contract_Final_' . $credit->getIdCredit() . '.pdf';
+        $pdfService->generateAndSaveContract($htmlContract, $contractFilename);
 
+        // PDF 2 : Échéancier
+        $tableauEcheance = $amortissementService->calculerTableau(
+            $credit->getMontant(),
+            $credit->getTaux(),
+            $credit->getDuree()
+        );
+        $htmlEcheancier = $this->renderView('front_office/credit/pdf_echeancier.html.twig', [
+            'credit' => $credit,
+            'tableau' => $tableauEcheance
+        ]);
+        $echeancierFilename = 'Echeancier_' . $credit->getIdCredit() . '.pdf';
+        $pdfService->generateAndSaveContract($htmlEcheancier, $echeancierFilename);
+
+        // 4. SAUVEGARDE BDD
+        $em->flush();
+
+        // 5. ENVOI DE L'EMAIL (Mode Synchrone forcé)
         try {
-            // 2. Générer la preuve finale
-            // Si l'utilisateur n'est pas connecté, on utilise une valeur par défaut pour éviter le plantage
-            $emailForHash = $user ? $user->getEmail() : 'client-non-authentifie@champions.tn';
+            $email = (new TemplatedEmail())
+                ->from('support@champions.tn')
+                ->to($borrowerEmail)
+                ->cc($investorEmail)
+                ->subject('🏁 Financement Actif - ChampionsFinance #' . $credit->getIdCredit())
+                ->htmlTemplate('front_office/credit/email_confirmation.html.twig')
+                ->context([
+                    'credit' => $credit,
+                    'date' => new \DateTime()
+                ]);
+
+            // Vérification physique des fichiers avant attachement
+            $contractPath = $uploadDir . $contractFilename;
+            $echeancierPath = $uploadDir . $echeancierFilename;
+
+            if (file_exists($contractPath)) {
+                $email->attachFromPath($contractPath);
+            }
+            if (file_exists($echeancierPath)) {
+                $email->attachFromPath($echeancierPath);
+            }
+
+            $mailer->send($email);
             
-            // On s'assure que le contrat ID ne soit pas null pour le hash
-            $baseId = $credit->getContratId() ?? 'STUB_ID_' . $credit->getIdCredit();
-            
-            $finalHash = hash('sha256', $baseId . $emailForHash . time());
+            $this->addFlash('success', 'Contrat signé ! Email envoyé à l\'emprunteur et à l\'investisseur.');
 
-            // 3. Contenu HTML pour le PDF
-            $html = $this->renderView('front_office/credit/pdf_contract.html.twig', [
-                'credit' => $credit,
-                'final_hash' => $finalHash,
-                'date' => new \DateTime()
-            ]);
-
-            // 4. Générer et sauvegarder le PDF
-            $filename = 'Contract_Final_' . $credit->getIdCredit() . '.pdf';
-            $pdfPath = $pdfService->generateAndSaveContract($html, $filename);
-
-            // 5. Mise à jour de l'entité
-            $credit->setStatus('COMPLETED');
-            $credit->setContratId($finalHash); 
-
-            $em->flush();
-
-            $this->addFlash('success', 'Félicitations ! Le contrat est officiellement signé.');
-
-        } catch (\Exception $e) {
-            $this->addFlash('error', 'Erreur lors de la signature : ' . $e->getMessage());
+        } catch (\Exception $mailEx) {
+            // Ici, on capture l'erreur exacte de Gmail
+            $this->addFlash('warning', 'Contrat enregistré, mais erreur mail : ' . $mailEx->getMessage());
         }
 
-        // Redirection vers la liste
-        return $this->redirectToRoute('app_credit_index');
-    }}
+    } catch (\Exception $e) {
+        $this->addFlash('error', 'Erreur système : ' . $e->getMessage());
+    }
+
+    return $this->redirectToRoute('app_credit_index');
+}
+
+
+    #[Route('/client/contrat-previsualisation/{id}', name: 'app_front_credit_preview', methods: ['GET'])]
+    public function previewContrat(Credit $credit): Response 
+    {
+        // 1. Sécurité : On s'assure que le crédit a bien un investisseur assigné
+        if (!$credit->getInvestisseur()) {
+            $this->addFlash('error', 'Ce crédit n\'a pas encore d\'investisseur.');
+            return $this->redirectToRoute('app_credit_index');
+        }
+
+        // 2. Rendu de la vue avec toutes les variables nécessaires
+        return $this->render('front_office/credit/pdf_contract.html.twig', [
+            'credit'     => $credit,
+            'investor'   => $credit->getInvestisseur(),
+            'borrower'   => $credit->getBorrower(),
+            'date'       => new \DateTime(),
+            'is_preview' => true, 
+            'final_hash' => bin2hex(random_bytes(16)), // Hash fictif pour la prévisualisation
+        ]);
+    }
+ }// <--- Cette accolade ferme la classe NegociationController

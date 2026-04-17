@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.5; padding: 10px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #444; padding-bottom: 10px; }
+        .title { text-transform: uppercase; font-size: 20px; color: #1a1a1a; margin-bottom: 5px; }
+        
+        .info-section { width: 100%; margin-bottom: 25px; }
+        .info-box { width: 48%; display: inline-block; vertical-align: top; font-size: 13px; }
+        .label { font-weight: bold; color: #555; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11px; }
+        th { background-color: #f2f2f2; color: #333; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #ddd; }
+        td { padding: 8px; border: 1px solid #ddd; text-align: right; }
+        .text-center { text-align: center; }
+        
+        .total-row { background-color: #fafafa; font-weight: bold; }
+        .footer { margin-top: 40px; font-size: 10px; color: #888; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+        
+        .highlight { color: #8353E2; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 class="title">Échéancier de Remboursement</h1>
+        <p>Référence Contrat : <strong>{{ credit.contratId|slice(0, 15) }}...</strong></p>
+    </div>
+
+    <div class="info-section">
+        <div class="info-box">
+            <p><span class="label">Emprunteur :</span> {{ credit.borrower.prenom|upper }} {{ credit.borrower.nom|upper }}</p>
+            <p><span class="label">Investisseur :</span> {{ credit.investisseur.prenom|upper }} {{ credit.investisseur.nom|upper }}</p>
+        </div>
+        <div class="info-box" style="text-align: right;">
+            <p><span class="label">Montant Capital :</span> {{ credit.montant|number_format(2, ',', ' ') }} {{ credit.devise }}</p>
+            <p><span class="label">Taux Annuel :</span> {{ credit.taux }} %</p>
+            <p><span class="label">Durée :</span> {{ credit.duree }} Mois</p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="text-center">N°</th>
+                <th class="text-center">Date d'échéance</th>
+                <th>Mensualité</th>
+                <th>Part Intérêts</th>
+                <th>Part Capital</th>
+                <th>Capital Restant</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ligne in tableau %}
+                <tr>
+                    <td class="text-center">{{ ligne.numero }}</td>
+                    <td class="text-center">{{ ligne.date|date('d/m/Y') }}</td>
+                    <td class="highlight">{{ ligne.mensualite|number_format(2, ',', ' ') }}</td>
+                    <td>{{ ligne.interets|number_format(2, ',', ' ') }}</td>
+                    <td>{{ ligne.principal|number_format(2, ',', ' ') }}</td>
+                    <td>{{ ligne.solde|number_format(2, ',', ' ') }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Ce document est une annexe informative au contrat de financement numérique.</p>
+        <p>Généré par <strong>ChampionsFinance IT Services</strong> - Tunis, Tunisie.</p>
+        <p>Document numérique certifié conforme aux conditions de l'engagement scellé le {{ "now"|date('d/m/Y') }}.</p>
+    </div>
+
+</body>
+</html>

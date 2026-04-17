@@ -127,22 +127,6 @@
     .cf-badge-open { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.25); color: #60a5fa; }
     .cf-badge-approved { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.25); color: #4ade80; }
     .cf-badge-completed { background: rgba(131, 83, 226, 0.15); border: 1px solid rgba(131, 83, 226, 0.25); color: #a77af5; }
-
-    /* ── MODAL ── */
-    .cf-modal-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
-        display: none; align-items: center; justify-content: center; z-index: 9999;
-    }
-    .cf-modal {
-        background: #1e1a3a; border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 24px; padding: 32px; width: 90%; max-width: 500px; text-align: center;
-    }
-    .cf-modal h2 { margin-top: 0; color: #fff; }
-    .cf-modal p { color: rgba(255,255,255,0.6); margin-bottom: 24px; }
-    .cf-modal-actions { display: flex; gap: 12px; justify-content: center; }
-
-    .cf-btn-cancel { background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; }
 </style>
 
 <nav class="cf-nav">
@@ -210,28 +194,33 @@
             </div>
 
             <div style="text-align: center;">
-                {% if credit.status|upper == 'OPEN' %}
-                    <span class="cf-badge cf-badge-open">EN ATTENTE</span>
-                {% elseif credit.status|upper == 'APPROVED' %}
-                    <span class="cf-badge cf-badge-approved">APPROUVÉ</span>
-                {% elseif credit.status|upper == 'COMPLETED' or credit.status|upper == 'SIGNED' %}
-                    <span class="cf-badge cf-badge-completed">SIGNÉ / PDF</span>
-                {% endif %}
-            </div>
+    {% if credit.status|upper == 'OPEN' %}
+        <span class="badge bg-primary">EN ATTENTE</span>
+    {% elseif credit.status|upper == 'APPROVED' %}
+        <span class="badge bg-success">APPROUVÉ</span>
+    {% elseif credit.status|upper == 'SIGNED' %}
+        <span class="badge bg-warning text-dark">SIGNATURE INVESTISSEUR</span>
+    {% elseif credit.status|upper == 'CLOSED' %}
+        <span class="cf-badge cf-badge-completed">CONTRAT SCELLÉ</span>
+    {% else %}
+        <span class="badge bg-secondary">{{ credit.status }}</span>
+    {% endif %}
+</div>
 
             <div style="text-align: right;">
-                {# --- ACTION : SIGNER (Si Approved ou Signed) --- #}
+                {# --- DÉBUT LOGIQUE ACTIONS CORRIGÉE --- #}
                 {% if credit.status|upper == 'SIGNED' or credit.status|upper == 'APPROVED' %}
-                    <button class="cf-btn-sign" onclick="openSignModal('{{ credit.idCredit }}', '{{ credit.projet.title|escape('js') }}')">
+                    {# ACTION : SIGNER (Via la page de preview) #}
+                    <a href="{{ path('app_front_credit_preview', {'id': credit.idCredit}) }}" class="cf-btn-sign">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/>
                             <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/>
                         </svg>
-                        Signer le contrat
-                    </button>
+                        Consulter et Signer
+                    </a>
 
-                {# --- ACTION : TÉLÉCHARGER (Si Terminé) --- #}
                 {% elseif credit.status|upper == 'COMPLETED' %}
+                    {# ACTION : TÉLÉCHARGER #}
                     <a href="{{ asset('uploads/contracts/Contract_Final_' ~ credit.idCredit ~ '.pdf') }}" 
                        class="cf-btn-edit" 
                        style="background: #059669;" 
@@ -242,60 +231,20 @@
                         Télécharger PDF
                     </a>
 
-                {# --- ACTION : MODIFIER (Uniquement si OPEN / EN ATTENTE) --- #}
                 {% elseif credit.status|upper == 'OPEN' or credit.status is empty %}
+                    {# ACTION : MODIFIER #}
                     <a href="{{ path('app_credit_edit', {'id_credit': credit.idCredit}) }}" class="cf-btn-edit">
                         Modifier
                     </a>
 
                 {% else %}
-                    <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">En cours...</span>
+                    <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">Traitement...</span>
                 {% endif %}
+                {# --- FIN LOGIQUE ACTIONS --- #}
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
-
-{# ── MODAL DE SIGNATURE ── #}
-<div id="signModal" class="cf-modal-overlay">
-    <div class="cf-modal">
-        <div style="width: 64px; height: 64px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <h2>Signature Électronique</h2>
-        <p>Vous allez signer numériquement le contrat pour le projet <strong id="modalProjectName"></strong>.</p>
-        
-        <form id="signForm" method="POST" action="">
-            <div class="cf-modal-actions">
-                <button type="button" class="cf-btn-cancel" onclick="closeSignModal()">Annuler</button>
-                <button type="submit" class="cf-btn-new" style="background: #10b981; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);">
-                    Confirmer et Signer
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    function openSignModal(id, projectName) {
-        document.getElementById('modalProjectName').innerText = projectName;
-        
-        // Génération dynamique de l'URL
-        let urlTemplate = "{{ path('app_front_client_sign_finish', {'id': 'REPLACE_ID'}) }}";
-        document.getElementById('signForm').action = urlTemplate.replace('REPLACE_ID', id);
-        
-        document.getElementById('signModal').style.display = 'flex';
-    }
-
-    function closeSignModal() {
-        document.getElementById('signModal').style.display = 'none';
-    }
-
-    window.onclick = function(event) {
-        const modal = document.getElementById('signModal');
-        if (event.target === modal) closeSignModal();
-    }
-</script>
 
 {% endblock %}
