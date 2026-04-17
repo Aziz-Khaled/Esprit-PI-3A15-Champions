@@ -45,7 +45,7 @@ class TradingDashboardController extends AbstractController
     {
         $userId = 1;
         
-        // Récupérer uniquement les wallets de type 'trading' ou 'crypto'
+      
         $wallets = $this->walletRepo->findBy([
             'utilisateur' => $userId,
             'typeWallet' => ['trading']
