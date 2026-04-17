@@ -218,6 +218,7 @@ public function faceCheck(
 }
 
 #[Route('/users/extract-id/{id}', name: 'app_admin_extract_id', methods: ['GET'])]
+#[Route('/users/extract-id/{id}', name: 'app_admin_extract_id', methods: ['GET'])]
 public function extractId(Utilisateur $user): JsonResponse
 {
     $projectDir = $this->getParameter('kernel.project_dir');
@@ -227,15 +228,22 @@ public function extractId(Utilisateur $user): JsonResponse
         return new JsonResponse(['success' => false, 'error' => 'ID file not found.'], 404);
     }
 
+    // Use the project's var/ directory — always writable, no OneDrive interference
+    $outputDir  = $projectDir . '\\var\\ocr_tmp';
+    if (!is_dir($outputDir)) {
+        mkdir($outputDir, 0777, true);
+    }
+    $outputBase   = $outputDir . '\\ocr_' . $user->getIdUser();
     $tesseractBin = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe';
     $tessdataDir  = $projectDir . '\\tessdata';
-    $outputBase   = sys_get_temp_dir() . '\\ocr_' . $user->getIdUser();
 
-    // Windows-safe command: use double quotes around paths, redirect stderr to NUL
+    // Normalize the ID path to Windows backslashes
+    $idPathWin = str_replace('/', '\\', $idPath);
+
     $cmd = sprintf(
-        '"%s" "%s" "%s" --tessdata-dir "%s" -l fra+ara 2>NUL',
+        '"%s" "%s" "%s" --tessdata-dir "%s" -l fra+ara 2>&1',
         $tesseractBin,
-        $idPath,
+        $idPathWin,
         $outputBase,
         $tessdataDir
     );
@@ -245,15 +253,17 @@ public function extractId(Utilisateur $user): JsonResponse
     $txtFile = $outputBase . '.txt';
 
     if (!file_exists($txtFile)) {
-        // Return debug info so you can see what went wrong
         return new JsonResponse([
             'success' => false,
             'error'   => 'OCR failed.',
             'debug'   => [
-                'exit_code' => $code,
-                'cmd'       => $cmd,
-                'tmp_dir'   => sys_get_temp_dir(),
-                'id_exists' => file_exists($idPath),
+                'exit_code'    => $code,
+                'cmd'          => $cmd,
+                'output'       => $out,       
+                'output_base'  => $outputBase,
+                'id_path'      => $idPathWin,
+                'id_exists'    => file_exists($idPathWin),
+                'out_dir_ok'   => is_writable($outputDir),
             ]
         ], 500);
     }
@@ -262,7 +272,6 @@ public function extractId(Utilisateur $user): JsonResponse
     unlink($txtFile);
 
     $parsed = $this->parseIdCard($rawText);
-
     return new JsonResponse(['success' => true, 'raw' => $rawText, 'parsed' => $parsed]);
 }
 
@@ -401,23 +410,38 @@ return new JsonResponse([
 }
 
 #[Route('/users/extract-id-raw/{id}', name: 'app_admin_extract_id_raw', methods: ['GET'])]
+#[Route('/users/extract-id-raw/{id}', name: 'app_admin_extract_id_raw', methods: ['GET'])]
 public function extractIdRaw(Utilisateur $user): JsonResponse
 {
     $projectDir   = $this->getParameter('kernel.project_dir');
     $idPath       = $projectDir . '/public/uploads/users/ids/' . $user->getPieceIdentite();
+    $idPathWin    = str_replace('/', '\\', $idPath);
+
+    $outputDir  = $projectDir . '\\var\\ocr_tmp';
+    if (!is_dir($outputDir)) {
+        mkdir($outputDir, 0777, true);
+    }
+
+    $outputBase   = $outputDir . '\\ocr_raw_' . $user->getIdUser();
     $tesseractBin = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe';
     $tessdataDir  = $projectDir . '\\tessdata';
-    $outputBase   = sys_get_temp_dir() . '\\ocr_raw_' . $user->getIdUser();
 
-    $cmd = sprintf('"%s" "%s" "%s" --tessdata-dir "%s" -l fra+ara 2>NUL',
-        $tesseractBin, $idPath, $outputBase, $tessdataDir);
+    $cmd = sprintf('"%s" "%s" "%s" --tessdata-dir "%s" -l fra+ara 2>&1',
+        $tesseractBin, $idPathWin, $outputBase, $tessdataDir);
+
     exec($cmd, $out, $code);
 
     $txtFile = $outputBase . '.txt';
     $raw = file_exists($txtFile) ? file_get_contents($txtFile) : '(no output)';
     if (file_exists($txtFile)) unlink($txtFile);
 
-    return new JsonResponse(['raw' => $raw, 'lines' => explode("\n", $raw)]);
+    return new JsonResponse([
+        'raw'       => $raw,
+        'lines'     => explode("\n", $raw),
+        'exit_code' => $code,
+        'cmd_out'   => $out,   
+        'cmd'       => $cmd,
+    ]);
 }
 
 }
