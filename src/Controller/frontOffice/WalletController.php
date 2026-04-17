@@ -6,6 +6,7 @@ use App\Entity\Wallet;
 use App\Entity\WalletCurrency;
 use App\Entity\Utilisateur;
 use App\Entity\Currency;
+use App\Entity\CreditCard;
 use App\Form\WalletType;
 use App\Form\TransactionType; 
 use App\Repository\WalletRepository;
@@ -24,22 +25,30 @@ use Dompdf\Options;
 #[Route('/wallet')]
 class WalletController extends AbstractController
 {
-    #[Route('/', name: 'app_wallet_index', methods: ['GET', 'POST'])]
-    public function index(WalletRepository $walletRepository, CurrencyRepository $currencyRepo, Request $request, EntityManagerInterface $entityManager): Response
-    {
+#[Route('/', name: 'app_wallet_index', methods: ['GET', 'POST'])]
+    public function index(
+        WalletRepository $walletRepository, 
+        CurrencyRepository $currencyRepo, 
+        Request $request, 
+        EntityManagerInterface $entityManager
+    ): Response {
+        // 1. Gestion de l'utilisateur (récupération ou fallback sur l'ID 1)
         $user = $this->getUser();
         if (!$user) {
             $user = $entityManager->getRepository(Utilisateur::class)->find(1);
         }
 
+        // 2. Préparation du formulaire de création de Wallet
         $newWallet = new Wallet();
         $form = $this->createForm(WalletType::class, $newWallet);
         $form->handleRequest($request);
 
+        // 3. Traitement du formulaire de création de Wallet
         if ($form->isSubmitted() && $form->isValid()) {
             $newWallet->setUtilisateur($user);
             $newWallet->setSolde(0.0); 
             
+            // Génération d'un RIB unique
             do {
                 $rib = (string)random_int(10000000, 99999999);
                 $exists = $walletRepository->findOneBy(['rib' => $rib]);
@@ -56,16 +65,24 @@ class WalletController extends AbstractController
             return $this->redirectToRoute('app_wallet_index');
         }
 
+        // 4. Récupération des données pour la vue
         $transactionForm = $this->createForm(TransactionType::class);
-
         $walletsList = $walletRepository->findBy(['utilisateur' => $user]);
         $allCurrencies = $currencyRepo->findAll();
 
+        // 5. RÉCUPÉRATION DE LA CARTE DE CRÉDIT (CORRIGÉ)
+        // On cherche par 'utilisateur' car le champ 'wallet' n'existe pas dans ton entité CreditCard
+        $creditCard = $entityManager->getRepository(CreditCard::class)->findOneBy([
+            'utilisateur' => $user
+        ]);
+
+        // 6. Rendu de la page
         return $this->render('wallet/wallet.html.twig', [
             'wallets' => $walletsList,
             'form' => $form->createView(),
             'all_available_currencies' => $allCurrencies,
-            'transactionForm' => $transactionForm->createView(), // Envoie la variable à Twig
+            'transactionForm' => $transactionForm->createView(),
+            'creditCard' => $creditCard, 
         ]);
     }
 
@@ -217,5 +234,38 @@ public function getHistoryJson(int $id, WalletRepository $walletRepository, Tran
         ];
     }
     return new JsonResponse($data);
+}
+#[Route('/{id}/add-card', name: 'app_wallet_add_card', methods: ['GET', 'POST'])]
+public function addCreditCard(Request $request, Wallet $wallet, EntityManagerInterface $entityManager): Response
+{
+    $card = new CreditCard();
+    // On lie la carte au wallet actuel
+    $card->setWallet($wallet); 
+
+    $form = $this->createForm(CreditCardType::class, $card);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        // Optionnel : Générer automatiquement des données si non saisies
+        if (!$card->getDateCreation()) {
+            $card->setDateCreation(new \DateTime());
+        }
+        
+        // On peut imaginer une logique pour définir la date d'expiration (ex: +3 ans)
+        $expiry = (new \DateTime())->modify('+3 years');
+        $card->setDateExpiration($expiry);
+
+        $entityManager->persist($card);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La carte de crédit a été associée avec succès au wallet ' . $wallet->getRib());
+        
+        return $this->redirectToRoute('app_wallet_index');
+    }
+
+    return $this->render('wallet/add_card.html.twig', [
+        'wallet' => $wallet,
+        'cardForm' => $form->createView(),
+    ]);
 }
 }

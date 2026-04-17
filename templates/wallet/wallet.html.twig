@@ -72,6 +72,244 @@
         .btn-mini-add:hover { background: #10b981; color: white; }
 
         .form-control-custom { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 15px; width: 100%; }
+
+      /* ===== CARTE BANCAIRE ULTRA-RÉALISTE ===== */
+.credit-card-champions-pro {
+    width: 100%;
+    max-width: 420px;
+    height: 250px;
+    border-radius: 18px;
+    padding: 24px 28px;
+    position: relative;
+    color: white;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #1a2744 0%, #0d1b3e 40%, #1a2744 70%, #0a1628 100%);
+    box-shadow:
+        0 2px 0 rgba(255,255,255,0.07) inset,
+        0 -1px 0 rgba(0,0,0,0.5) inset,
+        0 25px 60px rgba(0,0,0,0.6),
+        0 5px 15px rgba(0,0,0,0.4);
+    cursor: default;
+    user-select: none;
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease;
+}
+
+/* Texture lignes horizontales plastique */
+.card-texture {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.012) 2px,
+        rgba(255,255,255,0.012) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Hologramme dynamique (JS requis pour l'effet souris) */
+.card-holo {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    background: radial-gradient(
+        ellipse at 50% 50%,
+        rgba(120,180,255,0.06) 0%,
+        rgba(255,120,200,0.05) 35%,
+        rgba(120,255,180,0.04) 60%,
+        transparent 80%
+    );
+    pointer-events: none;
+    z-index: 0;
+    transition: background 0.05s;
+}
+
+/* Dégradé sombre en bas */
+.card-bottom-band {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 35%;
+    background: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 100%);
+    border-radius: 0 0 18px 18px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Reflet brillant en haut */
+.card-gloss-effect {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 55%;
+    border-radius: 18px 18px 60% 60%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.09) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Bordure lumineuse */
+.card-edge {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.13);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Puce EMV dorée */
+.card-chip-pro {
+    width: 48px;
+    height: 36px;
+    background: linear-gradient(135deg, #e8c84a 0%, #c8a020 30%, #f0d870 55%, #b89010 80%, #e0bc3a 100%);
+    border-radius: 6px;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 0 0 0.5px rgba(0,0,0,0.3) inset;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.card-chip-pro::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 3px;
+}
+.chip-line-v {
+    position: absolute;
+    top: 3px; bottom: 3px;
+    left: 50%; transform: translateX(-50%);
+    width: 1px;
+    background: rgba(0,0,0,0.15);
+}
+.chip-line-h1 {
+    position: absolute;
+    top: 33%; left: 3px; right: 3px;
+    height: 1px;
+    background: rgba(0,0,0,0.15);
+}
+.chip-line-h2 {
+    position: absolute;
+    top: 60%; left: 3px; right: 3px;
+    height: 1px;
+    background: rgba(0,0,0,0.15);
+}
+.chip-shine {
+    position: absolute;
+    top: 2px; left: 3px; right: 3px;
+    height: 40%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, transparent 100%);
+    border-radius: 3px 3px 0 0;
+}
+
+/* Icône NFC / sans contact */
+.contactless-icon {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+.nfc-arcs {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5px;
+}
+.nfc-arc {
+    border: 1.5px solid rgba(255,255,255,0.55);
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-radius: 0 50% 50% 0;
+    height: 6px;
+    width: 5px;
+}
+.nfc-arc:nth-child(2) { height: 10px; width: 8px; }
+.nfc-arc:nth-child(3) { height: 14px; width: 11px; }
+
+/* Header haut */
+.card-header-pro {
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+/* Numéro de carte */
+.card-number-pro {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.42rem;
+    letter-spacing: 2.5px;
+    display: flex;
+    gap: 14px;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8), 0 0 1px rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.92);
+    position: relative;
+    z-index: 2;
+}
+
+/* Footer bas */
+.card-footer-pro {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    position: relative;
+    z-index: 2;
+}
+
+.card-label {
+    font-size: 0.58rem;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.card-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.92);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+.card-footer-right {
+    display: flex;
+    align-items: flex-end;
+    gap: 22px;
+}
+
+/* Logo VISA */
+.card-brand-pro {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.visa-text {
+    font-family: "Arial Black", Impact, sans-serif;
+    font-size: 1.9rem;
+    font-style: italic;
+    font-weight: 900;
+    color: white;
+    line-height: 1;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    letter-spacing: -1px;
+}
+.visa-decorator {
+    height: 2.5px;
+    width: 110%;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    margin-top: -3px;
+    border-radius: 2px;
+    box-shadow: 0 0 4px rgba(245,158,11,0.5);
+}
     </style>
 {% endblock %}
 
@@ -171,9 +409,13 @@
                 <p class="text-muted">Monitor and manage your digital assets across multiple platforms.</p>
             </div>
             <div class="d-flex gap-2">
-            <a href="{{ path('app_wallet_export_pdf') }}" class="btn btn-outline-dark px-4 py-2 rounded-3 fw-bold shadow-sm">
-        <i class="fas fa-file-pdf me-2"></i> Statement
-    </a>
+                <a href="{{ path('app_wallet_export_pdf') }}" class="btn btn-outline-dark px-4 py-2 rounded-3 fw-bold shadow-sm">
+                    <i class="fas fa-file-pdf me-2"></i> Statement
+                </a>
+                <button class="btn btn-outline-primary px-4 py-2 rounded-3 fw-bold shadow-sm" 
+                        data-bs-toggle="modal" data-bs-target="#cardRealistModal">
+                    <i class="fas fa-credit-card me-2"></i> My Card
+                </button>
                 <button class="btn btn-outline-primary px-4 py-2 rounded-3 fw-bold shadow-sm" 
                         data-bs-toggle="modal" data-bs-target="#transactionModal">
                     <i class="fas fa-exchange-alt me-2"></i> Transfer
@@ -233,6 +475,90 @@
             </div>
         </div>
     </main>
+</div>
+
+{# MODALE CARTE ULTRA-RÉALISTE DYNAMIQUE #}
+<div class="modal fade" id="cardRealistModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 bg-transparent shadow-none">
+            <div class="modal-body p-0">
+
+                {% if creditCard %}
+                    {# AFFICHAGE DE LA CARTE SI ELLE EXISTE #}
+                    <div class="credit-card-champions-pro" id="realistCard">
+                        <div class="card-texture"></div>
+                        <div class="card-holo" id="cardHolo"></div>
+                        <div class="card-bottom-band"></div>
+                        <div class="card-gloss-effect"></div>
+                        <div class="card-edge"></div>
+
+                        <div class="card-header-pro">
+                            <div class="card-chip-pro">
+                                <div class="chip-shine"></div>
+                                <div class="chip-line-v"></div>
+                                <div class="chip-line-h1"></div>
+                                <div class="chip-line-h2"></div>
+                            </div>
+                            <div class="contactless-icon">
+                                <div class="nfc-arcs">
+                                    <div class="nfc-arc"></div>
+                                    <div class="nfc-arc"></div>
+                                    <div class="nfc-arc"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-number-pro">
+                            <span>****</span>
+                            <span>****</span>
+                            <span>****</span>
+                            <span>{{ creditCard.last4Digits }}</span>
+                        </div>
+
+                        <div class="card-footer-pro">
+                            <div class="card-footer-left">
+                                <span class="card-label">Card Holder</span>
+                                <span class="card-value">{{ creditCard.cardHolderName|upper }}</span>
+                            </div>
+                            <div class="card-footer-right">
+                                <div class="expiry-block">
+                                    <span class="card-label">Expires</span>
+                                    <span class="card-value">
+                                        {{ creditCard.expiryMonth|format('%02d') }}/{{ creditCard.expiryYear|slice(-2) }}
+                                    </span>
+                                </div>
+                                <div class="card-brand-pro">
+                                    <span class="visa-text">VISA</span>
+                                    <div class="visa-decorator"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    {# MESSAGE SI AUCUNE CARTE N'EST TROUVÉE #}
+                    <div class="bg-white rounded-4 p-5 text-center shadow-lg">
+                        <div class="mb-4">
+                            <i class="fas fa-credit-card fa-4x text-muted opacity-25"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark">No Active Card</h4>
+                        <p class="text-muted">You haven't linked a physical or virtual card to your wallet yet.</p>
+                        <button class="btn btn-primary rounded-pill px-4 py-2 mt-2" style="background: var(--primary-gradient); border: none;">
+                            <i class="fas fa-plus-circle me-2"></i>add a Card
+                        </button>
+                    </div>
+                {% endif %}
+
+                <div class="text-center mt-4">
+                    <button type="button"
+                            class="btn btn-light rounded-pill px-5 py-2 shadow-lg fw-bold"
+                            data-bs-dismiss="modal">
+                        Close View
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
 </div>
 
 {# TRANSACTION MODAL #}
@@ -358,7 +684,7 @@
     </div>
 </div>
 
-{# MODALE HISTORY (AJOUTÉE) #}
+{# MODALE HISTORY #}
 <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -394,22 +720,16 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    // --- GESTION DU GRAPHIQUE AVEC DEBUG ---
+    // --- GESTION DU GRAPHIQUE ---
     document.addEventListener('DOMContentLoaded', function() {
         const canvas = document.getElementById('walletChart');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         
         fetch('{{ path('app_wallet_chart_data') }}')
-            .then(response => {
-                console.log("Status HTTP :", response.status);
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log("Données reçues du serveur :", data);
-
                 if (!data || data.length === 0) {
-                    console.warn("Aucune donnée disponible pour le graphique.");
                     document.getElementById('chart-legend').innerHTML = '<span class="text-muted small italic">No balance data available yet.</span>';
                     return;
                 }
@@ -423,19 +743,14 @@
                         labels: labels,
                         datasets: [{
                             data: values,
-                            backgroundColor: [
-                                '#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#f43f5e', '#8b5cf6'
-                            ],
+                            backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#f43f5e', '#8b5cf6'],
                             borderWidth: 0,
                             hoverOffset: 10
                         }]
                     },
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
                         cutout: '70%'
                     }
                 });
@@ -454,58 +769,53 @@
                         </div>
                     `;
                 });
-            })
-            .catch(err => console.error("Erreur Fetch Chart :", err));
-    });
-
-    // --- LOGIQUE HISTORY MODAL (AJOUTÉE) ---
-const historyModal = document.getElementById('historyModal');
-if (historyModal) {
-    historyModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const walletId = button.getAttribute('data-id');
-        const rib = button.getAttribute('data-rib');
-        
-        const tableBody = document.getElementById('history-table-body');
-        const loader = document.getElementById('history-loader');
-        const ribTitle = document.getElementById('history-rib-title');
-
-        ribTitle.innerText = "Wallet: " + rib;
-        tableBody.innerHTML = '';
-        loader.classList.remove('d-none');
-
-        fetch(`/wallet/${walletId}/history-json`)
-            .then(response => response.json())
-            .then(data => {
-                loader.classList.add('d-none');
-                if (data.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-3">No transactions found.</td></tr>';
-                    return;
-                }
-                data.forEach(tx => {
-                    // --- MODIFICATION ICI ---
-                    // On utilise 'direction' envoyé par le contrôleur PHP
-                    const isOut = tx.direction === 'out'; 
-                    const amountClass = isOut ? 'text-danger' : 'text-success';
-                    const prefix = isOut ? '-' : '+';
-                    // ------------------------
-
-                    tableBody.innerHTML += `
-                        <tr>
-                            <td class="small">${tx.date}</td>
-                            <td><span class="badge bg-light text-dark text-uppercase" style="font-size:0.7rem;">${tx.type}</span></td>
-                            <td class="small text-muted">${tx.counterparty}</td>
-                            <td class="text-end fw-bold ${amountClass}">${prefix}${tx.amount} ${tx.currency}</td>
-                        </tr>
-                    `;
-                });
-            })
-            .catch(() => {
-                loader.classList.add('d-none');
-                tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading history.</td></tr>';
             });
     });
-}
+
+    // --- LOGIQUE HISTORY MODAL ---
+    const historyModal = document.getElementById('historyModal');
+    if (historyModal) {
+        historyModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const walletId = button.getAttribute('data-id');
+            const rib = button.getAttribute('data-rib');
+            const tableBody = document.getElementById('history-table-body');
+            const loader = document.getElementById('history-loader');
+            const ribTitle = document.getElementById('history-rib-title');
+
+            ribTitle.innerText = "Wallet: " + rib;
+            tableBody.innerHTML = '';
+            loader.classList.remove('d-none');
+
+            fetch(`/wallet/${walletId}/history-json`)
+                .then(response => response.json())
+                .then(data => {
+                    loader.classList.add('d-none');
+                    if (data.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-3">No transactions found.</td></tr>';
+                        return;
+                    }
+                    data.forEach(tx => {
+                        const isOut = tx.direction === 'out'; 
+                        const amountClass = isOut ? 'text-danger' : 'text-success';
+                        const prefix = isOut ? '-' : '+';
+
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td class="small">${tx.date}</td>
+                                <td><span class="badge bg-light text-dark text-uppercase" style="font-size:0.7rem;">${tx.type}</span></td>
+                                <td class="small text-muted">${tx.counterparty}</td>
+                                <td class="text-end fw-bold ${amountClass}">${prefix}${tx.amount} ${tx.currency}</td>
+                            </tr>
+                        `;
+                    });
+                })
+                .catch(() => {
+                    loader.classList.add('d-none');
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading history.</td></tr>';
+                });
+        });
+    }
 
     // --- LOGIQUE DES AUTRES MODALES ---
     const addCurrencyModal = document.getElementById('addCurrencyModal');
