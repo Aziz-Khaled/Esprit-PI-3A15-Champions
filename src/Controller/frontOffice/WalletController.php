@@ -7,6 +7,9 @@ use App\Entity\WalletCurrency;
 use App\Entity\Utilisateur;
 use App\Entity\Currency;
 use App\Entity\CreditCard;
+use App\Service\ConversionService;
+use App\Service\BlockchainService;
+use App\Service\TransactionManager;
 use App\Form\WalletType;
 use App\Form\TransactionType;
 use App\Form\CreditCardType; 
@@ -215,6 +218,8 @@ public function getHistoryJson(int $id, WalletRepository $walletRepository, Tran
     if (!$wallet) return new JsonResponse(['error' => 'Wallet not found'], 404);
 
     $transactions = $transactionRepository->createQueryBuilder('t')
+        ->leftJoin('t.conversion', 'c') // On joint la table conversion
+        ->addSelect('c')
         ->where('t.walletSource = :wallet OR t.walletDestination = :wallet')
         ->setParameter('wallet', $wallet)
         ->orderBy('t.dateTransaction', 'DESC')
@@ -224,26 +229,31 @@ public function getHistoryJson(int $id, WalletRepository $walletRepository, Tran
     $data = [];
     foreach ($transactions as $t) {
         $isDebit = ($t->getWalletSource() && $t->getWalletSource()->getIdWallet() === $wallet->getIdWallet());
+        $isConversion = (strtoupper($t->getType()) === 'CONVERSION');
         
+        // Initialisation par défaut
+        $displayAmount = $t->getMontant();
+        $displayCurrency = $t->getCurrency() ? $t->getCurrency()->getNom() : '';
         $counterparty = 'N/A';
 
-        // 1. Gestion des RECHARGES par carte
+        // LOGIQUE SPÉCIFIQUE POUR CONVERSION
+        if ($isConversion && $t->getConversion()) {
+            if (!$isDebit) {
+                // Si on est le destinataire de la conversion, on montre ce qu'on a REÇU
+                $displayAmount = (float)$t->getConversion()->getAmount_to();
+                $displayCurrency = $t->getConversion()->getCurrencyTo() ? $t->getConversion()->getCurrencyTo()->getNom() : $displayCurrency;
+            }
+        }
+
+        // Gestion de la contrepartie (Recharge vs Transfert)
         if (strtolower($t->getType()) === 'recharge') {
             if ($t->getCreditCard()) {
-                // CORRECTION ICI : Utilisation de getLast4Digits() selon ton entité
                 $last4 = $t->getCreditCard()->getLast4Digits(); 
-                
-                if ($last4) {
-                    $counterparty = "**** **** " . $last4;
-                } else {
-                    $counterparty = "Credit Card";
-                }
+                $counterparty = $last4 ? "**** **** " . $last4 : "Credit Card";
             } else {
                 $counterparty = "External Source"; 
             }
-        } 
-        // 2. Gestion des TRANSFERTS entre wallets
-        else {
+        } else {
             $counterparty = $isDebit ? 
                 ($t->getWalletDestination() ? $t->getWalletDestination()->getRib() : 'N/A') :
                 ($t->getWalletSource() ? $t->getWalletSource()->getRib() : 'N/A');
@@ -252,15 +262,14 @@ public function getHistoryJson(int $id, WalletRepository $walletRepository, Tran
         $data[] = [
             'date' => $t->getDateTransaction() ? $t->getDateTransaction()->format('d/m/Y H:i') : 'N/A',
             'type' => strtoupper($t->getType()), 
-            'amount' => number_format($t->getMontant(), 2),
-            'currency' => $t->getCurrency() ? $t->getCurrency()->getNom() : '',
+            'amount' => number_format($displayAmount, 2), // Utilise le montant calculé
+            'currency' => $displayCurrency,             // Utilise la devise calculée
             'counterparty' => $counterparty,
             'direction' => $isDebit ? 'out' : 'in'
         ];
     }
     return new JsonResponse($data);
 }
-
  // STEP 1: Send the email and store data in session
 #[Route('/recharge', name: 'app_wallet_recharge', methods: ['POST'])]
 public function initiateRecharge(
@@ -395,4 +404,67 @@ public function confirmRecharge(
 
     return $this->redirectToRoute('app_wallet_index');
 }
+#[Route('/convert', name: 'app_wallet_convert', methods: ['POST'])]
+    public function convert(
+        Request $request, 
+        EntityManagerInterface $em, 
+        TransactionManager $transactionManager
+    ): Response {
+        try {
+            $amountFrom = (float)$request->request->get('amount_from');
+            $walletSourceId = $request->request->get('wallet_source');
+            $walletDestId = $request->request->get('wallet_destination');
+            $currencyFromName = $request->request->get('currency_from_name');
+            $currencyToName = $request->request->get('currency_to_name');
+
+            $wSource = $em->getRepository(Wallet::class)->find($walletSourceId);
+            $wDest = $em->getRepository(Wallet::class)->find($walletDestId);
+            $curFrom = $em->getRepository(Currency::class)->findOneBy(['nom' => $currencyFromName]);
+            $curTo = $em->getRepository(Currency::class)->findOneBy(['nom' => $currencyToName]);
+
+            if (!$wSource || !$wDest || !$curFrom || !$curTo) {
+                throw new \Exception("Required data missing (Wallet or Currency).");
+            }
+
+            // Appel au TransactionManager avec correction des noms de méthodes (getIdCurrency)
+            $transactionManager->execute(
+                $wSource->getRib(),
+                $wDest->getRib(),
+                $amountFrom,
+                'CONVERSION',
+                $curFrom->getId(), 
+                $curTo->getId()
+            );
+
+            $this->addFlash('success', "✅ Transaction successfully sealed and recorded.");
+
+        } catch (\Exception $e) {
+            // Le message d'erreur inclura les restrictions Fiat/Crypto venant du service
+            $this->addFlash('error', "Transaction Failed: " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_wallet_index');
+    }
+
+    #[Route('/get-rate', name: 'app_wallet_get_rate', methods: ['GET'])]
+    public function getRate(Request $request, ConversionService $convServ): JsonResponse
+    {
+        $from = $request->query->get('from');
+        $to = $request->query->get('to');
+        $amount = (float)$request->query->get('amount');
+
+        if (!$from || !$to || $amount <= 0) {
+            return new JsonResponse(['error' => 'Paramètres invalides'], 400);
+        }
+
+        try {
+            $rate = $convServ->getExchangeRate($from, $to);
+            return new JsonResponse([
+                'rate' => $rate,
+                'result' => $amount * $rate
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
 }
