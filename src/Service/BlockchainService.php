@@ -4,69 +4,216 @@ namespace App\Service;
 
 use App\Entity\Transaction;
 use App\Entity\Blockchain;
+use App\Entity\Notification;
 use App\Repository\BlockchainRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 
 class BlockchainService 
 {
+    private $managerRegistry;
     private $em;
     private $repository;
     private const AES_KEY = "Champions_Secure";
 
-    public function __construct(EntityManagerInterface $em, BlockchainRepository $repository) {
-        $this->em = $em;
+    public function __construct(ManagerRegistry $managerRegistry, BlockchainRepository $repository) {
+        $this->managerRegistry = $managerRegistry;
+        $this->em = $managerRegistry->getManager();
         $this->repository = $repository;
     }
 
-    private function encrypt($data): string {
+    private function ensureManagerIsOpen(): void {
+        if (!$this->em->isOpen()) {
+            $this->em = $this->managerRegistry->resetManager();
+        }
+    }
+
+    private function encrypt(string $data): string {
         return base64_encode(openssl_encrypt($data, 'AES-128-ECB', self::AES_KEY));
     }
 
-public function addBlock(Transaction $t): void {
-    $lastBlock = $this->repository->findOneBy([], ['id_block' => 'DESC']);
-    
-    $previousHashOnly = $lastBlock ? $lastBlock->getCurrent_hash() : "0000";
-    $newIndex = $lastBlock ? $lastBlock->getBlock_index() + 1 : 1;
-
-    // Préparation des données communes
-    $amount = number_format($t->getMontant(), 2, '.', '');
-    $destRib = $t->getWalletDestination() ? $t->getWalletDestination()->getRib() : 'NO_DEST';
-    $currencyName = $t->getCurrency() ? $t->getCurrency()->getNom() : 'UNKNOWN';
-
-    $hashData = "";
-
-    // --- LOGIQUE DE HACHAGE PERSONNALISÉE ---
-    if (strtoupper($t->getType()) === 'RECHARGE') {
-        // Recharge : Last4 + RIB Destination + Montant
-        $last4 = ($t->getCreditCard()) ? $t->getCreditCard()->getLast4Digits() : '0000';
-        $hashData = $last4 . "|" . $destRib . "|" . $amount;
-    } else {
-        // Transfert : RIB Destination + RIB Source + Montant + Nom Currency
-        $srcRib = $t->getWalletSource() ? $t->getWalletSource()->getRib() : 'NO_SRC';
-        $hashData = $destRib . "|" . $srcRib . "|" . $amount . "|" . $currencyName;
+    private function decrypt(string $data): string {
+        return openssl_decrypt(base64_decode($data), 'AES-128-ECB', self::AES_KEY);
     }
 
-    // Calcul du hash SHA-256
-    $newHash = hash('sha256', $t->getIdTransaction() . "|" . $previousHashOnly . "|" . $hashData);
+    public function addBlock(Transaction $t): void {
+        $this->ensureManagerIsOpen();
+        $lastBlock = $this->repository->findOneBy([], ['block_index' => 'DESC']);
+        $previousHashOnly = "0000";
+        $encryptedBackupOfPrevious = "";
+        $newIndex = 1;
 
-    // --- INSERTION DANS LA TABLE BLOCKCHAIN ---
-    $block = new Blockchain();
-    $block->setTransaction($t);
-    $block->setBlock_index($newIndex);
-    $block->setPrevious_hash($previousHashOnly . ";" . $this->encrypt($hashData));
-    $block->setCurrent_hash($newHash);
-    
-    // On copie les valeurs de la transaction
-    $block->setMontant($t->getMontant());
-    $block->setType($t->getType());
-    
-    // ICI : Si c'est une recharge, walletSource sera NULL et creditCard sera remplie
-    // car tu les as déjà set dans ton contrôleur avant d'appeler ce service.
-    $block->setWalletSource($t->getWalletSource()); 
-    $block->setWalletDestination($t->getWalletDestination());
-    $block->setCreditCard($t->getCreditCard());
+        if ($lastBlock) {
+            $previousHashOnly = $lastBlock->getCurrent_hash();
+            $newIndex = $lastBlock->getBlock_index() + 1;
 
-    $this->em->persist($block);
-    $this->em->flush();
-}
+            // --- LOGIQUE SOURCE (RIB ou CARTE) ---
+            $sourceLabel = "N/A";
+            if ($lastBlock->getWalletSource()) {
+                $sourceLabel = $lastBlock->getWalletSource()->getRib();
+            } elseif ($lastBlock->getType() === 'RECHARGE' && $lastBlock->getTransaction() && $lastBlock->getTransaction()->getCreditCard()) {
+                // Affichage : ******** + Last4Digits
+                $sourceLabel = "********" . $lastBlock->getTransaction()->getCreditCard()->getLast4Digits();
+            }
+
+            $dataToBackup = sprintf(
+                "ID:%d|MT:%.2f|TYP:%s|SRC:%s|DST:%s",
+                $lastBlock->getTransaction() ? $lastBlock->getTransaction()->getIdTransaction() : 0,
+                $lastBlock->getMontant(),
+                $lastBlock->getType(),
+                $sourceLabel,
+                $lastBlock->getWalletDestination() ? $lastBlock->getWalletDestination()->getRib() : "EXTERNE"
+            );
+            $encryptedBackupOfPrevious = $this->encrypt($dataToBackup);
+        }
+
+        $formattedAmount = sprintf("%.2f", $t->getMontant());
+        $newHash = $this->generateHash($t->getIdTransaction() . "|" . $previousHashOnly . "|" . $formattedAmount);
+        $storageValue = $previousHashOnly . ";" . $encryptedBackupOfPrevious;
+
+        $block = new Blockchain();
+        $block->setTransaction($t);
+        $block->setBlock_index($newIndex);
+        $block->setPrevious_hash($storageValue);
+        $block->setCurrent_hash($newHash);
+        $block->setMontant($t->getMontant());
+        $block->setType($t->getType());
+        $block->setWalletSource($t->getWalletSource());
+        $block->setWalletDestination($t->getWalletDestination());
+
+        $this->em->persist($block);
+        $this->em->flush();
+    }
+
+    public function verifyIntegrity(): void {
+        $blocks = $this->repository->findBy([], ['block_index' => 'ASC']);
+        $lastKnownHash = "0000";
+        $expectedIndex = 1;
+
+        foreach ($blocks as $block) {
+            $this->ensureManagerIsOpen();
+            $currentIndex = $block->getBlock_index();
+            $parts = explode(';', $block->getPrevious_hash());
+            $storedPrevHash = $parts[0];
+            $storedCurrentHash = $block->getCurrent_hash();
+
+            // 1. RECALCUL DU HASH
+            $formattedAmount = sprintf("%.2f", $block->getMontant());
+            $recalculatedHash = $this->generateHash($block->getTransaction()->getIdTransaction() . "|" . $storedPrevHash . "|" . $formattedAmount);
+
+            if ($recalculatedHash !== $storedCurrentHash) {
+                $this->createAlert("BLOCKCHAIN_CORRUPTED", "🚨 ALERTE : Hash invalide au bloc #" . $currentIndex);
+            }
+
+            // 2. DÉTECTION SUPPRESSION
+            if ($currentIndex > $expectedIndex) {
+                $this->handleDeleteDetected($expectedIndex, $parts);
+                $expectedIndex = $currentIndex;
+            }
+
+            // 3. DÉTECTION UPDATE
+            if (count($parts) > 1 && !empty($parts[1])) {
+                $decrypted = $this->decrypt($parts[1]);
+                $d = $this->parseBackupChain($decrypted);
+                
+                try {
+                    $oldId = (int) $d['ID'];
+                    $oldAmount = (float) $d['MT'];
+                    $this->checkAndTriggerRupture($oldId, $oldAmount, $d);
+                } catch (\Exception $e) {}
+            }
+
+            // 4. RUPTURE LIEN
+            if ($storedPrevHash !== $lastKnownHash) {
+                $this->createAlert("BLOCKCHAIN_CORRUPTED", "🚨 RUPTURE : Lien brisé au bloc #" . $currentIndex);
+            }
+
+            $lastKnownHash = $storedCurrentHash;
+            $expectedIndex++;
+        }
+    }
+
+    private function parseBackupChain(string $decrypted): array {
+        $data = explode('|', $decrypted);
+        $result = [];
+        foreach ($data as $item) {
+            $kv = explode(':', $item, 2);
+            if (count($kv) === 2) {
+                $result[$kv[0]] = $kv[1];
+            }
+        }
+        return $result;
+    }
+
+    private function handleDeleteDetected(int $missingIdx, array $nextBlockParts): void {
+        $msg = "🚨 ALERTE : DELETE_detected\n";
+        $msg .= "------------------------------------------\n";
+        $msg .= "❌ Bloc disparu à l'index : " . $missingIdx . "\n";
+
+        if (count($nextBlockParts) > 1) {
+            $d = $this->parseBackupChain($this->decrypt($nextBlockParts[1]));
+            $msg .= "📝 Type : " . ($d['TYP'] ?? 'N/A') . "\n";
+            $msg .= "💰 Montant : " . ($d['MT'] ?? '0.00') . " DT\n";
+            $msg .= "💳 Source : " . ($d['SRC'] ?? 'N/A') . "\n";
+            $msg .= "📥 Destination : " . ($d['DST'] ?? 'N/A') . "\n";
+        }
+        $msg .= "------------------------------------------\n";
+        $this->createAlert("DELETE_DETECTED", $msg);
+    }
+
+    private function checkAndTriggerRupture(int $transId, float $backupAmount, array $d): void {
+        $this->ensureManagerIsOpen();
+        $transaction = $this->em->getRepository(Transaction::class)->find($transId);
+        if ($transaction) {
+            $currentAmount = (float) $transaction->getMontant();
+            if (abs($currentAmount - $backupAmount) > 0.001) {
+                $msg = "🚨 ALERTE : UPDATE_detected\n";
+                $msg .= "------------------------------------------\n";
+                $msg .= "📝 Type : " . ($d['TYP'] ?? 'N/A') . "\n";
+                $msg .= "💳 Source : " . ($d['SRC'] ?? 'N/A') . "\n";
+                $msg .= "📥 Destination : " . ($d['DST'] ?? 'N/A') . "\n";
+                $msg .= "------------------------------------------\n";
+                $msg .= "📜 ANCIEN : " . number_format($backupAmount, 2, '.', '') . " DT\n";
+                $msg .= "🕵️ NOUVEAU : " . number_format($currentAmount, 2, '.', '') . " DT\n";
+                $msg .= "------------------------------------------\n";
+                
+                $this->createAlert("UPDATE_DETECTED", $msg, $transId);
+                $this->breakChainOnUpdate($transId, $currentAmount);
+            }
+        }
+    }
+
+    public function breakChainOnUpdate(int $transactionId, float $newAmount): void {
+        $this->ensureManagerIsOpen();
+        $block = $this->repository->findOneBy(['transaction' => $transactionId]);
+        if ($block) {
+            $prevHash = explode(';', $block->getPrevious_hash())[0];
+            $corruptedHash = $this->generateHash($transactionId . "|" . $prevHash . "|" . sprintf("%.2f", $newAmount));
+            $block->setCurrent_hash($corruptedHash);
+            $this->em->flush();
+        }
+    }
+
+    public function generateHash(string $data): string {
+        return hash('sha256', $data);
+    }
+
+    private function createAlert(string $type, string $message, ?int $txId = null): void {
+        $this->ensureManagerIsOpen();
+        $repo = $this->em->getRepository(Notification::class);
+        $exists = $txId 
+            ? $repo->findOneBy(['id_transaction' => $txId, 'type_notification' => $type])
+            : $repo->findOneBy(['message' => $message, 'type_notification' => $type]);
+
+        if (!$exists) {
+            $notif = new Notification();
+            $notif->setIdTransaction($txId);
+            $notif->setTypeNotification($type);
+            $notif->setMessage($message);
+            $notif->setCreatedAt(new \DateTime());
+            $notif->setIsRead(false);
+            $this->em->persist($notif);
+            $this->em->flush();
+        }
+    }
 }
