@@ -1,3 +1,10 @@
+
+parameters:
+    twilio_sid: '%env(TWILIO_SID)%'
+    twilio_token: '%env(TWILIO_TOKEN)%'
+    twilio_whatsapp_from: '+14155238886'
+
+
 services:
     _defaults:
         autowire: true
@@ -10,6 +17,7 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    
     App\Service\StripeService:
         arguments:
             $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
