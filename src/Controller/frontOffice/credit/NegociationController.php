@@ -163,7 +163,7 @@ public function confirmAndSend(
 
         // Mise à jour du crédit
         $credit->setDateContrat(new \DateTime());
-        $credit->setStatus('SIGNED'); // On passe le statut à SIGNED
+        $credit->setStatus('APPROVED'); // On passe le statut à SIGNED
         
         // On stocke une version courte ou complète du JWT comme ID de contrat
         $credit->setContratId('SECURE-' . substr($jwtSignature, -12));
@@ -232,9 +232,12 @@ public function clientSignFinish(
         // PDF 1 : Contrat
         $htmlContract = $this->renderView('front_office/credit/pdf_contract.html.twig', [
             'credit' => $credit,
-            'final_hash' => $finalHash,
-            'date' => new \DateTime(),
-            'is_preview' => false
+    'investor' => $credit->getInvestisseur(),
+    'borrower' => $credit->getBorrower(),
+    'investor_signature' => $credit->getContratId(), // C'est le hash "SECURE-..." généré avant
+    'borrower_signature' => $finalHash,              // Le nouveau hash que tu viens de créer
+    'date' => new \DateTime(),
+    'is_preview' => false
         ]);
         $contractFilename = 'Contract_Final_' . $credit->getIdCredit() . '.pdf';
         $pdfService->generateAndSaveContract($htmlContract, $contractFilename);
