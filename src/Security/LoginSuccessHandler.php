@@ -23,6 +23,6 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
         }
 
         // Only active users reach here (pending/banned are blocked by UserChecker)
-        return new RedirectResponse($this->router->generate('app_projet'));
+        return new RedirectResponse($this->router->generate('app_wallet_index'));
     }
 }

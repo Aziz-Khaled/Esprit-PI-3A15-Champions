@@ -7,10 +7,11 @@
 /public/bundles/
 /var/
 /vendor/
-<<<<<<< HEAD
 
-=======
->>>>>>> 716fbda4e1318175273d282207cce216475e04f1
+
+
+
+
 ###< symfony/framework-bundle ###
 
 ###> phpunit/phpunit ###
@@ -23,5 +24,11 @@
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
+
 /public/uploads/users/selfies/*
 /public/uploads/users/ids/*
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###
+

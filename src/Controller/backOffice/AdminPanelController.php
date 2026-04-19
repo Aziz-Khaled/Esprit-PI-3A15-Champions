@@ -10,20 +10,61 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use App\Service\AdminLogger;
 use App\Form\AdminEditUserType;
+
+
+
 
 
 
 #[Route('/admin')]
 final class AdminPanelController extends AbstractController
 {
-    #[Route('/panel', name: 'app_admin_panel')]
-    public function index(): Response
-    {
-        return $this->render('admin_panel/index.html.twig', [
-            'controller_name' => 'AdminPanelController',
-        ]);
+  #[Route('/panel', name: 'app_admin_panel')]
+public function index(EntityManagerInterface $em, AdminLogger $logger): Response  // ✅ inject AdminLogger, not $logRepo
+{
+    $repo = $em->getRepository(Utilisateur::class);
+
+    // ── User status counts ──
+    $activeCount   = count($repo->findBy(['statut' => 'active']));
+    $pendingCount  = count($repo->findBy(['statut' => 'pending']));
+    $disabledCount = count($repo->findBy(['statut' => 'desactive']));
+
+    // ── Registrations per month (last 12 months) ──
+    $registrationsByMonth = [];
+    $monthLabels          = [];
+
+    for ($i = 11; $i >= 0; $i--) {
+        $date      = new \DateTime("first day of -$i months");
+        $dateStart = (clone $date)->modify('first day of this month')->setTime(0, 0, 0);
+        $dateEnd   = (clone $date)->modify('last day of this month')->setTime(23, 59, 59);
+
+        $monthLabels[] = $date->format('M Y');
+
+        $count = $repo->createQueryBuilder('u')
+            ->select('COUNT(u.idUser)')
+            ->where('u.dateCreation >= :start')
+            ->andWhere('u.dateCreation <= :end')
+            ->setParameter('start', $dateStart)
+            ->setParameter('end', $dateEnd)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $registrationsByMonth[] = (int) $count;
     }
+
+    $recentLogs = $logger->findRecent(5);  // ✅ use AdminLogger DBAL method
+
+    return $this->render('admin_panel/index.html.twig', [
+        'activeCount'          => $activeCount,
+        'pendingCount'         => $pendingCount,
+        'disabledCount'        => $disabledCount,
+        'registrationsByMonth' => $registrationsByMonth,
+        'monthLabels'          => $monthLabels,
+        'recentLogs'           => $recentLogs,
+    ]);
+}
 
     #[Route('/users/pending', name: 'app_admin_pending_users')]
     public function pendingUsers(UtilisateurRepository $repo): Response
@@ -43,7 +84,8 @@ final class AdminPanelController extends AbstractController
     Utilisateur $user,
     EntityManagerInterface $em,
     Request $request,
-    CsrfTokenManagerInterface $csrf
+    CsrfTokenManagerInterface $csrf,
+    AdminLogger $logger 
     ): Response {
     if (!$csrf->isTokenValid(new CsrfToken('approve_' . $user->getIdUser(), $request->request->get('_token')))) {
         throw $this->createAccessDeniedException('Invalid CSRF token.');
@@ -51,6 +93,13 @@ final class AdminPanelController extends AbstractController
 
     $user->setStatut('ACTIVE');
     $em->flush();
+
+    $logger->log(
+        action:      'APPROVE_USER',
+        entity:      'Utilisateur',
+        performedBy: $this->getUser()->getUserIdentifier(),
+        details:     'Approved user: ' . $user->getEmail()
+    );
 
     $this->addFlash('success', $user->getPrenom() . ' ' . $user->getNom() . ' has been approved.');
     return $this->redirectToRoute('app_admin_pending_users');
@@ -61,7 +110,8 @@ public function rejectUser(
     Utilisateur $user,
     EntityManagerInterface $em,
     Request $request,
-    CsrfTokenManagerInterface $csrf
+    CsrfTokenManagerInterface $csrf,
+    AdminLogger $logger 
 ): Response {
     if (!$csrf->isTokenValid(new CsrfToken('reject_' . $user->getIdUser(), $request->request->get('_token')))) {
         throw $this->createAccessDeniedException('Invalid CSRF token.');
@@ -69,6 +119,9 @@ public function rejectUser(
 
     $user->setStatut('BANNED');
     $em->flush();
+
+    $logger->log('REJECT_USER', 'Utilisateur', $this->getUser()->getUserIdentifier(),
+    'Rejected user: ' . $user->getEmail());
 
     $this->addFlash('warning', $user->getPrenom() . ' ' . $user->getNom() . ' has been rejected.');
     return $this->redirectToRoute('app_admin_pending_users');
@@ -97,7 +150,8 @@ public function usersList(UtilisateurRepository $repo, Request $request): Respon
 public function editUser(
     Utilisateur $user,
     Request $request,
-    EntityManagerInterface $em
+    EntityManagerInterface $em,
+    AdminLogger $logger 
 ): Response {
     $form = $this->createForm(AdminEditUserType::class, $user);
     $form->handleRequest($request);
@@ -107,6 +161,9 @@ public function editUser(
         $this->addFlash('success', $user->getPrenom() . ' ' . $user->getNom() . ' has been updated.');
         return $this->redirectToRoute('app_admin_users_list');
     }
+
+    $logger->log('EDIT_USER', 'Utilisateur', $this->getUser()->getUserIdentifier(),
+    'Edited user: ' . $user->getEmail());
 
     return $this->render('admin_panel/edit_user.html.twig', [
         'form' => $form,
@@ -119,7 +176,8 @@ public function deleteUser(
     Utilisateur $user,
     EntityManagerInterface $em,
     Request $request,
-    CsrfTokenManagerInterface $csrf
+    CsrfTokenManagerInterface $csrf,
+    AdminLogger $logger 
 ): Response {
     if (!$csrf->isTokenValid(new CsrfToken('delete_' . $user->getIdUser(), $request->request->get('_token')))) {
         throw $this->createAccessDeniedException('Invalid CSRF token.');
@@ -127,6 +185,9 @@ public function deleteUser(
 
     $em->remove($user);
     $em->flush();
+
+    $logger->log('DELETE_USER', 'Utilisateur', $this->getUser()->getUserIdentifier(),
+    'Deleted user: ' . $user->getEmail());
 
     $this->addFlash('success', 'User has been deleted.');
     return $this->redirectToRoute('app_admin_users_list');
@@ -150,5 +211,20 @@ public function deleteUser(
             'total'   => count($users),
         ]);
     }
+
+    #[Route('/logs', name: 'app_admin_logs', methods: ['GET'])]
+public function logs(Request $request, AdminLogger $logger): Response  // ✅ AdminLogger not AdminLogRepository
+{
+    $from = $request->query->get('from');
+    $to   = $request->query->get('to');
+
+    $logs = $logger->findByDateRange($from, $to);
+
+    return $this->render('admin_panel/logs.html.twig', [
+        'logs' => $logs,
+        'from' => $from,
+        'to'   => $to,
+    ]);
+}
 
 }

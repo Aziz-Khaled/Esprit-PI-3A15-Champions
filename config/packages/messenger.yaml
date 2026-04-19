@@ -20,7 +20,9 @@ framework:
 
         routing:
             # MODIFICATION ICI : On remplace 'async' par 'sync' pour l'envoi immédiat
-            #Symfony\Component\Mailer\Messenger\SendEmailMessage: sync
+
+            Symfony\Component\Mailer\Messenger\SendEmailMessage: sync
+
             Symfony\Component\Notifier\Message\ChatMessage: sync
             Symfony\Component\Notifier\Message\SmsMessage: sync
 
