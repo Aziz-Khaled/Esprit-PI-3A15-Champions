@@ -1,0 +1,134 @@
+{% extends 'frontOffice/front_base.html.twig' %}
+
+{% block title %}My Orders - Fintech Marketplace{% endblock %}
+
+{% block body %}
+<div class="row align-items-center mb-5 mt-n4">
+    <div class="col-md-7">
+        <h1 class="display-4 fw-black text-gray-900 mb-2">Order <span class="text-primary">History</span></h1>
+        <p class="text-muted lead">Track your assets and view your crypto transaction receipts.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        {% for order in orders %}
+            <div class="card border-0 shadow-sm mb-5 rounded-4 overflow-hidden bg-white hover-up transition-all border border-light">
+                <div class="card-header bg-light-soft border-0 p-4 border-bottom">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white shadow-sm p-3 rounded-circle me-3 text-primary border">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-black text-gray-900">Order #ORD-{{ order.id }}</h5>
+                                <small class="text-muted font-weight-bold opacity-75">Placed on {{ order.orderDate|date('d F Y at H:i') }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="text-md-end d-flex flex-column flex-md-row align-items-md-center gap-2">
+                            <a href="{{ path('app_order_receipt', { id: order.id }) }}" target="_blank" rel="noopener" class="btn btn-sm btn-white border rounded-pill px-3 font-weight-bold shadow-sm">
+                                <i class="fas fa-print me-1"></i> Reçu
+                            </a>
+                            <span class="badge rounded-pill px-4 py-2 shadow-sm border
+                                {{ order.status == 'paid' ? 'bg-success text-white' : 
+                                   order.status == 'pending_payment' ? 'bg-warning text-dark border-warning' : 
+                                   order.status == 'cancelled' ? 'bg-danger text-white' : 'bg-primary text-white' }}">
+                                <i class="fas 
+                                    {{ order.status == 'paid' ? 'fa-check-circle' : 
+                                       order.status == 'pending_payment' ? 'fa-clock' : 
+                                       order.status == 'cancelled' ? 'fa-times-circle' : 'fa-info-circle' }} me-2"></i>
+                                {{ order.status|upper }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-4">
+                            <thead class="bg-light-soft x-small text-uppercase font-weight-bold text-muted letter-spacing-1">
+                                <tr>
+                                    <th class="border-0">Item Description</th>
+                                    <th class="border-0 text-center">Qty</th>
+                                    <th class="border-0 text-end">UP</th>
+                                    <th class="border-0 text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.orderItems %}
+                                    <tr>
+                                        <td class="py-3">
+                                            <div class="d-flex align-items-center">
+                                                {% if item.product and item.product.imageUrl %}
+                                                    <img src="{{ asset('uploads/products/' ~ item.product.imageUrl) }}" class="rounded shadow-sm me-3 border p-1 bg-white" style="width: 45px; height: 45px; object-fit: cover;">
+                                                {% endif %}
+                                                <span class="fw-bold text-gray-900">{{ item.product ? item.product.name : 'Removed Product' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center text-muted font-family-mono">x{{ item.quantity }}</td>
+                                        <td class="text-end text-muted">{{ item.unitPrice }} <span class="text-xs">BTC</span></td>
+                                        <td class="text-end fw-black text-dark">{{ item.subTotal }} <span class="text-xs">BTC</span></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="bg-light p-4 rounded-4 border border-light d-flex flex-wrap justify-content-between align-items-center shadow-sm card-footer-custom">
+                        <div class="d-flex flex-column gap-2 mb-3 mb-md-0">
+                            <span class="text-muted small font-weight-bold"><i class="fas fa-truck-moving text-primary me-2"></i> Destination: <span class="text-dark">{{ order.shippingAddress }}</span></span>
+                            <span class="text-muted small font-weight-bold"><i class="fas fa-shield-alt text-success me-2"></i> Network: <span class="badge bg-white shadow-none text-primary border fw-black">Bitcoin (BTC)</span></span>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted small font-weight-bold d-block mb-1 text-uppercase letter-spacing-1">Amount Paid</span>
+                            <h3 class="mb-0 text-primary fw-black">{{ order.totalAmount }} BTC</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if order.status == 'pending_payment' %}
+                <div class="card-footer bg-white border-0 p-4 pt-0 d-flex justify-content-end gap-3 flex-wrap">
+                    <form action="{{ path('app_order_cancel', {id: order.id}) }}" method="POST">
+                        <button type="submit" class="btn btn-white border rounded-pill px-4 font-weight-bold transition-all hov-danger shadow-sm">
+                            <i class="fas fa-times me-2"></i> Cancel
+                        </button>
+                    </form>
+                    <form action="{{ path('app_order_pay', {id: order.id}) }}" method="POST">
+                        <button type="submit" class="btn btn-success border-0 rounded-pill px-5 py-2 shadow-lg shadow-success-light fw-black transition-all hover-up-small">
+                            <i class="fas fa-wallet me-2"></i> Pay Now with Wallet
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white border-2 border-dashed">
+                <div class="mb-4">
+                    <i class="fas fa-box-open fa-5x text-blue-100"></i>
+                </div>
+                <h3 class="fw-black h4 text-gray-900 mb-3">No orders found 📦</h3>
+                <p class="text-muted mb-4 opacity-75">You haven't made any purchases on our marketplace yet.</p>
+                <a href="{{ path('app_marketplace_index') }}" class="btn btn-primary rounded-pill px-5 py-2 font-weight-bold shadow-lg">Browse Marketplace</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .fw-black { font-weight: 800; }
+    .text-gray-900 { color: #0f172a; }
+    .bg-light-soft { background-color: #f8fafc; }
+    .x-small { font-size: 0.72rem; }
+    .letter-spacing-1 { letter-spacing: 0.05rem; }
+    .transition-all { transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .hover-up:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important; }
+    .hover-up-small:hover { transform: translateY(-3px); }
+    .btn-white { background: white; color: #475569; }
+    .btn-white:hover { background: #f8fafc; color: #1e293b; }
+    .hov-danger:hover { background: #fee2e2; color: #ef4444; border-color: #fecaca; }
+    .shadow-success-light { box-shadow: 0 10px 20px -5px rgba(22, 163, 74, 0.4); }
+    .font-family-mono { font-family: 'JetBrains Mono', monospace; }
+    .card-footer-custom { border-radius: 18px !important; }
+</style>
+{% endblock %}
