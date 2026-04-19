@@ -33,10 +33,10 @@ security:
     access_control:
         - { path: ^/login,    roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
-        - { path: ^/connect,  roles: PUBLIC_ACCESS } 
+        - { path: ^/connect,  roles: PUBLIC_ACCESS }
         - { path: ^/$,        roles: PUBLIC_ACCESS }
         - { path: ^/admin/users/tesseract-debug,  roles: PUBLIC_ACCESS }
-        - { path: ^/admin/users/extract-id-raw,  roles: PUBLIC_ACCESS }
+        - { path: ^/admin/users/extract-id-raw,   roles: PUBLIC_ACCESS }
         - { path: ^/admin/search, roles: ROLE_ADMIN }
         - { path: ^/admin,    roles: ROLE_ADMIN }
         - { path: ^/, roles: [ROLE_CLIENT, ROLE_ADMIN, ROLE_COMMERCANT, ROLE_INVESTISSEUR] }
