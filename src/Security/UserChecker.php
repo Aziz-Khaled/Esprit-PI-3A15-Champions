@@ -13,7 +13,7 @@ class UserChecker implements UserCheckerInterface
         if (!$user instanceof Utilisateur) {
             return;
         }
-
+        
         // Admins bypass all status checks
         if ($user->getRole() === 'ADMIN') {
             return;
@@ -25,6 +25,11 @@ class UserChecker implements UserCheckerInterface
 
         if ($user->getStatut() === 'BANNED') {
             throw new CustomUserMessageAuthenticationException('ACCOUNT_BANNED');
+        }
+        if (!$user instanceof Utilisateur) return;
+
+        if ($user->getStatut() === 'BANNED') {
+        throw new CustomUserMessageAuthenticationException('ACCOUNT_BANNED');
         }
     }
 

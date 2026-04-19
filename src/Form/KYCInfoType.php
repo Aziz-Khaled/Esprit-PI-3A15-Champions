@@ -31,7 +31,7 @@ class KYCInfoType extends AbstractType
                     new NotBlank(['message' => 'Please select a role']),
                 ],
             ])
-            
+            // NOT mapped to entity — we handle the file upload manually
             ->add('selfie', FileType::class, [
                 'label'       => 'Profile Photo',
                 'mapped'      => false,

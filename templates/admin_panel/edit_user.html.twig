@@ -57,8 +57,8 @@
                                 {{ app.user.prenom }} {{ app.user.nom }}
                             </span>
                             <img class="img-profile rounded-circle"
-                                 src="/uploads/users/selfies/{{ app.user.userImage }}"
-                                 style="width:32px;height:32px;object-fit:cover;">
+                                src="/uploads/users/selfies/{{ app.user.userImage }}"
+                                style="width:32px;height:32px;object-fit:cover;">
                         </a>
                         <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
                             <a class="dropdown-item" href="{{ path('app_logout') }}">
@@ -70,7 +70,6 @@
             </nav>
 
             <div class="container-fluid">
-
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <h1 class="h3 mb-0 text-gray-800">
                         <i class="fas fa-user-edit mr-2 text-primary"></i>
@@ -86,7 +85,7 @@
                         <div class="card shadow mb-4">
                             <div class="card-header py-3 d-flex align-items-center">
                                 <img src="/uploads/users/selfies/{{ user.userImage }}"
-                                    style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-right:12px;">
+                                     style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-right:12px;">
                                 <h6 class="m-0 font-weight-bold text-primary">
                                     {{ user.email }}
                                 </h6>

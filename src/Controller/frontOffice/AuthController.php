@@ -14,6 +14,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use App\Form\KYCInfoType;
+use App\Service\SmsVerificationService;
+use Psr\Log\LoggerInterface;
 
 final class AuthController extends AbstractController
 {
@@ -54,6 +56,8 @@ public function login(AuthenticationUtils $authenticationUtils, Request $request
         'error'        => $error,
         'last_email'   => $lastEmail,
         'initial_step' => $initialStep,
+        'otp_phone'    => null,   
+        'otp_error'    => null,   
     ]);
 }
 
@@ -61,6 +65,7 @@ public function login(AuthenticationUtils $authenticationUtils, Request $request
  #[Route('/register/step1', name: 'app_register_step1', methods: ['GET', 'POST'])]
     public function step1(Request $request): Response
     {
+        
         $utilisateur = new Utilisateur();
         $form = $this->createForm(GeneralInfoType::class, $utilisateur);
         $form->handleRequest($request);
@@ -76,7 +81,7 @@ public function login(AuthenticationUtils $authenticationUtils, Request $request
             ]);
 
             // Redirect back to login page at step 2
-            return $this->redirectToRoute('app_login', ['step' => '2']);
+            return $this->redirectToRoute('app_send_otp');
         }
 
         // If form has errors, go back to login page and show them
@@ -165,10 +170,14 @@ public function login(AuthenticationUtils $authenticationUtils, Request $request
         Request $request,
         EntityManagerInterface $em,
         UserPasswordHasherInterface $hasher,
-        SluggerInterface $slugger
+        SluggerInterface $slugger,
+        SmsVerificationService $sms
     ): Response {
         $step1 = $request->getSession()->get('register_step1');
-
+        if (!$sms->isVerified()) {
+        return $this->redirectToRoute('app_login', ['step' => 'signup1']);
+        }
+        $request->getSession()->remove('phone_verified');
         if (!$step1) {
             $this->addFlash('error', 'Session expired. Please start again.');
             return $this->redirectToRoute('app_login');
@@ -217,7 +226,7 @@ public function login(AuthenticationUtils $authenticationUtils, Request $request
             // role is already set on $user by KYCInfoType (it's mapped)
             $user->setUserImage($selfieFilename);
             $user->setPieceIdentite($idDocFilename);
-            $user->setStatut('pending');
+            $user->setStatut('PENDING');
             $user->setDateCreation(new \DateTime());
             $user->setDateDerniereConnexion(new \DateTime());
 
@@ -236,7 +245,9 @@ public function login(AuthenticationUtils $authenticationUtils, Request $request
             'kycForm'      => $form->createView(),   // ← pass the form with errors
             'error'        => null,
             'last_email'   => '',
-            'initial_step' => '2',                   // ← keep user on KYC screen
+            'initial_step' => '2',
+            'otp_phone'    => null, // ← add
+            'otp_error'    => null, // ← add                   // ← keep user on KYC screen
         ]);
     }
 
@@ -245,4 +256,86 @@ public function login(AuthenticationUtils $authenticationUtils, Request $request
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
+
+
+
+#[Route('/register/send-otp', name: 'app_send_otp', methods: ['GET', 'POST'])]
+public function sendOtp(
+    Request $request,
+    SmsVerificationService $sms,
+    LoggerInterface $logger
+): Response {   
+    $step1 = $request->getSession()->get('register_step1');
+
+    // Guard: step1 must be completed first
+    if (!$step1) {
+        return $this->redirectToRoute('app_login', ['step' => 'signup1']);
+    }
+
+    $phone = $step1['telephone'];
+
+    try {
+        $sms->sendCode($phone);
+    }  catch (\Throwable $e) {
+    $logger->error('SMS send failed: ' . $e->getMessage()); // ← $logger not $this->logger
+
+    return $this->render('auth/index.html.twig', [
+        'loginForm'    => $this->createForm(LoginType::class)->createView(),
+        'registerForm' => $this->createForm(GeneralInfoType::class, new Utilisateur())->createView(),
+        'kycForm'      => $this->createForm(KYCInfoType::class, new Utilisateur())->createView(),
+        'error'        => null,
+        'last_email'   => '',
+        'initial_step' => 'otp',
+        'otp_error'    => 'SMS failed: ' . $e->getMessage(),
+        'otp_phone'    => $phone,
+    ]);
+}
+
+    return $this->render('auth/index.html.twig', [
+        'loginForm'    => $this->createForm(LoginType::class)->createView(),
+        'registerForm' => $this->createForm(GeneralInfoType::class, new Utilisateur())->createView(),
+        'kycForm'      => $this->createForm(KYCInfoType::class, new Utilisateur())->createView(),
+        'error'        => null,
+        'last_email'   => '',
+        'initial_step' => 'otp',
+        'otp_phone'    => $phone,
+    ]);
+}
+
+#[Route('/register/verify-otp', name: 'app_verify_otp', methods: ['POST'])]
+public function verifyOtp(
+    Request $request,
+    SmsVerificationService $sms
+): Response {
+    $step1 = $request->getSession()->get('register_step1');
+
+    if (!$step1) {
+        return $this->redirectToRoute('app_login', ['step' => 'signup1']);
+    }
+
+    $submitted = trim($request->request->get('otp_code', ''));
+    $phone     = $step1['telephone'];
+    $result    = $sms->verifyCode($phone, $submitted); // ← phone added
+
+    if ($result === 'ok') {
+        return $this->redirectToRoute('app_login', ['step' => '2']);
+    }
+
+    $messages = [
+        'expired'  => 'Your code has expired. Please request a new one.',
+        'invalid'  => 'Incorrect code. Please try again.',
+        'too_many' => 'Too many attempts. Please request a new code.',
+    ];
+
+    return $this->render('auth/index.html.twig', [
+        'loginForm'    => $this->createForm(LoginType::class)->createView(),
+        'registerForm' => $this->createForm(GeneralInfoType::class, new Utilisateur())->createView(),
+        'kycForm'      => $this->createForm(KYCInfoType::class, new Utilisateur())->createView(),
+        'error'        => null,
+        'last_email'   => '',
+        'initial_step' => 'otp',
+        'otp_error'    => $messages[$result] ?? 'Verification failed.',
+        'otp_phone'    => $phone,
+    ]);
+}
 }

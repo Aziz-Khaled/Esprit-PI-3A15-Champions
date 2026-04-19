@@ -317,6 +317,26 @@
     position: relative; overflow: hidden;
     box-shadow: 0 8px 24px rgba(0,212,255,0.25);
   }
+
+
+ .btn-google {
+    width: 100%; padding: 13px 16px;
+    background: #fff; border: 1.5px solid rgba(90,112,144,0.25);
+    border-radius: 12px; color: #3c3c3c;
+    font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: all 0.25s ease;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    text-decoration: none; margin-bottom: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-top: 20px;
+  }
+  .btn-google:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    border-color: rgba(66,133,244,0.4);
+    transform: translateY(-1px);
+  }
+
+  
   .btn-primary::after {
     content: ''; position: absolute; inset: 0;
     background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
@@ -546,6 +566,16 @@
 
 {{ form_end(loginForm) }}
 
+<a href="{{ path('connect_auth0_start') }}" class="btn-google">
+  <svg width="18" height="18" viewBox="0 0 48 48" style="flex-shrink:0">
+    <path fill="#EA4335" d="M24 9.5c3.5 0 6.5 1.2 8.9 3.2l6.6-6.6C35.4 2.5 30 0 24 0 14.6 0 6.5 5.5 2.5 13.5l7.7 6C12 13.7 17.6 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 6.9-10 6.9-17z"/>
+    <path fill="#FBBC05" d="M10.2 28.5A14.4 14.4 0 0 1 9.5 24c0-1.6.3-3.1.7-4.5L2.5 13.5A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l7.7-6.3z"/>
+    <path fill="#34A853" d="M24 48c6 0 11-2 14.7-5.3l-7.5-5.8c-2 1.4-4.6 2.1-7.2 2.1-6.4 0-11.9-4.3-13.8-10.1L2.5 34.8C6.5 42.5 14.6 48 24 48z"/>
+  </svg>
+  Continue with Google
+</a>
+
       <div class="divider">or</div>
       <button class="btn-secondary" onclick="goto('s-signup1')">Create an Account</button>
       <div class="auth-link" style="margin-top:16px">
@@ -669,6 +699,99 @@
     
     </div>
 
+<!-- ─── SCREEN OTP : PHONE VERIFICATION ─── -->
+<div class="screen" id="s-otp">
+  <div class="step-track">
+    <div class="step-wrapper">
+      <div class="step-node done">✓</div>
+      <span class="step-label">Profile</span>
+    </div>
+    <div class="step-line active"></div>
+    <div class="step-wrapper">
+      <div class="step-node active">●</div>
+      <span class="step-label active">Verify</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-wrapper">
+      <div class="step-node">2</div>
+      <span class="step-label">KYC</span>
+    </div>
+  </div>
+
+  <div class="screen-title">Verify your number</div>
+  <div class="screen-subtitle">
+    We sent a 6-digit code to
+    <span style="color:var(--cyan);font-weight:600">
+      {{ otp_phone | default('your phone') }}
+    </span>
+  </div>
+
+  {% if otp_error is defined and otp_error %}
+    <div style="background:rgba(255,77,106,0.1);border:1px solid rgba(255,77,106,0.3);
+                border-radius:10px;padding:12px 16px;margin-bottom:16px;
+                color:#FF4D6A;font-size:13px;">
+      ⚠ {{ otp_error }}
+    </div>
+  {% endif %}
+
+  <form action="{{ path('app_verify_otp') }}" method="POST" id="otp-form">
+    <div class="field">
+      <label class="field-label" style="font-size:11px;font-weight:600;letter-spacing:0.08em;
+             text-transform:uppercase;color:var(--muted);display:block;margin-bottom:12px">
+        Verification Code
+      </label>
+
+      
+      <div id="otp-boxes" style="display:flex;gap:10px;justify-content:center;margin-bottom:8px">
+        {% for i in 1..6 %}
+          <input type="text"
+            id="otp-box-{{ i }}"
+            maxlength="1"
+            inputmode="numeric"
+            pattern="[0-9]"
+            autocomplete="one-time-code"
+            style="width:48px;height:56px;text-align:center;font-size:22px;
+                   font-family:'DM Mono',monospace;font-weight:500;
+                   background:rgba(0,0,0,0.3);border:1px solid rgba(90,112,144,0.3);
+                   border-radius:10px;color:var(--text);outline:none;
+                   transition:border-color .2s,box-shadow .2s;padding:0;"
+            oninput="otpInput(this, {{ i }})"
+            onkeydown="otpKeydown(event, {{ i }})"
+            onpaste="{{ i == 1 ? 'otpPaste(event)' : 'return false' }}" />
+        {% endfor %}
+      </div>
+
+      
+      <input type="hidden" name="otp_code" id="otp-hidden" />
+    </div>
+
+    <div style="text-align:center;margin-bottom:20px">
+      <span id="otp-timer" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">
+        Code expires in <span id="otp-countdown">5:00</span>
+      </span>
+    </div>
+
+    <button type="submit" class="btn-primary" id="otp-submit" disabled
+      style="opacity:0.5;cursor:not-allowed">
+      Verify &amp; Continue →
+    </button>
+  </form>
+
+  <div style="text-align:center;margin-top:16px">
+    <form action="{{ path('app_send_otp') }}" method="POST" style="display:inline">
+      <button type="submit"
+        style="background:none;border:none;color:var(--cyan);font-size:13px;
+               font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;">
+        Resend code
+      </button>
+    </form>
+    <span style="color:var(--muted);font-size:13px"> · </span>
+    <a onclick="goto('s-signup1','left')"
+      style="color:var(--muted);font-size:13px;cursor:pointer;">
+      Change number
+    </a>
+  </div>
+</div>
 <!-- ─── SCREEN 3 : SIGNUP STEP 2 KYC ─── -->
 <div class="screen" id="s-signup2">
   <div class="step-track">
@@ -978,6 +1101,88 @@ function validateKyc() {
   return true;
 }
 
+/* ── OTP BOXES ── */
+function otpInput(box, idx) {
+  box.value = box.value.replace(/[^0-9]/g, '');
+  if (box.value && idx < 6) {
+    document.getElementById('otp-box-' + (idx + 1)).focus();
+  }
+  syncOtp();
+}
+
+function otpKeydown(e, idx) {
+  if (e.key === 'Backspace') {
+    const box = document.getElementById('otp-box-' + idx);
+    if (!box.value && idx > 1) {
+      document.getElementById('otp-box-' + (idx - 1)).focus();
+    }
+  }
+}
+
+function otpPaste(e) {
+  e.preventDefault();
+  const digits = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+  digits.split('').forEach((d, i) => {
+    const box = document.getElementById('otp-box-' + (i + 1));
+    if (box) box.value = d;
+  });
+  syncOtp();
+  const next = document.getElementById('otp-box-' + Math.min(digits.length + 1, 6));
+  if (next) next.focus();
+}
+
+function syncOtp() {
+  let code = '';
+  for (let i = 1; i <= 6; i++) {
+    code += document.getElementById('otp-box-' + i).value;
+  }
+  document.getElementById('otp-hidden').value = code;
+
+  const btn = document.getElementById('otp-submit');
+  const complete = code.length === 6;
+  btn.disabled      = !complete;
+  btn.style.opacity = complete ? '1' : '0.5';
+  btn.style.cursor  = complete ? 'pointer' : 'not-allowed';
+
+  // Highlight filled boxes
+  for (let i = 1; i <= 6; i++) {
+    const box = document.getElementById('otp-box-' + i);
+    box.style.borderColor = box.value
+      ? 'var(--cyan)'
+      : 'rgba(90,112,144,0.3)';
+    box.style.boxShadow = box.value
+      ? '0 0 0 3px rgba(0,212,255,0.12)'
+      : 'none';
+  }
+}
+
+/* ── OTP COUNTDOWN TIMER ── */
+let otpTimer = null;
+function startOtpTimer(seconds) {
+  clearInterval(otpTimer);
+  const el = document.getElementById('otp-countdown');
+  if (!el) return;
+  let remaining = seconds;
+  otpTimer = setInterval(() => {
+    remaining--;
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    el.textContent = m + ':' + String(s).padStart(2, '0');
+    if (remaining <= 60) el.style.color = 'var(--danger)';
+    if (remaining <= 0) {
+      clearInterval(otpTimer);
+      el.textContent = 'Expired';
+      document.getElementById('otp-submit').disabled = true;
+      document.getElementById('otp-submit').style.opacity = '0.5';
+    }
+  }, 1000);
+}
+
+/* ── Activate OTP screen when it's the initial step ── */
+if (initialStep === 'otp') {
+  goto('s-otp');
+  startOtpTimer(300);
+}
 
 </script>
 </body>

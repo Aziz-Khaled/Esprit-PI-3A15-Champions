@@ -1,5 +1,4 @@
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
+
 
 parameters:
     # --- Configuration Marketplace (Images) ---
@@ -14,6 +13,7 @@ parameters:
 
 services:
     _defaults:
+
         autowire: true      
         autoconfigure: true 
         
@@ -21,8 +21,6 @@ services:
         bind:
             $fraudApiUrl: '%fraud_api_url%'
             $apiKey: '%env(GROQ_API_KEY)%'
-
-    # Chargement automatique des classes du dossier src/
     App\:
         resource: '../src/'
         exclude:
@@ -54,3 +52,8 @@ services:
     App\Controller\BackOffice\:
         resource: '../src/Controller/backOffice/'
         tags: ['controller.service_arguments']
+    App\Service\SmsVerificationService:
+        arguments:
+            $twilioSid:       '%env(TWILIO_SID)%'
+            $twilioToken:     '%env(TWILIO_TOKEN)%'
+            $twilioVerifySid: '%env(TWILIO_VERIFY_SID)%'

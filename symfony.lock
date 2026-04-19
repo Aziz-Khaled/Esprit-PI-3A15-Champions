@@ -38,6 +38,15 @@
     "knplabs/knp-paginator-bundle": {
         "version": "v6.10.0"
     },
+    "knpuniversity/oauth2-client-bundle": {
+        "version": "2.20",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.20",
+            "ref": "1ff300d8c030f55c99219cc55050b97a695af3f6"
+        }
+    },
     "lexik/jwt-authentication-bundle": {
         "version": "2.18",
         "recipe": {
@@ -65,6 +74,19 @@
             "./bin/phpunit"
         ]
     },
+    "scheb/2fa-bundle": {
+        "version": "7.13",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "6.0",
+            "ref": "1e6f68089146853a790b5da9946fc5974f6fcd49"
+        },
+        "files": [
+            "./config/packages/scheb_2fa.yaml",
+            "./config/routes/scheb_2fa.yaml"
+        ]
+    },
     "stripe/stripe-php": {
         "version": "20.0",
         "recipe": {
@@ -72,10 +94,7 @@
             "branch": "main",
             "version": "19.0",
             "ref": "d6829c693e3927a8972c7671d74a1a5c505712b0"
-        },
-        "files": [
-            "./config/packages/stripe.yaml"
-        ]
+        }
     },
     "symfony/asset-mapper": {
         "version": "6.4",
@@ -321,10 +340,7 @@
             "branch": "main",
             "version": "1.1",
             "ref": "0c643e17b5340747b35c2c75e11727fa31bfa9bb"
-        },
-        "files": [
-            "./config/routes/calendar.yaml"
-        ]
+        }
     },
     "twig/extra-bundle": {
         "version": "v3.24.0"
