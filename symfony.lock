@@ -50,6 +50,21 @@
             "./bin/phpunit"
         ]
     },
+<<<<<<< HEAD
+    "stripe/stripe-php": {
+        "version": "20.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "19.0",
+            "ref": "d6829c693e3927a8972c7671d74a1a5c505712b0"
+        },
+        "files": [
+            "./config/packages/stripe.yaml"
+        ]
+    },
+=======
+>>>>>>> 716fbda4e1318175273d282207cce216475e04f1
     "symfony/asset-mapper": {
         "version": "6.4",
         "recipe": {
@@ -121,6 +136,18 @@
             "./src/Kernel.php"
         ]
     },
+<<<<<<< HEAD
+    "symfony/google-mailer": {
+        "version": "6.4",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "4.4",
+            "ref": "f8fd4ddb9b477510f8f4bce2b9c054ab428c0120"
+        }
+    },
+=======
+>>>>>>> 716fbda4e1318175273d282207cce216475e04f1
     "symfony/mailer": {
         "version": "6.4",
         "recipe": {
