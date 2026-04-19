@@ -1,0 +1,185 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Rapport d'Audit - Champions FinTech{% endblock %}
+
+{% block body %}
+<style>
+    :root {
+        --fintech-primary: #0a2540;
+        --fintech-accent: #635bff;
+        --fintech-success: #00d924;
+        --fintech-danger: #ff4d4d;
+        --fintech-warning: #f5a623;
+    }
+
+    body { background-color: #f6f9fc; font-family: 'Inter', -apple-system, sans-serif; }
+    
+    .report-card {
+        border-radius: 16px;
+        background: #ffffff;
+        border: none;
+        overflow: hidden;
+    }
+
+    .header-premium {
+        background: var(--fintech-primary);
+        padding: 2rem;
+        color: white;
+    }
+
+    .kpi-box {
+        padding: 1.5rem;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #edf2f7;
+        transition: transform 0.2s;
+    }
+    
+    .kpi-box:hover { transform: translateY(-5px); }
+
+    .ai-expert-section {
+        background: linear-gradient(135deg, #ffffff 0%, #f1f4ff 100%);
+        border: 1px solid #e0e7ff;
+        border-radius: 16px;
+        position: relative;
+    }
+
+    .ai-badge {
+        position: absolute;
+        top: -12px;
+        left: 20px;
+        background: var(--fintech-accent);
+        color: white;
+        padding: 4px 16px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .report-text {
+        color: #1a1f36;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        white-space: pre-wrap; /* Garde la structure des paragraphes de l'IA */
+    }
+
+    .status-pill {
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 8px 20px !important;
+    }
+
+    .custom-progress {
+        height: 12px;
+        border-radius: 10px;
+        background-color: #e6ebf1;
+    }
+
+    @media print { .no-pdf { display: none !important; } }
+</style>
+
+<div class="container py-5">
+    <div id="report-content" class="report-card shadow-lg">
+        
+        {# Header de Luxe #}
+        <div class="header-premium d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1 fw-bold"><i class="fas fa-microchip me-2"></i>Smart Audit AI</h2>
+                <p class="mb-0 opacity-75">Référence Dossier : #{{ credit.idCredit }} | Compte : {{ rib }}</p>
+            </div>
+            <div class="text-end">
+                <span class="badge rounded-pill status-pill bg-{{ risqueClasse }} mb-2">
+                    NIVEAU : {{ risqueNiveau }}
+                </span>
+                <div class="no-pdf mt-2">
+                    <button onclick="generatePDF()" class="btn btn-sm btn-light shadow-sm">
+                        <i class="fas fa-download me-1"></i> Exporter PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-5">
+            {# KPIs Financiers #}
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="kpi-box">
+                        <small class="text-muted fw-bold">SOLDE ACTUEL</small>
+                        <h3 class="fw-bold text-dark mt-2">{{ walletBalance|number_format(2, ',', ' ') }} <small>{{ credit.devise }}</small></h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="kpi-box" style="border-top: 4px solid var(--fintech-accent);">
+                        <small class="text-muted fw-bold">BESOIN DE FINANCEMENT</small>
+                        <h3 class="fw-bold text-primary mt-2">{{ remainingAmount|number_format(2, ',', ' ') }} <small>{{ credit.devise }}</small></h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="kpi-box">
+                        <small class="text-muted fw-bold">RATIO D'EXPOSITION</small>
+                        <h3 class="fw-bold text-{{ risqueClasse }} mt-2">{{ pourcentage|number_format(1) }} %</h3>
+                    </div>
+                </div>
+            </div>
+
+            {# Barre d'exposition stylisée #}
+            <div class="mb-5">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-bold text-muted small">Indice de risque financier</span>
+                    <span class="fw-bold text-{{ risqueClasse }}">{{ pourcentage|number_format(0) }}%</span>
+                </div>
+                <div class="progress custom-progress">
+                    <div class="progress-bar bg-{{ risqueClasse }}" 
+                         role="progressbar" 
+                         style="width: {{ pourcentage > 100 ? 100 : pourcentage }}%"></div>
+                </div>
+            </div>
+
+            {# Section Analyse IA #}
+            <div class="ai-expert-section p-4 mb-4">
+                <div class="ai-badge shadow-sm"><i class="fas fa-brain me-1"></i> ANALYSE PROFONDE</div>
+                <div class="report-text mt-3">
+                    {{ aiAnalysis|raw }} {# Utilise raw si ton service renvoie du HTML ou Markdown #}
+                </div>
+            </div>
+
+            {# Note d'information #}
+            <div class="alert alert-light border-0 py-3 shadow-sm d-flex align-items-center">
+                <i class="fas fa-info-circle text-primary me-3 fa-lg"></i>
+                <div class="small text-muted">
+                    Cet audit a été généré dynamiquement par l'intelligence artificielle <strong>Champions AI</strong>. 
+                    Il prend en compte la viabilité du projet <strong>"{{ credit.projet ? credit.projet.title : 'N/A' }}"</strong> par rapport aux conditions réelles du marché.
+                </div>
+            </div>
+
+            {# Actions #}
+            <div class="d-flex justify-content-between align-items-center mt-5 no-pdf">
+                <a href="{{ path('app_credit_investor_index') }}" class="text-decoration-none text-muted fw-bold">
+                    <i class="fas fa-chevron-left me-2"></i> Revenir aux dossiers
+                </a>
+                
+                <a href="{{ path('app_credit_new_negociation', {'id': credit.idCredit}) }}"
+                   class="btn btn-{{ risqueClasse == 'danger' ? 'secondary' : 'primary' }} btn-lg px-5 py-3 shadow fw-bold">
+                    <i class="fas fa-rocket me-2"></i> {{ risqueClasse == 'danger' ? 'REVOIR LES CONDITIONS' : 'PROPOSER UNE OFFRE' }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    function generatePDF() {
+        const element = document.getElementById('report-content');
+        const opt = {
+            margin: [10, 5, 10, 5],
+            filename: 'Audit_Champions_{{ credit.idCredit }}.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 3, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+</script>
+{% endblock %}

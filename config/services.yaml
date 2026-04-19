@@ -1,3 +1,4 @@
+
 # config/services.yaml fusionné
 parameters:
     # Tes paramètres (Blockchain/WhatsApp)
@@ -12,14 +13,17 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
+        # On garde uniquement ce qui est nécessaire pour les autres modules
+        bind:
+            $apiKey: '%env(GROQ_API_KEY)%'
 
+    # Chargement automatique des classes du dossier src/
     App\:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
-
     App\Service\StripeService:
         arguments:
             $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
@@ -31,3 +35,8 @@ services:
     App\Controller\BackOffice\:
         resource: '../src/Controller/backOffice/'
         tags: ['controller.service_arguments']
+
+    # Enregistrement explicite de ton nouveau service métier
+    App\Service\SmartContractGenerator:
+        autowire: true
+

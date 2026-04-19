@@ -34,24 +34,70 @@
                         <td class="ps-4 fw-bold">{{ offre.credit.projet.title }}</td>
                         <td>{{ offre.utilisateur.nom }}</td>
                         <td class="text-primary fw-bold">{{ offre.montant }} DT</td>
-                        <td><span class="badge bg-light text-dark border">{{ offre.taux_propose }}%</span></td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                {{ offre.tauxPropose }}%
+                            </span>
+                        </td>
                         <td class="text-end pe-4">
                             <div class="d-flex justify-content-end gap-2">
+                                {# Action Accepter #}
                                 <form action="{{ path('app_front_negociation_accept', {id: offre.id_negociation}) }}" method="post">
-                                    <button class="btn btn-sm btn-success rounded-pill px-3">Accepter</button>
+                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">Accepter</button>
                                 </form>
+                                
+                                {# Action Rejeter #}
                                 <form action="{{ path('app_front_negociation_delete', {id: offre.id_negociation}) }}" method="post" onsubmit="return confirm('Confirmer le rejet ?');">
-                                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3">Rejeter</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">Rejeter</button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="5" class="text-center py-5 text-muted">Aucune offre reçue.</td></tr>
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">Aucune offre reçue.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {# Intégration de SweetAlert2 pour le popup #}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {# On récupère le flash message 'success_json' envoyé par le contrôleur #}
+            {% for message in app.flashes('success_json') %}
+                try {
+                    const data = {{ message|raw }};
+                    
+                    Swal.fire({
+                        title: '<strong>' + data.titre + '</strong>',
+                        icon: 'success',
+                        html: `
+                            <div class="text-center mt-3">
+                                <p class="text-muted">${data.message}</p>
+                                <div class="p-3 bg-light rounded border">
+                                    <span class="d-block small text-uppercase fw-bold text-secondary">Montant restant à financer</span>
+                                    <h3 class="text-primary mb-0">${data.reste}</h3>
+                                </div>
+                                ${data.isComplet ? '<div class="badge bg-success mt-3 p-2">Financement terminé ! ✅</div>' : ''}
+                            </div>
+                        `,
+                        showCloseButton: true,
+                        focusConfirm: false,
+                        confirmButtonText: '<i class="fa fa-thumbs-up"></i> Super !',
+                        confirmButtonColor: '#0d6efd'
+                    });
+                } catch (e) {
+                    console.error("Erreur lors de la lecture du message flash JSON", e);
+                }
+            {% endfor %}
+        });
+    </script>
 {% endblock %}
