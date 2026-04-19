@@ -6,8 +6,9 @@ use App\Entity\Order;
 use App\Entity\OrderItem;
 use App\Repository\ProductRepository;
 use App\Repository\UtilisateurRepository;
-use App\Repository\CurrencyRepository;
+use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,24 +44,18 @@ class CartController extends AbstractController
     }
 
     #[Route('/add/{id}', name: 'app_cart_add')]
-    public function add($id, SessionInterface $session, ProductRepository $productRepository): Response
+    public function add($id, SessionInterface $session): Response
     {
-        $product = $productRepository->find($id);
-        if (!$product) {
-            return $this->redirectToRoute('app_marketplace_index');
-        }
-
         $panier = $session->get('panier', []);
-        $currentQty = $panier[$id] ?? 0;
 
-        // Check stock: do not allow more than available stock
-        if ($currentQty >= $product->getStock()) {
-            $this->addFlash('error', 'Quantité maximale atteinte ! Stock disponible : ' . $product->getStock());
-            return $this->redirectToRoute('app_marketplace_index');
+        if (!empty($panier[$id])) {
+            $panier[$id]++;
+        } else {
+            $panier[$id] = 1;
         }
 
-        $panier[$id] = $currentQty + 1;
         $session->set('panier', $panier);
+
 
         return $this->redirectToRoute('app_marketplace_index');
     }
@@ -70,21 +65,9 @@ class CartController extends AbstractController
     {
         $panier = $session->get('panier', []);
         $action = $request->request->get('action');
-        
+
         if (!empty($panier[$id])) {
-            $product = $productRepository->find($id);
             if ($action === 'plus') {
-                // Check stock: do not allow more than available stock
-                if ($product && $panier[$id] >= $product->getStock()) {
-                    return $this->json([
-                        'success' => false,
-                        'error' => 'Stock maximum atteint (' . $product->getStock() . ' unités)',
-                        'quantity' => $panier[$id],
-                        'subtotal' => ($product->getDiscountPrice() ?: $product->getPrice()) * $panier[$id],
-                        'total' => $this->calculateTotal($panier, $productRepository),
-                        'cartCount' => count($panier)
-                    ]);
-                }
                 $panier[$id]++;
             } elseif ($action === 'minus') {
                 if ($panier[$id] > 1) {
@@ -101,13 +84,13 @@ class CartController extends AbstractController
                 }
             }
         }
-        
+
         $session->set('panier', $panier);
-        
+
         $total = 0;
         $itemSubtotal = 0;
         $itemQty = 0;
-        
+
         foreach ($panier as $pid => $qty) {
             $product = $productRepository->find($pid);
             if ($product) {
@@ -120,7 +103,7 @@ class CartController extends AbstractController
                 }
             }
         }
-        
+
         return $this->json([
             'success' => true,
             'quantity' => $itemQty,
@@ -152,24 +135,22 @@ class CartController extends AbstractController
         }
 
         $session->set('panier', $panier);
-        $this->addFlash('info', 'Product removed.');
+
 
         return $this->redirectToRoute('app_cart_index');
     }
 
     #[Route('/checkout', name: 'app_cart_checkout', methods: ['GET', 'POST'])]
-    public function checkout(Request $request, SessionInterface $session, ProductRepository $productRepository, UtilisateurRepository $userRepo, CurrencyRepository $currencyRepo, EntityManagerInterface $em): Response
+    public function checkout(Request $request, SessionInterface $session, ProductRepository $productRepository, UtilisateurRepository $userRepo, EntityManagerInterface $em, EmailService $emailService, LoggerInterface $logger): Response
     {
         $panier = $session->get('panier', []);
         if (empty($panier)) {
-            $this->addFlash('warning', 'Your cart is empty.');
             return $this->redirectToRoute('app_marketplace_index');
         }
 
         if ($request->isMethod('POST')) {
             $user = $userRepo->findOneBy([]);
             if (!$user) {
-                $this->addFlash('danger', 'User not found.');
                 return $this->redirectToRoute('app_marketplace_index');
             }
 
@@ -177,12 +158,11 @@ class CartController extends AbstractController
             $order->setUtilisateur($user);
             $order->setOrderDate(new \DateTime());
             $order->setStatus('pending_payment');
-            
-            // Get from form
-            $order->setPaymentMethod($request->request->get('payment_method'));
+
+            $order->setPaymentMethod('BTC');
             $order->setShippingAddress($request->request->get('address'));
             $order->setPhoneNumber($request->request->get('phone'));
-            
+
             $totalAmount = 0;
             foreach ($panier as $id => $quantity) {
                 $product = $productRepository->find($id);
@@ -211,19 +191,33 @@ class CartController extends AbstractController
             $em->persist($order);
             $em->flush();
 
-            $session->remove('panier');
-            $this->addFlash('success', 'Order placed successfully! Please finalize the ' . $order->getPaymentMethod() . ' payment.');
+            $emailSent = false;
+                        $userEmail = "Mohamedalaaeddine.Hedfi@esprit.tn";
 
-            return $this->redirectToRoute('app_order_index');
+            if (filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+                try {
+                    $emailService->sendOrderConfirmation($order, $userEmail);
+                    $emailSent = true;
+                } catch (\Throwable $e) {
+                    $logger->error('Order confirmation email failed', [
+                        'order_id' => $order->getId(),
+                        'recipient' => $userEmail,
+                        'exception' => $e,
+                    ]);
+
+                }
+            }
+
+            $session->remove('panier');
+
+
+            return $this->redirectToRoute('app_order_receipt', ['id' => $order->getId()]);
         }
 
-        // GET: Show checkout form
         $total = $this->calculateTotal($panier, $productRepository);
-        $currencies = $currencyRepo->findAll();
 
         return $this->render('frontOffice/cart/checkout.html.twig', [
             'total' => $total,
-            'currencies' => $currencies
         ]);
     }
 }

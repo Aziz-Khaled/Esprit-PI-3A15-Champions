@@ -7,11 +7,14 @@
 /public/bundles/
 /var/
 /vendor/
+<<<<<<< HEAD
 
 
 
 
 
+=======
+>>>>>>> origin/module-marketplace
 ###< symfony/framework-bundle ###
 
 ###> phpunit/phpunit ###
@@ -23,6 +26,7 @@
 
 /assets/vendor/
 ###< symfony/asset-mapper ###
+<<<<<<< HEAD
 
 
 /public/uploads/users/selfies/*
@@ -32,3 +36,5 @@
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
 
+=======
+>>>>>>> origin/module-marketplace

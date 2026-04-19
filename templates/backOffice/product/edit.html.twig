@@ -68,10 +68,23 @@
                         </div>
                     </div>
 
-                    <div class="form-group mb-4">
-                        <label class="text-info font-weight-bold small text-uppercase letter-spacing-1">Description Technique</label>
+                    <div class="form-group mb-4 position-relative">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="text-info font-weight-bold small text-uppercase letter-spacing-1 mb-0">Description Technique</label>
+                            <div class="ai-tools d-flex gap-2">
+                                <button type="button" id="ai-generate-btn" class="btn btn-sm btn-outline-info shadow-sm rounded-pill px-3 py-1 scale-hover">
+                                    <i class="fas fa-magic mr-1"></i> <span class="small font-weight-bold">Générer avec IA</span>
+                                </button>
+                                <button type="button" id="ai-refine-btn" class="btn btn-sm btn-outline-success shadow-sm rounded-pill px-3 py-1 scale-hover">
+                                    <i class="fas fa-spell-check mr-1"></i> <span class="small font-weight-bold">Corriger avec IA</span>
+                                </button>
+                            </div>
+                        </div>
                         {{ form_widget(form.description, {'attr': {'class': 'form-control upgraded-input border-info-light', 'rows': 4}}) }}
                         <div class="text-danger small mt-1">{{ form_errors(form.description) }}</div>
+                        <div id="ai-loader" class="mt-2 small text-info font-weight-bold" style="display: none;">
+                            <i class="fas fa-circle-notch fa-spin mr-2"></i> Gemini est en train de réfléchir...
+                        </div>
                     </div>
 
                     <div class="row mb-4">
@@ -147,16 +160,116 @@
     .upgraded-submit { transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-weight: 800; text-transform: uppercase; letter-spacing: 0.12rem; border: none; }
     .upgraded-submit:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 15px 35px rgba(54, 185, 204, 0.35) !important; }
     
+    .scale-hover { transition: 0.2s; }
+    .scale-hover:hover { transform: scale(1.05); }
+
     .custom-file-label { padding-top: 0.8rem; height: calc(1.5em + 1.25rem + 5px); background: #fcfcfc; color: #6e707e; font-weight: 500; }
     .bg-gray-50 { background-color: #f9fafb; }
+    .gap-2 { gap: 0.5rem; }
     .gap-3 { gap: 1rem; }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // File input sync
         $('.custom-file-input').on('change', function() {
             var fileName = $(this).val().split('\\').pop();
             $(this).siblings('.custom-file-label').addClass("selected").html(fileName);
+        });
+
+        // Dynamic IDs from Symfony Form
+        const descField = document.getElementById('{{ form.description.vars.id }}');
+        const nameField = document.getElementById('{{ form.name.vars.id }}');
+        const catField  = document.getElementById('{{ form.category.vars.id }}');
+        const loader = document.getElementById('ai-loader');
+
+        // AI Generation Logic
+        document.getElementById('ai-generate-btn').addEventListener('click', function() {
+            const nameValue = nameField ? nameField.value : '';
+            const catValue  = catField ? catField.value : '';
+
+            if (!nameValue) {
+                alert('Veuillez saisir le nom du produit pour générer une description.');
+                return;
+            }
+
+            loader.style.display = 'block';
+            this.disabled = true;
+
+            const formData = new URLSearchParams();
+            formData.append('name', nameValue);
+            formData.append('category', catValue);
+
+            fetch('{{ path("app_back_product_ai_generate") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Generation error: ' + response.statusText);
+                return response.json();
+            })
+            .then(data => {
+                loader.style.display = 'none';
+                this.disabled = false;
+                if (data.description && descField) {
+                    descField.value = data.description;
+                } else if (data.error) {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                this.disabled = false;
+                console.error('Error:', error);
+                alert('Erreur: ' + error.message);
+            });
+        });
+
+        // AI Refinement Logic
+        document.getElementById('ai-refine-btn').addEventListener('click', function() {
+            const currentDesc = descField ? descField.value : '';
+
+            if (!currentDesc) {
+                alert('Veuillez saisir une description à corriger.');
+                return;
+            }
+
+            loader.style.display = 'block';
+            this.disabled = true;
+
+            const formData = new URLSearchParams();
+            formData.append('description', currentDesc);
+
+            fetch('{{ path("app_back_product_ai_refine") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Refine error: ' + response.statusText);
+                return response.json();
+            })
+            .then(data => {
+                loader.style.display = 'none';
+                this.disabled = false;
+                if (data.description && descField) {
+                    descField.value = data.description;
+                } else if (data.error) {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                this.disabled = false;
+                console.error('Error:', error);
+            });
         });
     });
 </script>

@@ -7,8 +7,10 @@ use App\Entity\Transaction;
 use App\Repository\OrderRepository;
 use App\Repository\UtilisateurRepository;
 use App\Repository\CurrencyRepository;
+use App\Service\OrderReceiptPdfGenerator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -26,11 +28,48 @@ class OrderController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/receipt', name: 'app_order_receipt', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function receipt(Order $order, UtilisateurRepository $userRepo): Response
+    {
+        $user = $userRepo->findOneBy([]);
+        if (!$user || $order->getUtilisateur()?->getIdUser() !== $user->getIdUser()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        return $this->render('frontOffice/order/receipt.html.twig', [
+            'order' => $order,
+        ]);
+    }
+
+    #[Route('/{id}/receipt/download', name: 'app_order_receipt_download', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function downloadReceiptPdf(
+        Order $order,
+        UtilisateurRepository $userRepo,
+        OrderReceiptPdfGenerator $orderReceiptPdfGenerator
+    ): Response {
+        $user = $userRepo->findOneBy([]);
+        if (!$user || $order->getUtilisateur()?->getIdUser() !== $user->getIdUser()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $pdf = $orderReceiptPdfGenerator->generateForOrder($order);
+
+        $response = new Response($pdf);
+        $disposition = $response->headers->makeDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            sprintf('recu-commande-%d.pdf', $order->getId())
+        );
+
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->headers->set('Content-Disposition', $disposition);
+
+        return $response;
+    }
+
     #[Route('/pay/{id}', name: 'app_order_pay', methods: ['POST'])]
     public function pay(Order $order, EntityManagerInterface $entityManager, CurrencyRepository $currencyRepo): Response
     {
         if ($order->getStatus() !== 'pending_payment') {
-            $this->addFlash('error', 'Commande déjà payée ou invalide.');
             return $this->redirectToRoute('app_order_index');
         }
 
@@ -64,7 +103,7 @@ class OrderController extends AbstractController
         $entityManager->persist($transaction);
         $entityManager->flush();
 
-        $this->addFlash('success', 'Paiement crypto réussi ! Transaction ' . $transaction->getIdTransaction() . ' générée.');
+
 
         return $this->redirectToRoute('app_order_index');
     }
@@ -75,7 +114,6 @@ class OrderController extends AbstractController
         if ($order->getStatus() === 'pending_payment') {
             $order->setStatus('cancelled');
             $entityManager->flush();
-            $this->addFlash('info', 'Commande annulée.');
         }
 
         return $this->redirectToRoute('app_order_index');

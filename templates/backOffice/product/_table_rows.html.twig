@@ -5,7 +5,7 @@
                 <div class="mr-3">
                     {% if product.imageUrl %}
                         <div class="image-wrapper shadow-sm rounded-lg overflow-hidden border">
-                            <img src="{{ asset('uploads/products/' ~ product.imageUrl) }}" class="img-fluid" style="width: 50px; height: 50px; object-fit: cover;" alt="{{ product.name }}">
+                            <img src="{{ product.imageUrl|slice(0, 4) == 'http' ? product.imageUrl : asset('uploads/products/' ~ product.imageUrl) }}" class="img-fluid" style="width: 50px; height: 50px; object-fit: cover;" alt="{{ product.name }}">
                         </div>
                     {% else %}
                         <div class="rounded-lg bg-gray-100 d-flex align-items-center justify-content-center border" style="width: 50px; height: 50px;">

@@ -70,11 +70,18 @@
 <div class="row g-5 mt-2 px-2" id="front-products-grid">
     {% for product in products %}
     <div class="col-sm-6 col-lg-6 col-xl-4 col-xxl-3 product-card-col">
-        <div class="card h-100 premium-card transition-premium overflow-hidden p-0 border-0 bg-white">
+        <div class="card h-100 premium-card transition-premium p-0 border-0 bg-white" style="position: relative;">
+            <!-- Wishlist Heart Button - Top Right -->
+            <button class="wishlist-btn-floating btn p-0 d-flex align-items-center justify-content-center"
+                    data-id="{{ product.id }}"
+                    style="position: absolute; top: 22px; right: 22px; width: 40px; height: 40px; z-index: 10; background: rgba(255,255,255,0.95); border-radius: 50%; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer;">
+                <i class="{{ product.id in app.session.get('wishlist', []) ? 'fas' : 'far' }} fa-heart" style="color: #ef4444; font-size: 1rem; pointer-events: none;"></i>
+            </button>
+
             <!-- Media Area -->
             <div class="media-container position-relative overflow-hidden m-3 rounded-5 bg-soft-light d-flex align-items-center justify-content-center">
                 {% if product.imageUrl %}
-                    <img src="{{ asset('uploads/products/' ~ product.imageUrl) }}" class="card-img-top premium-img" alt="{{ product.name }}">
+                    <img src="{{ product.imageUrl|slice(0, 4) == 'http' ? product.imageUrl : asset('uploads/products/' ~ product.imageUrl) }}" class="card-img-top premium-img" alt="{{ product.name }}">
                 {% else %}
                     <div class="placeholder-icon text-center">
                         <i class="fas fa-cube fa-6x text-gradient-blue opacity-25"></i>
@@ -147,6 +154,15 @@
         </div>
     </div>
     {% endfor %}
+</div>
+
+{# ========== PAGINATION ========== #}
+<div class="row mt-5">
+    <div class="col-12 d-flex justify-content-center" id="front-pagination-container">
+        <div class="navigation premium-pagination">
+            {{ knp_pagination_render(products) }}
+        </div>
+    </div>
 </div>
 
 <style>
@@ -275,9 +291,11 @@
 
     /* ========== Premium Card Design ========== */
     .premium-card { 
+        position: relative;
         border-radius: 32px !important; 
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
         box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        z-index: 1;
     }
     .premium-card:hover { 
         transform: translateY(-12px); 
@@ -350,6 +368,49 @@
     .product-card-col:nth-child(8) { animation-delay: 0.4s; }
 
     .stock-status-out { color: #ef4444; font-size: 0.7rem; font-weight: 800; }
+
+    /* ========== Premium Pagination Styling ========== */
+    .premium-pagination .pagination {
+        display: flex;
+        gap: 8px;
+        border: none;
+    }
+    .premium-pagination .page-item .page-link {
+        border-radius: 12px !important;
+        border: 2px solid #e2e8f0;
+        color: #64748b;
+        font-weight: 700;
+        padding: 10px 18px;
+        transition: 0.3s;
+        background: white;
+    }
+    .premium-pagination .page-item.active .page-link {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        color: white;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    .premium-pagination .page-item .page-link:hover:not(.active) {
+        background-color: #f8fafc;
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+    .premium-pagination .page-item.disabled .page-link {
+        opacity: 0.5;
+        border-color: #e2e8f0;
+    }
+
+    /* Wishlist Heart Animation */
+    @keyframes heartBeat {
+        0% { transform: scale(1); }
+        15% { transform: scale(1.3); }
+        30% { transform: scale(1); }
+        45% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    .animate-heart {
+        animation: heartBeat 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
 </style>
 {% endblock %}
 
@@ -366,9 +427,12 @@
     var clearBtn = document.getElementById('front-clear-btn');
     var countBadge = document.getElementById('front-product-count');
     var currentDir = 'ASC';
+    var currentPage = 1;
     var debounceTimer = null;
 
-    function frontSearch() {
+    function frontSearch(page) {
+        if (page) currentPage = page;
+        
         var q = searchInput.value.trim();
         var sort = sortField.value;
         var dir = currentDir;
@@ -383,8 +447,9 @@
 
         var url = '{{ path("app_marketplace_ajax_search") }}' + 
                   '?q=' + encodeURIComponent(q) + 
-                  '&sort=' + encodeURIComponent(sort) + 
-                  '&dir=' + encodeURIComponent(dir);
+                  '&sortBy=' + encodeURIComponent(sort) + 
+                  '&sortDir=' + encodeURIComponent(dir) +
+                  '&page=' + currentPage;
 
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
@@ -400,6 +465,12 @@
                     // Update count badge
                     var cardCount = grid.querySelectorAll('.product-card-col').length;
                     countBadge.innerHTML = '<i class="fas fa-cube me-1"></i> ' + cardCount + ' produits';
+                    
+                    // Attach event listeners to new pagination links
+                    attachPaginationEvents();
+                    
+                    // Scroll to top of grid
+                    grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } else {
                     console.error('AJAX search failed:', xhr.status);
                 }
@@ -408,24 +479,43 @@
         xhr.send();
     }
 
+    function attachPaginationEvents() {
+        var links = grid.querySelectorAll('.premium-pagination a');
+        links.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Extract page number from URL
+                var urlParams = new URLSearchParams(this.getAttribute('href').split('?')[1]);
+                var page = urlParams.get('page') || 1;
+                frontSearch(page);
+            });
+        });
+    }
+
     // Debounced live search on input
     searchInput.addEventListener('input', function() {
+        currentPage = 1; // Reset to page 1 on search
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(frontSearch, 300);
     });
 
     // Instant search on sort change
-    sortField.addEventListener('change', frontSearch);
+    sortField.addEventListener('change', function() {
+        currentPage = 1;
+        frontSearch();
+    });
 
     // Direction toggle buttons
     ascBtn.addEventListener('click', function() {
         currentDir = 'ASC';
+        currentPage = 1;
         ascBtn.classList.add('active');
         descBtn.classList.remove('active');
         frontSearch();
     });
     descBtn.addEventListener('click', function() {
         currentDir = 'DESC';
+        currentPage = 1;
         descBtn.classList.add('active');
         ascBtn.classList.remove('active');
         frontSearch();
@@ -434,17 +524,64 @@
     // Clear search
     clearBtn.addEventListener('click', function() {
         searchInput.value = '';
+        currentPage = 1;
         clearBtn.style.display = 'none';
         frontSearch();
     });
+
+    // Initial attachment for existing pagination (if any on first load)
+    attachPaginationEvents();
 
     // Enter key triggers search
     searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
+            currentPage = 1;
             frontSearch();
         }
     });
+
+    // Wishlist Toggle Event Delegation
+    grid.addEventListener('click', function(e) {
+        var btn = e.target.closest('.wishlist-btn-floating');
+        if (btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            var productId = btn.getAttribute('data-id');
+            toggleWishlist(btn, productId);
+        }
+    });
+
+    function toggleWishlist(btn, id) {
+        var icon = btn.querySelector('i');
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.7';
+        
+        var url = '{{ path("app_wishlist_toggle", {id: "999999"}) }}'.replace('999999', id);
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+                if (xhr.status === 200) {
+                    var resp = JSON.parse(xhr.responseText);
+                    if (resp.isWishlisted) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas', 'animate-heart');
+                        icon.style.color = '#ef4444';
+                    } else {
+                        icon.classList.remove('fas', 'animate-heart');
+                        icon.classList.add('far');
+                        icon.style.color = '#ef4444';
+                    }
+                }
+            }
+        };
+        xhr.send();
+    }
 })();
 </script>
 {% endblock %}

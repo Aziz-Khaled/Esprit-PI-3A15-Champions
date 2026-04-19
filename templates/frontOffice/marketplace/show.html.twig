@@ -2,8 +2,6 @@
 
 {% block title %}{{ product.name }} - Détails Produit{% endblock %}
 
-
-
 {% block body %}
 <!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="mb-4 mt-n2">
@@ -19,7 +17,7 @@
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-light p-4 sticky-top" style="top: 100px;">
             <div class="d-flex align-items-center justify-content-center bg-white rounded-4 shadow-sm" style="min-height: 450px;">
                 {% if product.imageUrl %}
-                    <img src="{{ asset('uploads/products/' ~ product.imageUrl) }}" class="img-fluid transition-all hover-scale" style="max-height: 400px; object-fit: contain;">
+                    <img src="{{ product.imageUrl|slice(0, 4) == 'http' ? product.imageUrl : asset('uploads/products/' ~ product.imageUrl) }}" class="img-fluid transition-all hover-scale" style="max-height: 400px; object-fit: contain;">
                 {% else %}
                     <i class="fas fa-box fa-8x text-blue-100 opacity-50"></i>
                 {% endif %}
@@ -120,9 +118,61 @@
             </div>
         </div>
     </div>
+    <!-- AI Recommendations Section -->
+    <div class="mt-5 pt-5 border-top">
+        <div class="d-flex align-items-center justify-content-between mb-5">
+            <div>
+                <h2 class="h3 fw-black text-gray-900 mb-1">Recommandé pour vous</h2>
+                <p class="text-muted small mb-0"><i class="fas fa-magic text-primary me-2"></i> Propulsé par Gemini AI Vision</p>
+            </div>
+            <a href="{{ path('app_marketplace_index') }}" class="btn btn-link text-primary fw-bold text-decoration-none p-0">
+                Explorer tout le marché <i class="fas fa-long-arrow-alt-right ms-2"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for rec in recommendations %}
+                {% set p = rec.product %}
+                <div class="col-6 col-md-3">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden transition-all hov-up bg-white p-2">
+                        <div class="card-img-container bg-light rounded-4 d-flex align-items-center justify-content-center mb-3" style="height: 180px;">
+                            <a href="{{ path('app_marketplace_product_show', {id: p.id}) }}">
+                                {% if p.imageUrl %}
+                                    <img src="{{ p.imageUrl|slice(0, 4) == 'http' ? p.imageUrl : asset('uploads/products/' ~ p.imageUrl) }}" class="img-fluid" style="max-height: 140px; object-fit: contain;">
+                                {% else %}
+                                    <i class="fas fa-cube text-blue-100 fa-4x opacity-50"></i>
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="card-body p-2 text-center">
+                            <h6 class="fw-black mb-1 text-truncate" title="{{ p.name }}">{{ p.name }}</h6>
+                            <p class="text-primary font-weight-bold small mb-2">{{ p.price }} BTC</p>
+                            
+                            <!-- AI Reason -->
+                            <div class="bg-primary-soft rounded-3 p-2 mb-3 x-small text-muted" style="min-height: 60px;">
+                                <i class="fas fa-quote-left opacity-25 me-1"></i> {{ rec.reason }}
+                            </div>
+
+                            <a href="{{ path('app_marketplace_product_show', {id: p.id}) }}" class="btn btn-soft-primary btn-sm rounded-pill w-100 fw-bold">Détails</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 text-center py-4">
+                    <p class="text-muted small">Aucune recommandation disponible pour le moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 
 <style>
+    .bg-soft-primary { background-color: #f0f7ff; color: #3b82f6; }
+    .bg-soft-primary:hover { background-color: #3b82f6; color: white; }
+    .btn-soft-primary { background-color: #f0f7ff; color: #3b82f6; border: none; }
+    .btn-soft-primary:hover { background-color: #3b82f6; color: white; }
+    .card-img-container { transition: 0.3s; }
+    .card:hover .card-img-container { background-color: #e2e8f0; }
     .fw-black { font-weight: 800; }
     .text-gray-900 { color: #0f172a; }
     .x-small { font-size: 0.72rem; }

@@ -115,7 +115,7 @@
             <div class="card shadow-lg border-0 rounded-xl overflow-hidden mb-4 mt-n2">
                 <div class="card-body p-0 text-center bg-gray-50 position-relative">
                     {% if product.imageUrl %}
-                        <img src="{{ asset('uploads/products/' ~ product.imageUrl) }}" class="img-fluid w-100" style="min-height: 300px; max-height: 500px; object-fit: cover;" alt="{{ product.name }}">
+                        <img src="{{ product.imageUrl|slice(0, 4) == 'http' ? product.imageUrl : asset('uploads/products/' ~ product.imageUrl) }}" class="img-fluid w-100" style="min-height: 300px; max-height: 500px; object-fit: cover;" alt="{{ product.name }}">
                         <div class="img-overlay-brand p-3 text-white text-right">
                             <span class="badge badge-dark opacity-75 px-3 py-1 font-weight-light">{{ product.brand ?: 'Fintech Asset' }}</span>
                         </div>

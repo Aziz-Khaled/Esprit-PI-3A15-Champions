@@ -18,118 +18,70 @@
 <body id="page-top">
 
     <!-- Page Wrapper -->
-    <div id="wrapper">        
+    <div id="wrapper">
+
         <!-- Sidebar -->
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ path('app_admin_panel') }}">
-                <div class="sidebar-brand-text mx-3">NexVault Admin panel</div>
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-laugh-wink"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">SB Admin <sup>2</sup></div>
             </a>
 
+            <!-- Divider -->
             <hr class="sidebar-divider my-0">
 
-            <!-- Dashboard -->
-            <li class="nav-item active">
+            <!-- Nav Item - Dashboard -->
+            <li class="nav-item">
                 <a class="nav-link" href="{{ path('app_admin_panel') }}">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
 
+            <!-- Divider -->
             <hr class="sidebar-divider">
-            <div class="sidebar-heading">User Management</div>
 
-            <!-- Pending Approvals -->
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('app_admin_pending_users') }}">
-                    <i class="fas fa-fw fa-user-clock"></i>
-                    <span>Pending Approvals</span>
-                </a>
-            </li>
-
-            <!-- All Users -->
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('app_admin_users_list') }}">
-                    <i class="fas fa-fw fa-users"></i>
-                    <span>Users</span>
-                </a>
-            </li>
-
-            <hr class="sidebar-divider">
-            <div class="sidebar-heading">Trading</div>
-
-            <!-- Assets -->
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('app_backoffice_asset_index') }}">
-                    <i class="fas fa-fw fa-coins"></i>
-                    <span>Assets</span>
-                </a>
-            </li>
-
-            <hr class="sidebar-divider">
+            <!-- Heading -->
             <div class="sidebar-heading">Interface</div>
 
-            <!-- Assets -->
+            <!-- Nav Item - Products -->
             <li class="nav-item">
                 <a class="nav-link" href="{{ path('app_back_product_index') }}">
-                    <i class="fas fa-fw fa-coins"></i>
+                    <i class="fas fa-fw fa-box"></i>
                     <span>Produits</span>
                 </a>
             </li>
 
-             <li class="nav-item">
+            <!-- Nav Item - Orders -->
+            <li class="nav-item">
                 <a class="nav-link" href="{{ path('app_back_order_index') }}">
-                    <i class="fas fa-fw fa-coins"></i>
+                    <i class="fas fa-fw fa-shopping-cart"></i>
                     <span>Commandes</span>
                 </a>
             </li>
 
+            <!-- Nav Item - Pages Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
+                    aria-expanded="true" aria-controls="collapseTwo">
+                    <i class="fas fa-fw fa-cog"></i>
+                    <span>Components</span>
+                </a>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Custom Components:</h6>
+                        <a class="collapse-item" href="#">Buttons</a>
+                        <a class="collapse-item" href="#">Cards</a>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Divider -->
             <hr class="sidebar-divider">
-            <div class="sidebar-heading">Billing</div>
-                
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('app_admin_transactions') }}">
-                    <i class="fas fa-fw fa-coins"></i>
-                    <span>transactions</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('app_admin_currency_index') }}">
-                    <i class="fas fa-fw fa-coins"></i>
-                    <span>Currencies</span>
-                </a>
-            </li>
-
-            <hr class="sidebar-divider">
-            <div class="sidebar-heading">Formations</div>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('app_admin_formation_index') }}">
-                    <i class="fas fa-fw fa-graduation-cap"></i>
-                    <span>Formations</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('app_admin_certificat_index') }}">
-                    <i class="fas fa-fw fa-certificate"></i>
-                    <span>Certificats</span>
-                </a>
-            </li>
-            <hr class="sidebar-divider">
-            <!-- Logout -->
-            <li class="nav-item">
-                <a class="nav-link" href="{{ path('app_logout') }}">
-                    <i class="fas fa-fw fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
-
-            
-
-            <hr class="sidebar-divider d-none d-md-block">
 
             <!-- Sidebar Toggler -->
             <div class="text-center d-none d-md-inline">
@@ -137,7 +89,6 @@
             </div>
 
         </ul>
-        
         <!-- End of Sidebar -->
 
         <!-- Content Wrapper -->

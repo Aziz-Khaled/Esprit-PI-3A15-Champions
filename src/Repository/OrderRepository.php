@@ -16,28 +16,33 @@ class OrderRepository extends ServiceEntityRepository
         parent::__construct($registry, Order::class);
     }
 
-//    /**
-//     * @return Order[] Returns an array of Order objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('o')
-//            ->andWhere('o.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('o.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function getTotalRevenue(): float
+    {
+        return (float) $this->createQueryBuilder('o')
+            ->select('SUM(o.totalAmount)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 
-//    public function findOneBySomeField($value): ?Order
-//    {
-//        return $this->createQueryBuilder('o')
-//            ->andWhere('o.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function getMonthlyRevenue(): array
+    {
+        // Simple monthly aggregation
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = '
+            SELECT MONTH(order_date) as month, SUM(total_amount) as total
+            FROM orders
+            GROUP BY month
+            ORDER BY month ASC
+        ';
+        return $conn->executeQuery($sql)->fetchAllAssociative();
+    }
+
+    public function getShippingAddressStats(): array
+    {
+        return $this->createQueryBuilder('o')
+            ->select('o.shippingAddress, COUNT(o.id) as count')
+            ->groupBy('o.shippingAddress')
+            ->getQuery()
+            ->getResult();
+    }
 }

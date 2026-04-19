@@ -25,7 +25,10 @@ class ProductRepository extends ServiceEntityRepository
      * @param string      $sortDir  Sort direction (ASC or DESC)
      * @return Product[]
      */
-    public function searchAndSort(?string $keyword = null, string $sortBy = 'name', string $sortDir = 'ASC'): array
+    /**
+     * Exact same logic as searchAndSort but returns the Query object for pagination.
+     */
+    public function searchAndSortQuery(?string $keyword = null, string $sortBy = 'name', string $sortDir = 'ASC')
     {
         $qb = $this->createQueryBuilder('p');
 
@@ -34,16 +37,38 @@ class ProductRepository extends ServiceEntityRepository
                ->setParameter('kw', '%' . trim($keyword) . '%');
         }
 
-        // Whitelist allowed sort fields to prevent injection
         $allowedSortFields = ['name', 'price', 'stock', 'category', 'createdAt', 'brand', 'avgRating'];
         if (!in_array($sortBy, $allowedSortFields)) {
             $sortBy = 'name';
         }
 
         $sortDir = strtoupper($sortDir) === 'DESC' ? 'DESC' : 'ASC';
-
         $qb->orderBy('p.' . $sortBy, $sortDir);
 
-        return $qb->getQuery()->getResult();
+        return $qb->getQuery();
+    }
+
+    public function searchAndSort(?string $keyword = null, string $sortBy = 'name', string $sortDir = 'ASC'): array
+    {
+        return $this->searchAndSortQuery($keyword, $sortBy, $sortDir)->getResult();
+    }
+
+    public function getCategoryDistribution(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->select('p.category, COUNT(p.id) as count')
+            ->groupBy('p.category')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countLowStock(int $threshold = 10): int
+    {
+        return (int) $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->where('p.stock < :t')
+            ->setParameter('t', $threshold)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 }

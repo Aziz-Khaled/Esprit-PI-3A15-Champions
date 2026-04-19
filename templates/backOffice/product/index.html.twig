@@ -7,7 +7,7 @@
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <div>
             <h1 class="h3 mb-1 text-gray-900 font-weight-bold">Catalogue des Produits</h1>
-            <p class="text-muted small">Gérez l'ensemble de vos actifs numériques et matériels. <span class="badge badge-light border ml-1" id="product-count-badge">{{ products|length }} items</span></p>
+            <p class="text-muted small">Gérez l'ensemble de vos actifs numériques et matériels. <span class="badge badge-light border ml-1" id="product-count-badge">{{ products.totalItemCount }} items</span></p>
         </div>
         <a href="{{ path('app_back_product_new') }}" class="btn btn-primary rounded-pill px-4 shadow-lg border-0 py-2">
             <i class="fas fa-plus mr-2"></i> Ajouter un produit
@@ -21,21 +21,16 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Commandes</div>
-                            <div class="h4 mb-0 font-weight-bold text-gray-800">128</div>
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Produits</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ total_products }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-shopping-cart fa-2x text-gray-200"></i>
+                            <i class="fas fa-box-open fa-2x text-gray-200"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        {% set low_stock = 0 %}
-        {% for p in products %}
-            {% if p.stock < 10 %}{% set low_stock = low_stock + 1 %}{% endif %}
-        {% endfor %}
 
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-warning shadow h-100 py-2 upgraded-card">
@@ -43,7 +38,7 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Alertes Stock Bas</div>
-                            <div class="h4 mb-0 font-weight-bold text-{{ low_stock > 0 ? 'danger' : 'success' }}">{{ low_stock }}</div>
+                            <div class="h4 mb-0 font-weight-bold text-{{ low_stock_count > 0 ? 'danger' : 'success' }}">{{ low_stock_count }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-exclamation-triangle fa-2x text-warning opacity-25"></i>
@@ -67,8 +62,8 @@
                             </span>
                         </div>
                         <input type="text" id="admin-search-input" class="form-control border-left-0 py-2" 
-                            placeholder="Rechercher par nom, marque, catégorie..." autocomplete="off">
-                        <div class="input-group-append" id="clear-search-btn" style="display:none;">
+                               placeholder="Rechercher par nom, marque, catégorie..." autocomplete="off" value="{{ q|default('') }}">
+                        <div class="input-group-append" id="clear-search-btn" style="{{ q|default('') ? '' : 'display:none;' }}">
                             <span class="input-group-text bg-white border-left-0 cursor-pointer">
                                 <i class="fas fa-times text-gray-400"></i>
                             </span>
@@ -78,19 +73,19 @@
                 <!-- Sort By -->
                 <div class="col-md-3 mb-2 mb-md-0">
                     <select id="admin-sort-field" class="form-control form-control-sm custom-select py-2">
-                        <option value="name">Trier par : Nom</option>
-                        <option value="price">Trier par : Prix</option>
-                        <option value="stock">Trier par : Stock</option>
-                        <option value="category">Trier par : Catégorie</option>
-                        <option value="brand">Trier par : Marque</option>
-                        <option value="createdAt">Trier par : Date</option>
+                        <option value="name" {{ (sort|default('name')) == 'name' ? 'selected' }}>Trier par : Nom</option>
+                        <option value="price" {{ (sort|default('name')) == 'price' ? 'selected' }}>Trier par : Prix</option>
+                        <option value="stock" {{ (sort|default('name')) == 'stock' ? 'selected' }}>Trier par : Stock</option>
+                        <option value="category" {{ (sort|default('name')) == 'category' ? 'selected' }}>Trier par : Catégorie</option>
+                        <option value="brand" {{ (sort|default('name')) == 'brand' ? 'selected' }}>Trier par : Marque</option>
+                        <option value="createdAt" {{ (sort|default('name')) == 'createdAt' ? 'selected' }}>Trier par : Date</option>
                     </select>
                 </div>
                 <!-- Sort Direction -->
                 <div class="col-md-2 mb-2 mb-md-0">
                     <select id="admin-sort-dir" class="form-control form-control-sm custom-select py-2">
-                        <option value="ASC">Croissant ↑</option>
-                        <option value="DESC">Décroissant ↓</option>
+                        <option value="ASC" {{ (dir|default('ASC')) == 'ASC' ? 'selected' }}>Croissant ↑</option>
+                        <option value="DESC" {{ (dir|default('ASC')) == 'DESC' ? 'selected' }}>Décroissant ↓</option>
                     </select>
                 </div>
                 <!-- Live indicator -->
@@ -139,91 +134,12 @@
                         </tr>
                     </thead>
                     <tbody id="admin-products-tbody">
-                    {% for product in products %}
-                        <tr class="upgraded-tr">
-                            <td class="pl-4 py-3 align-middle">
-                                <div class="d-flex align-items-center">
-                                    <div class="mr-3">
-                                        {% if product.imageUrl %}
-                                            <div class="image-wrapper shadow-sm rounded-lg overflow-hidden border">
-                                                <img src="{{ asset('uploads/products/' ~ product.imageUrl) }}" class="img-fluid" style="width: 50px; height: 50px; object-fit: cover;" alt="{{ product.name }}">
-                                            </div>
-                                        {% else %}
-                                            <div class="rounded-lg bg-gray-100 d-flex align-items-center justify-content-center border" style="width: 50px; height: 50px;">
-                                                <i class="fas fa-box text-gray-300"></i>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                    <div>
-                                        <div class="font-weight-bold text-dark fs-6">{{ product.name }}</div>
-                                        <div class="small text-gray-500">
-                                            {% if product.avgRating %}
-                                                <span class="text-warning mr-1"><i class="fas fa-star text-xxs"></i> {{ product.avgRating }}</span>
-                                            {% endif %}
-                                            {{ product.description|slice(0, 30) }}...
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="align-middle">
-                                <span class="text-gray-700 font-weight-bold letter-spacing-1">{{ product.brand ?: 'N/A' }}</span>
-                            </td>
-                            <td class="align-middle">
-                                <span class="badge badge-info-soft rounded-pill px-3 py-1 font-weight-bold">
-                                    {{ product.category|replace({'_': ' '})|title }}
-                                </span>
-                            </td>
-                            <td class="align-middle">
-                                <div class="d-flex flex-column">
-                                    {% if product.discountPrice and product.discountPrice > 0 %}
-                                        <span class="text-success font-weight-bold h6 mb-0">{{ product.discountPrice }} BTC</span>
-                                        <del class="text-muted small">{{ product.price }} BTC</del>
-                                    {% else %}
-                                        <span class="font-weight-bold text-primary h6 mb-0">{{ product.price }} BTC</span>
-                                    {% endif %}
-                                </div>
-                            </td>
-                            <td class="align-middle text-center">
-                                <span class="font-weight-bold {{ product.stock < 10 ? 'text-danger' : 'text-dark' }}">{{ product.stock }}</span>
-                                <div class="progress progress-xs w-100 mt-1 mx-auto" style="max-width: 40px;">
-                                    <div class="progress-bar {{ product.stock < 10 ? 'bg-danger' : 'bg-success' }}" role="progressbar" style="width: {{ product.stock > 100 ? 100 : product.stock }}%"></div>
-                                </div>
-                            </td>
-                            <td class="align-middle text-center">
-                                {% if product.status == 'available' %}
-                                    <span class="badge badge-success-soft rounded-pill px-3 py-1">En vente</span>
-                                {% elseif product.status == 'out_of_stock' %}
-                                    <span class="badge badge-danger-soft rounded-pill px-3 py-1">Rupture Stock</span>
-                                {% elseif product.status == 'coming_soon' %}
-                                    <span class="badge badge-warning-soft rounded-pill px-3 py-1">Bientôt</span>
-                                {% else %}
-                                    <span class="badge badge-light border rounded-pill px-3 py-1">{{ product.status ?: 'Archivé' }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="align-middle text-center pr-4">
-                                <div class="btn-group shadow-sm">
-                                    <a href="{{ path('app_back_product_show', {'id': product.id}) }}" class="btn btn-sm btn-white border" title="Voir">
-                                        <i class="fas fa-eye text-primary"></i>
-                                    </a>
-                                    <a href="{{ path('app_back_product_edit', {'id': product.id}) }}" class="btn btn-sm btn-white border" title="Modifier">
-                                        <i class="fas fa-edit text-info"></i>
-                                    </a>
-                                    <form method="post" action="{{ path('app_back_product_delete', {'id': product.id}) }}" class="d-inline" onsubmit="return confirm('Confirmer la suppression du produit ?');">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ product.id) }}">
-                                        <button class="btn btn-sm btn-white border" title="Supprimer">
-                                            <i class="fas fa-trash text-danger"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="7" class="text-center py-5 text-gray-500">Aucun produit trouvé.</td>
-                        </tr>
-                    {% endfor %}
+                        {% include 'backOffice/product/_table_rows.html.twig' %}
                     </tbody>
                 </table>
+            </div>
+            <div id="admin-products-pagination-wrapper" class="border-top bg-white">
+                {% include 'backOffice/product/_pagination.html.twig' %}
             </div>
         </div>
     </div>
@@ -314,110 +230,116 @@
 {% block javascripts %}
 <script>
 (function() {
+    var indexUrl = '{{ path("app_back_product_index") }}';
     var searchInput = document.getElementById('admin-search-input');
     var sortField = document.getElementById('admin-sort-field');
     var sortDir = document.getElementById('admin-sort-dir');
     var tbody = document.getElementById('admin-products-tbody');
+    var paginationWrap = document.getElementById('admin-products-pagination-wrapper');
     var loadingIndicator = document.getElementById('search-loading');
     var liveBadge = document.getElementById('search-live-badge');
     var clearBtn = document.getElementById('clear-search-btn');
     var countBadge = document.getElementById('product-count-badge');
     var debounceTimer = null;
 
-    function adminSearch() {
+    function buildListUrl(page) {
+        var params = new URLSearchParams();
         var q = searchInput.value.trim();
-        var sort = sortField.value;
-        var dir = sortDir.value;
+        if (q) params.set('q', q);
+        params.set('sort', sortField.value);
+        params.set('dir', sortDir.value);
+        if (page && page > 1) params.set('page', String(page));
+        var qs = params.toString();
+        return qs ? indexUrl + '?' + qs : indexUrl;
+    }
 
-        // Show loading
+    function bindPaginationLinks() {
+        if (!paginationWrap) return;
+        paginationWrap.querySelectorAll('a[href]').forEach(function(a) {
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                fetchList(a.href);
+            });
+        });
+    }
+
+    function fetchList(url) {
         loadingIndicator.style.display = 'inline';
         liveBadge.style.display = 'none';
         tbody.classList.add('loading');
 
-        // Show/hide clear button
-        clearBtn.style.display = q.length > 0 ? '' : 'none';
-
-        var url = '{{ path("app_back_product_ajax_search") }}' + 
-                  '?q=' + encodeURIComponent(q) + 
-                  '&sort=' + encodeURIComponent(sort) + 
-                  '&dir=' + encodeURIComponent(dir);
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Request failed');
+                return r.json();
+            })
+            .then(function(data) {
+                tbody.innerHTML = data.rows;
+                paginationWrap.innerHTML = data.pagination;
+                countBadge.textContent = data.totalItemCount + ' items';
+                bindPaginationLinks();
+            })
+            .catch(function(err) {
+                console.error('List refresh failed:', err);
+            })
+            .finally(function() {
                 loadingIndicator.style.display = 'none';
                 liveBadge.style.display = 'inline';
                 tbody.classList.remove('loading');
-
-                if (xhr.status === 200) {
-                    tbody.innerHTML = xhr.responseText;
-                    // Update count badge
-                    var rowCount = tbody.querySelectorAll('tr.upgraded-tr').length;
-                    countBadge.textContent = rowCount + ' items';
-                } else {
-                    console.error('AJAX search failed:', xhr.status);
-                }
-            }
-        };
-        xhr.send();
+            });
     }
 
-    // Make adminSearch available globally for Sync button
-    window.adminSearch = adminSearch;
+    /** @param {number} [page] Page number (default 1) */
+    function adminSearch(page) {
+        var p = typeof page === 'number' ? page : 1;
+        var q = searchInput.value.trim();
+        clearBtn.style.display = q.length > 0 ? '' : 'none';
+        fetchList(buildListUrl(p));
+    }
 
-    // Debounced live search on input
+    window.adminSearch = function() { adminSearch(1); };
+
     searchInput.addEventListener('input', function() {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(adminSearch, 300);
+        debounceTimer = setTimeout(function() { adminSearch(1); }, 300);
     });
 
-    // Instant search on sort change
-    sortField.addEventListener('change', adminSearch);
-    sortDir.addEventListener('change', adminSearch);
+    sortField.addEventListener('change', function() { adminSearch(1); });
+    sortDir.addEventListener('change', function() { adminSearch(1); });
 
-    // Clear search
     clearBtn.addEventListener('click', function() {
         searchInput.value = '';
         clearBtn.style.display = 'none';
-        adminSearch();
+        adminSearch(1);
     });
 
-    // Clickable column headers for sorting
     document.querySelectorAll('.sortable-th').forEach(function(th) {
         th.addEventListener('click', function() {
-            var field = this.getAttribute('data-sort');
-            
-            // Toggle direction if same field, else set ASC
+            var field = th.getAttribute('data-sort');
             if (sortField.value === field) {
                 sortDir.value = sortDir.value === 'ASC' ? 'DESC' : 'ASC';
             } else {
                 sortField.value = field;
                 sortDir.value = 'ASC';
             }
-
-            // Update active states
             document.querySelectorAll('.sortable-th').forEach(function(h) { h.classList.remove('active-sort'); });
-            this.classList.add('active-sort');
-
-            // Update icon
-            var icon = this.querySelector('.fas');
+            th.classList.add('active-sort');
+            var icon = th.querySelector('.fas');
             if (icon) {
                 icon.className = 'fas ml-1 ' + (sortDir.value === 'ASC' ? 'fa-sort-up' : 'fa-sort-down');
             }
-
-            adminSearch();
+            adminSearch(1);
         });
     });
 
-    // Enter key triggers search
     searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            adminSearch();
+            adminSearch(1);
         }
     });
+
+    bindPaginationLinks();
 })();
 </script>
 {% endblock %}

@@ -126,24 +126,6 @@
     function updateQty(id, action) {
         $.post('/cart/ajax/update/' + id, { action: action })
         .done(function(data) {
-            // Stock limit reached
-            if (data.success === false && data.error) {
-                // Show stock warning
-                var warning = $('#stock-warning');
-                if (warning.length === 0) {
-                    $('body').append('<div id="stock-warning" style="position:fixed;top:20px;right:20px;z-index:9999;max-width:380px;">' +
-                        '<div class="alert alert-danger shadow-lg border-0 rounded-4 d-flex align-items-center py-3 px-4" role="alert">' +
-                        '<i class="fas fa-exclamation-triangle me-3 fa-lg"></i>' +
-                        '<div><strong>Stock limité !</strong><br><span class="small">' + data.error + '</span></div>' +
-                        '</div></div>');
-                } else {
-                    warning.find('span.small').text(data.error);
-                    warning.show();
-                }
-                setTimeout(function() { $('#stock-warning').fadeOut(400); }, 3000);
-                return;
-            }
-
             if (data.removed) {
                 $('.cart-row[data-id="' + id + '"]').fadeOut(300, function() {
                     $(this).remove();

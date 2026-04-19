@@ -26,7 +26,10 @@
                             </div>
                         </div>
                         
-                        <div class="text-md-end">
+                        <div class="text-md-end d-flex flex-column flex-md-row align-items-md-center gap-2">
+                            <a href="{{ path('app_order_receipt', { id: order.id }) }}" target="_blank" rel="noopener" class="btn btn-sm btn-white border rounded-pill px-3 font-weight-bold shadow-sm">
+                                <i class="fas fa-print me-1"></i> Reçu
+                            </a>
                             <span class="badge rounded-pill px-4 py-2 shadow-sm border
                                 {{ order.status == 'paid' ? 'bg-success text-white' : 
                                    order.status == 'pending_payment' ? 'bg-warning text-dark border-warning' : 
@@ -75,7 +78,7 @@
                     <div class="bg-light p-4 rounded-4 border border-light d-flex flex-wrap justify-content-between align-items-center shadow-sm card-footer-custom">
                         <div class="d-flex flex-column gap-2 mb-3 mb-md-0">
                             <span class="text-muted small font-weight-bold"><i class="fas fa-truck-moving text-primary me-2"></i> Destination: <span class="text-dark">{{ order.shippingAddress }}</span></span>
-                            <span class="text-muted small font-weight-bold"><i class="fas fa-shield-alt text-success me-2"></i> Network: <span class="badge bg-white shadow-none text-primary border fw-black">TRC-20 Blockchain</span></span>
+                            <span class="text-muted small font-weight-bold"><i class="fas fa-shield-alt text-success me-2"></i> Network: <span class="badge bg-white shadow-none text-primary border fw-black">Bitcoin (BTC)</span></span>
                         </div>
                         <div class="text-end">
                             <span class="text-muted small font-weight-bold d-block mb-1 text-uppercase letter-spacing-1">Amount Paid</span>

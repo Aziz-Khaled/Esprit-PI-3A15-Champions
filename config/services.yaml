@@ -1,22 +1,28 @@
-# config/services.yaml
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
 parameters:
+    # --- Configuration Marketplace (Images) ---
+    products_images_directory: '%kernel.project_dir%/public/uploads/products'
+
+    # --- Ta Configuration IA / Fraud API ---
     fraud_api_url: '%env(FRAUD_API_URL)%'
 
     twilio_sid: '%env(TWILIO_SID)%'
     twilio_token: '%env(TWILIO_TOKEN)%'
     twilio_whatsapp_from: '+14155238886'
-    
-    products_images_directory: '%kernel.project_dir%/public/uploads/products'
 
 services:
     _defaults:
         autowire: true      
         autoconfigure: true 
         
+        # Centralisation des injections automatiques (Binds)
         bind:
             $fraudApiUrl: '%fraud_api_url%'
             $apiKey: '%env(GROQ_API_KEY)%'
 
+    # Chargement automatique des classes du dossier src/
     App\:
         resource: '../src/'
         exclude:
@@ -24,8 +30,14 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    # --- Services Spécifiques (On garde TOUT) ---
+    # --- SERVICES DU MODULE MARKETPLACE ---
+    App\Service\CloudinaryService:
+        arguments:
+            $cloudName:  '%env(CLOUDINARY_CLOUD_NAME)%'
+            $apiKey:     '%env(CLOUDINARY_API_KEY)%'
+            $apiSecret:  '%env(CLOUDINARY_API_SECRET)%'
 
+    # --- SERVICES DE LA BRANCHE DEV (FRAUDE, PAIEMENT, SECURITY) ---
     App\Service\StripeService:
         arguments:
             $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
@@ -34,11 +46,11 @@ services:
         arguments:
             $router: '@router'
 
-    # Service de tes collègues pour la Blockchain
+    # Service pour la partie Blockchain
     App\Service\SmartContractGenerator:
         autowire: true
 
-    # Configuration des contrôleurs
+    # Configuration spécifique des contrôleurs pour le BackOffice
     App\Controller\BackOffice\:
         resource: '../src/Controller/backOffice/'
         tags: ['controller.service_arguments']
