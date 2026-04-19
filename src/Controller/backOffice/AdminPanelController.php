@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\Request;
 use App\Form\AdminEditUserType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+use Knp\Component\Pager\PaginatorInterface;
+
 
 #[Route('/admin')]
 final class AdminPanelController extends AbstractController
@@ -25,18 +27,28 @@ final class AdminPanelController extends AbstractController
         ]);
     }
 
-    #[Route('/users/pending', name: 'app_admin_pending_users')]
-    public function pendingUsers(UtilisateurRepository $repo): Response
-    {
-        $pendingUsers = $repo->findBy(
-            ['statut' => 'pending'],
-            ['dateCreation' => 'DESC']
-        );
+  #[Route('/users/pending', name: 'app_admin_pending_users')]
+public function pendingUsers(
+    UtilisateurRepository $repo,
+    Request $request,
+    PaginatorInterface $paginator
+): Response {
+    $query = $repo->createQueryBuilder('u')
+        ->where('u.statut = :statut')
+        ->setParameter('statut', 'pending')
+        ->orderBy('u.dateCreation', 'DESC')
+        ->getQuery();
 
-        return $this->render('admin_panel/pending_users.html.twig', [
-            'users' => $pendingUsers,
-        ]);
-    }
+    $pagination = $paginator->paginate(
+        $query,
+        $request->query->getInt('page', 1),
+        10
+    );
+
+    return $this->render('admin_panel/pending_users.html.twig', [
+        'users' => $pagination,
+    ]);
+}
 
     #[Route('/users/approve/{id}', name: 'app_admin_approve_user', methods: ['POST'])]
     public function approveUser(
@@ -75,19 +87,27 @@ public function rejectUser(
 }
 
 #[Route('/users/list', name: 'app_admin_users_list')]
-public function usersList(UtilisateurRepository $repo, Request $request): Response
-{
+public function usersList(
+    UtilisateurRepository $repo,
+    Request $request,
+    PaginatorInterface $paginator
+): Response {
     $role   = $request->query->get('role');
     $statut = $request->query->get('statut');
 
-    $criteria = [];
-    if ($role)   $criteria['role']   = $role;
-    if ($statut) $criteria['statut'] = $statut;
+    $qb = $repo->createQueryBuilder('u');
 
-    $users = $criteria ? $repo->findBy($criteria) : $repo->findAll();
+    if ($role)   { $qb->andWhere('u.role = :role')->setParameter('role', $role); }
+    if ($statut) { $qb->andWhere('u.statut = :statut')->setParameter('statut', $statut); }
+
+    $pagination = $paginator->paginate(
+        $qb->getQuery(),
+        $request->query->getInt('page', 1),
+        10
+    );
 
     return $this->render('admin_panel/users_list.html.twig', [
-        'users'          => $users,
+        'users'          => $pagination,
         'selectedRole'   => $role,
         'selectedStatut' => $statut,
     ]);

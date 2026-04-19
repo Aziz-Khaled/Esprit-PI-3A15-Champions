@@ -23,7 +23,6 @@
         .id-thumb:hover { transform: scale(1.05); }
         .badge-pending { background: #f6c23e; color: #fff; }
 
-        /* ── Face Match Badge ── */
         .face-score {
             display: inline-flex; align-items: center; gap: 5px;
             font-size: 0.82rem; font-weight: 700;
@@ -35,7 +34,6 @@
         .face-score.no-match { background: #f8d7da; border-color: #dc3545; color: #721c24; }
         .face-score.error    { background: #fff3cd; border-color: #ffc107; color: #856404; }
 
-        /* Circular progress ring */
         .face-ring-wrap {
             display: inline-flex; flex-direction: column;
             align-items: center; gap: 4px;
@@ -57,7 +55,7 @@
             cursor: pointer; transition: background 0.2s;
             white-space: nowrap;
         }
-        .btn-check:hover   { background: #2e59d9; }
+        .btn-check:hover    { background: #2e59d9; }
         .btn-check:disabled { background: #b7c3e8; cursor: not-allowed; }
 
         .face-cell { min-width: 120px; text-align: center; }
@@ -130,8 +128,9 @@
                     <h1 class="h3 mb-0 text-gray-800">
                         <i class="fas fa-user-clock mr-2 text-warning"></i>Pending Approvals
                     </h1>
+                    {# FIX 1: use totalItemCount instead of |length #}
                     <span class="badge badge-warning badge-pill" style="font-size:1rem;padding:8px 16px;">
-                        {{ users|length }} pending
+                        {{ users.totalItemCount }} pending
                     </span>
                 </div>
 
@@ -145,7 +144,7 @@
                     {% endfor %}
                 {% endfor %}
 
-                {% if users is empty %}
+                {% if users.totalItemCount == 0 %}
                     <div class="card shadow mb-4">
                         <div class="card-body text-center py-5">
                             <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
@@ -178,37 +177,31 @@
                                         {% for user in users %}
                                         <tr id="row-{{ user.idUser }}">
 
-                                            {# Avatar #}
                                             <td class="align-middle text-center">
                                                 <img class="user-avatar"
                                                      src="/uploads/users/selfies/{{ user.userImage }}"
                                                      alt="{{ user.prenom }}">
                                             </td>
 
-                                            {# Name #}
                                             <td class="align-middle">
                                                 <div class="font-weight-bold text-gray-800">{{ user.prenom }} {{ user.nom }}</div>
                                                 <div class="small text-gray-500">{{ user.telephone }}</div>
                                             </td>
 
-                                            {# Email #}
                                             <td class="align-middle">
                                                 <a href="mailto:{{ user.email }}" class="text-primary">{{ user.email }}</a>
                                             </td>
 
-                                            {# Role #}
                                             <td class="align-middle">
                                                 {% set roleColors = {'CLIENT':'primary','INVESTISSEUR':'success','COMMERCANT':'info','ADMIN':'danger'} %}
                                                 <span class="badge badge-{{ roleColors[user.role] ?? 'secondary' }}">{{ user.role }}</span>
                                             </td>
 
-                                            {# Date #}
                                             <td class="align-middle small text-gray-600">
                                                 {{ user.dateCreation|date('d M Y') }}<br>
                                                 <span class="text-gray-400">{{ user.dateCreation|date('H:i') }}</span>
                                             </td>
 
-                                            {# ID Document #}
                                             <td class="align-middle">
                                                 <a href="/uploads/users/ids/{{ user.pieceIdentite }}" target="_blank">
                                                     <img class="id-thumb"
@@ -221,7 +214,6 @@
                                                 <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
                                             </td>
 
-                                            {# ── FACE MATCH CELL ── #}
                                             <td class="align-middle face-cell" id="face-cell-{{ user.idUser }}">
                                                 <button class="btn-check"
                                                         onclick="faceCheck({{ user.idUser }}, this)"
@@ -230,7 +222,6 @@
                                                 </button>
                                             </td>
 
-                                            {# Actions #}
                                             <td class="align-middle text-center" style="white-space:nowrap">
                                                 <form method="POST"
                                                       action="{{ path('app_admin_approve_user', {id: user.idUser}) }}"
@@ -258,6 +249,68 @@
                             </div>
                         </div>
                     </div>
+
+                    {# ── PAGINATION — FIX 2 & 3: outside card, no filter params ── #}
+                    {% if users.pageCount > 1 %}
+                    <div class="d-flex justify-content-between align-items-center mt-3 px-1 mb-4">
+
+                        <small class="text-gray-500">
+                            Showing
+                            <strong>{{ (users.currentPageNumber - 1) * users.itemNumberPerPage + 1 }}</strong>
+                            –
+                            <strong>{{ min(users.currentPageNumber * users.itemNumberPerPage, users.totalItemCount) }}</strong>
+                            of <strong>{{ users.totalItemCount }}</strong> pending
+                        </small>
+
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+
+                                {# Previous #}
+                                <li class="page-item {{ users.currentPageNumber == 1 ? 'disabled' }}">
+                                    <a class="page-link" href="?page={{ users.currentPageNumber - 1 }}">
+                                        <i class="fas fa-chevron-left fa-xs"></i>
+                                    </a>
+                                </li>
+
+                                {% set start = max(1, users.currentPageNumber - 2) %}
+                                {% set end   = min(users.pageCount, users.currentPageNumber + 2) %}
+
+                                {% if start > 1 %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">1</a>
+                                    </li>
+                                    {% if start > 2 %}
+                                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                                    {% endif %}
+                                {% endif %}
+
+                                {% for p in start..end %}
+                                    <li class="page-item {{ p == users.currentPageNumber ? 'active' }}">
+                                        <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+                                    </li>
+                                {% endfor %}
+
+                                {% if end < users.pageCount %}
+                                    {% if end < users.pageCount - 1 %}
+                                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                                    {% endif %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ users.pageCount }}">{{ users.pageCount }}</a>
+                                    </li>
+                                {% endif %}
+
+                                {# Next #}
+                                <li class="page-item {{ users.currentPageNumber == users.pageCount ? 'disabled' }}">
+                                    <a class="page-link" href="?page={{ users.currentPageNumber + 1 }}">
+                                        <i class="fas fa-chevron-right fa-xs"></i>
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+
                 {% endif %}
 
             </div>
@@ -279,14 +332,8 @@
 <script src="/js/sb-admin-2.min.js"></script>
 
 <script>
-/**
- * faceCheck — calls the Symfony JSON endpoint, then renders
- * a circular progress ring + match/no-match badge in the cell.
- */
 async function faceCheck(userId, btn) {
     const cell = document.getElementById('face-cell-' + userId);
-
-    // Show spinner
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Checking…';
 
@@ -307,14 +354,10 @@ async function faceCheck(userId, btn) {
     cell.innerHTML = buildRing(data.confidence, data.match);
 }
 
-/**
- * buildRing — SVG circular ring showing confidence %
- * Green = match, Red = no match (based on Face++ threshold)
- */
 function buildRing(score, isMatch) {
     const radius = 22;
-    const circ   = 2 * Math.PI * radius;           // circumference
-    const offset = circ - (score / 100) * circ;    // dashoffset
+    const circ   = 2 * Math.PI * radius;
+    const offset = circ - (score / 100) * circ;
     const color  = isMatch ? '#28a745' : '#dc3545';
     const icon   = isMatch ? '✔' : '✘';
     const label  = isMatch ? 'Match' : 'No Match';
@@ -343,10 +386,6 @@ function buildRing(score, isMatch) {
     </div>`;
 }
 
-/**
- * buildBadge — shown when Face++ returns an error
- * (no face detected, file unreadable, API key wrong, etc.)
- */
 function buildBadge(score, message) {
     return `
     <span class="face-score error" title="${message}">
@@ -374,7 +413,6 @@ async function fetchIdInfo(userId, cell) {
 
 function buildIdCard(parsed, raw) {
     const p = parsed;
-
     const hasData = Object.values(p).some(v => v);
     if (!hasData) return `<span style="font-size:11px;color:#aaa">⚠ No data extracted</span>`;
 
