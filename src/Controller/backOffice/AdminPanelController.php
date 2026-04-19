@@ -17,13 +17,49 @@ use App\Form\AdminEditUserType;
 #[Route('/admin')]
 final class AdminPanelController extends AbstractController
 {
-    #[Route('/panel', name: 'app_admin_panel')]
-    public function index(): Response
-    {
-        return $this->render('admin_panel/index.html.twig', [
-            'controller_name' => 'AdminPanelController',
-        ]);
+   #[Route('/panel', name: 'app_admin_panel')]
+public function index(EntityManagerInterface $em): Response
+{
+    $repo = $em->getRepository(Utilisateur::class);
+
+    // ── User status counts ──
+    $activeCount   = count($repo->findBy(['statut' => 'active']));
+    $pendingCount  = count($repo->findBy(['statut' => 'pending']));
+    $disabledCount = count($repo->findBy(['statut' => 'desactive']));
+
+    // ── Registrations per month (last 12 months) ──
+$registrationsByMonth = [];
+$monthLabels          = [];
+
+for ($i = 11; $i >= 0; $i--) {
+    $date      = new \DateTime("first day of -$i months");
+    $dateStart = (clone $date)->modify('first day of this month')->setTime(0, 0, 0);
+    $dateEnd   = (clone $date)->modify('last day of this month')->setTime(23, 59, 59);
+
+    $monthLabels[] = $date->format('M Y');
+
+    $count = $repo->createQueryBuilder('u')
+        ->select('COUNT(u.idUser)')
+        ->where('u.dateCreation >= :start')
+        ->andWhere('u.dateCreation <= :end')
+        ->setParameter('start', $dateStart)
+        ->setParameter('end', $dateEnd)
+        ->getQuery()
+        ->getSingleScalarResult();
+
+    $registrationsByMonth[] = (int) $count;
+
     }
+
+    // ── Single return with ALL variables ──
+    return $this->render('admin_panel/index.html.twig', [
+        'activeCount'          => $activeCount,
+        'pendingCount'         => $pendingCount,
+        'disabledCount'        => $disabledCount,
+        'registrationsByMonth' => $registrationsByMonth,
+        'monthLabels'          => $monthLabels,
+    ]);
+}
 
     #[Route('/users/pending', name: 'app_admin_pending_users')]
     public function pendingUsers(UtilisateurRepository $repo): Response
