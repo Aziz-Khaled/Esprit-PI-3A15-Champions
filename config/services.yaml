@@ -1,24 +1,34 @@
-# config/services.yaml fusionné
+# config/services.yaml
 parameters:
-    # Tes paramètres (Blockchain/WhatsApp)
+    # --- Configuration IA / Fraud API ---
+    fraud_api_url: '%env(FRAUD_API_URL)%'
+
+    # --- Tes paramètres (Blockchain/WhatsApp) ---
     twilio_sid: '%env(TWILIO_SID)%'
     twilio_token: '%env(TWILIO_TOKEN)%'
     twilio_whatsapp_from: '+14155238886'
     
-    # Paramètres de tes collègues (Gestion produits)
+    # --- Paramètres de tes collègues (Gestion produits) ---
     products_images_directory: '%kernel.project_dir%/public/uploads/products'
 
 services:
     _defaults:
-        autowire: true
-        autoconfigure: true
+        autowire: true      # Injecte automatiquement les dépendances
+        autoconfigure: true # Enregistre automatiquement les services comme commandes, abonnés, etc.
+        
+        # On lie la variable $fraudApiUrl pour qu'elle soit disponible dans ton FraudDetectionService
+        bind:
+            $fraudApiUrl: '%fraud_api_url%'
 
+    # Configuration standard de Symfony pour charger les classes du dossier src/
     App\:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # --- Configuration spécifique des services ---
 
     App\Service\StripeService:
         arguments:
@@ -28,6 +38,11 @@ services:
         arguments:
             $router: '@router'
 
+    # --- Configuration spécifique des contrôleurs ---
+
     App\Controller\BackOffice\:
         resource: '../src/Controller/backOffice/'
         tags: ['controller.service_arguments']
+
+    # Note: Le FraudDetectionService est chargé automatiquement grâce à l'autowire
+    # et la variable $fraudApiUrl est injectée grâce au 'bind' défini plus haut.

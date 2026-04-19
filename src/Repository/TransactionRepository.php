@@ -68,4 +68,15 @@ class TransactionRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+public function calculateIsSameCard(int $idTransaction): int
+{
+    $conn = $this->getEntityManager()->getConnection();
+    $sql = "SELECT CASE WHEN COUNT(DISTINCT id_card) = 1 THEN 1 ELSE 0 END as res 
+            FROM (SELECT t.id_card FROM transaction t ...) as last_moves";
+    
+    $stmt = $conn->prepare($sql);
+    $result = $stmt->executeQuery(['id' => $idTransaction])->fetchOne();
+    
+    return (int) $result;
+}
 }

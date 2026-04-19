@@ -10,6 +10,7 @@
     <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
     <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body id="page-top">
@@ -76,12 +77,19 @@
             </li>
 
             <hr class="sidebar-divider">
-            <div class="sidebar-heading">Billing</div>
+            <div class="sidebar-heading">Billing & AI</div>
                 
             <li class="nav-item">
                 <a class="nav-link" href="{{ path('app_admin_transactions') }}">
                     <i class="fas fa-fw fa-exchange-alt"></i>
                     <span>Transactions</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('admin_fraud_analyze') }}">
+                    <i class="fas fa-fw fa-robot"></i>
+                    <span>Fraud Analysis (AI)</span>
                 </a>
             </li>
 
@@ -193,7 +201,7 @@
 
                 <div class="container-fluid">
                     <h1 class="h3 mb-2 text-gray-800">Transactions</h1>
-                    <p class="mb-4">Full history of all system transactions.</p>
+                    <p class="mb-4">Full history of all system transactions with AI Fraud Monitoring.</p>
 
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
@@ -233,6 +241,7 @@
                                             <th>Destination RIB</th>
                                             <th>Amount</th>
                                             <th>Type</th>
+                                            <th>AI Status</th> 
                                             <th>Date</th>
                                         </tr>
                                     </thead>
@@ -270,10 +279,21 @@
                                                     {% elseif t.type|upper == 'CONVERSION' %}{% set badgeColor = 'warning' %}{% endif %}
                                                     <span class="badge badge-{{ badgeColor }} text-uppercase">{{ t.type }}</span>
                                                 </td>
+                                                <td>
+                                                    {% if t.aiPrediction is defined %}
+                                                        {% if t.aiPrediction.is_fraud %}
+                                                            <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> FRAUD ({{ t.aiPrediction.score }}%)</span>
+                                                        {% else %}
+                                                            <span class="badge badge-success"><i class="fas fa-check-circle"></i> Secure ({{ t.aiPrediction.score }}%)</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="text-muted small">N/A</span>
+                                                    {% endif %}
+                                                </td>
                                                 <td>{{ t.dateTransaction ? t.dateTransaction|date('M d, Y H:i') : 'N/A' }}</td>
                                             </tr>
                                         {% else %}
-                                            <tr><td colspan="6" class="text-center">No transactions found.</td></tr>
+                                            <tr><td colspan="7" class="text-center">No transactions found.</td></tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
@@ -300,6 +320,30 @@
 
     <script>
     $(document).ready(function() {
+        {% for message in app.flashes('fraud_report') %}
+            const fraudData = {{ message|raw }};
+            let reportHtml = '<div style="text-align:left;">';
+            
+            fraudData.forEach(item => {
+                reportHtml += `
+                    <div class="mb-3 p-2 border-bottom">
+                        <i class="fas fa-user text-primary"></i> <strong>${item.userName}</strong><br>
+                        <i class="fas fa-percentage text-danger"></i> Risque: <span class="badge badge-danger">${item.highestProbability}%</span><br>
+                        <i class="fas fa-info-circle text-warning"></i> <strong>Motif:</strong> <span class="text-muted">${item.reason}</span>
+                    </div>`;
+            });
+            reportHtml += '</div>';
+
+            Swal.fire({
+                title: 'AI Fraud Analysis Report',
+                icon: 'warning',
+                html: reportHtml,
+                confirmButtonText: 'Understood',
+                confirmButtonColor: '#4e73df',
+                width: '600px'
+            });
+        {% endfor %}
+
         function filterTransactions() {
             const userName = $('#user_name').val();
             const type = $('#type').val();
