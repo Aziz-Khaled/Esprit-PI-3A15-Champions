@@ -139,9 +139,10 @@
         <span class="cf-nav-title">ChampionsFinance</span>
     </div>
     <div class="cf-nav-links">
-        <a href="#">Tableau de bord</a>
+        <a href="/front/credit/liste" class="cf-btn-edit">Consulter mes projets</a>
+
         <a href="{{ path('app_credit_index') }}" class="active">Mes Demandes</a>
-        <a href="#">Simulation</a>
+       
     </div>
     <div class="cf-avatar">{{ app.user ? app.user.firstName|first ~ app.user.lastName|first : 'JD' }}</div>
 </nav>
@@ -152,6 +153,7 @@
             <span class="cf-badge-label">Espace Financement</span>
             <h1 class="cf-title">Mes Demandes de Crédit</h1>
             <p class="cf-subtitle">Gérez vos contrats et suivez vos validations en temps réel.</p>
+            
         </div>
         <a href="{{ path('app_credit_new') }}" class="cf-btn-new">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -159,8 +161,8 @@
             </svg>
             Nouvelle Demande
         </a>
-    </div>
-
+        
+    
     <div class="cf-table-card">
         <div class="cf-table-head">
             <div class="cf-th">Projet</div>
