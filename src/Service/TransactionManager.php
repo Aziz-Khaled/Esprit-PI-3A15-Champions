@@ -64,34 +64,28 @@ class TransactionManager
             }
         }
 
-        // Règle B : Paire Crypto <-> Trading (Autorisé si la devise est tagguée trading)
         $isCryptoTradingPair = ($srcType === 'crypto' && $destType === 'trading') || 
                                ($srcType === 'trading' && $destType === 'crypto');
 
         if ($isCryptoTradingPair) {
-            // On vérifie si ton entité Currency a la méthode isTrading() ou similaire
             if (method_exists($currency, 'isTrading') && !$currency->isTrading()) {
                 throw new \Exception("This currency is not authorized for trading transactions.");
             }
         }
 
-        // Règle C : Interdiction si les types sont différents et ce n'est ni conversion ni trade
         if ($srcType !== $destType && !$isCryptoTradingPair && $srcType !== 'fiat') {
             if (!$isConversion && !$isTrade) {
                 throw new \Exception("Forbidden transaction: Wallet types do not match and no conversion/trade specified.");
             }
         }
 
-        // Règle D : Compatibilité de l'asset (Fiat ne va pas dans un wallet Crypto)
         if ($currencyType === 'fiat' && $srcType !== 'fiat') {
             throw new \Exception("Incompatible asset: Fiat currency cannot be stored in a $srcType wallet.");
         }
 
-        // 4. TRANSACTION ATOMIQUE
         $this->em->getConnection()->beginTransaction();
 
         try {
-            // A. Vérification du solde source
             $srcWC = $this->em->getRepository(WalletCurrency::class)->findOneBy([
                 'wallet' => $srcWallet,
                 'currency' => $currency

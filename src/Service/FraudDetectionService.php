@@ -19,18 +19,16 @@ class FraudDetectionService
         $this->apiUrl = $fraudApiUrl;
     }
 
-    /**
-     * PARTIE STATIQUE : Conservée pour l'affichage prédictible
-     */
+    
     public function verifyTransaction(int $transactionId): array
     {
         $data = [
             'is_same_card_repeat'        => 1, 
             'montant_category'           => 2,
-            'consecutive_card_recharges' => 2,
+            'consecutive_card_recharges' => 5,
             'trading_flow_signal'        => 0,
-            'daily_internal_transfers'   => 2,
-            'daily_conversion_count'     => 6 
+            'daily_internal_transfers'   => 6,
+            'daily_conversion_count'     => 15
         ];
 
         try {
@@ -41,9 +39,7 @@ class FraudDetectionService
         }
     }
 
-    /**
-     * PARTIE DYNAMIQUE : Avec explication des motifs (Reasons)
-     */
+    
 public function getGlobalFraudReport(array $transactions): array
 {
     $fraudMap = [];
@@ -62,7 +58,7 @@ public function getGlobalFraudReport(array $transactions): array
         $start = (clone $date)->setTime(0, 0, 0);
         $end   = (clone $date)->setTime(23, 59, 59);
 
-        // Récupération des transactions du jour via QueryBuilder
+        
         $allUserTransactionsToday = $this->repository->createQueryBuilder('tr')
             ->leftJoin('tr.walletSource', 'ws')
             ->leftJoin('tr.walletDestination', 'wd')
@@ -101,7 +97,7 @@ public function getGlobalFraudReport(array $transactions): array
         $montant         = $t->getMontant();
         $montantCategory = ($montant > 5000) ? 2 : (($montant >= 1000) ? 1 : 0);
 
-        // Préparation des données pour l'IA
+        
         $dataForAI = [
             'is_same_card_repeat'        => ($consecutiveCardRecharges > 1) ? 1 : 0,
             'montant_category'           => $montantCategory,
@@ -119,22 +115,22 @@ public function getGlobalFraudReport(array $transactions): array
                 $userName = strtoupper($user->getNom() ?? 'Unknown') . ' ' . ($user->getPrenom() ?? '');
                 $prob     = $result['percentage'] ?? 0;
 
-                // --- GÉNÉRATION DE L'EXPLICATION (REASON) ---
+                
                 $reasons = [];
                 if ($montantCategory == 2) {
                     $reasons[] = "High amount (>5000)";
                 }
                 if ($consecutiveCardRecharges > 2) {
-                    $reasons[] = "Too many card recharges ($consecutiveCardRecharges)";
+                    $reasons[] = "Too many card recharges ";
                 }
                 if ($dailyConversions > 5) {
-                    $reasons[] = "Many conversions today ($dailyConversions)";
+                    $reasons[] = "Many conversions today (";
                 }
                 if ($tradingFlowSignal == 0) {
                     $reasons[] = "Bad trading flow";
                 }
                 if ($dailyInternalTransfers > 3) {
-                    $reasons[] = "Too many internal transfers ($dailyInternalTransfers)";
+                    $reasons[] = "Too many internal transfers today";
                 }
 
                 $reasonString = !empty($reasons) ? implode(", ", $reasons) : "Unusual activity detected";

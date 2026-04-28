@@ -46,6 +46,52 @@ class FormationRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * Server-side filtering + sorting with statut filter added.
+     */
+    public function findFiltered(
+        ?string $search,
+        ?string $domaine,
+        ?string $statut,
+        string  $sort = 'date_asc'
+    ): array {
+        $qb = $this->createQueryBuilder('f');
+
+        if ($search) {
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    $qb->expr()->like('LOWER(f.titre)',       ':search'),
+                    $qb->expr()->like('LOWER(f.description)', ':search')
+                )
+            )->setParameter('search', '%' . mb_strtolower($search) . '%');
+        }
+
+        if ($domaine) {
+            $qb->andWhere('f.domaine = :domaine')
+               ->setParameter('domaine', $domaine);
+        }
+
+        if ($statut) {
+            $qb->andWhere('f.statut = :statut')
+               ->setParameter('statut', $statut);
+        }
+
+        $direction = 'ASC';
+        $field = 'f.dateDebut';
+        if ($sort === 'prix_desc') {
+            $field = 'f.prix';
+            $direction = 'DESC';
+        } elseif ($sort === 'prix_asc') {
+            $field = 'f.prix';
+        } elseif ($sort === 'date_desc') {
+            $direction = 'DESC';
+        }
+
+        $qb->orderBy($field, $direction);
+
+        return $qb->getQuery()->getResult();
+    }
+
     public function findDistinctDomaines(): array
     {
         $rows = $this->createQueryBuilder('f')

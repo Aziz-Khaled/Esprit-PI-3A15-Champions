@@ -36,7 +36,7 @@ final class AdminPanelController extends AbstractController
     ): Response {
         $repo = $em->getRepository(Utilisateur::class);
 
-        // ── User status counts (your branch) ──
+        // ── User status counts (your banch) ──
         $activeCount   = count($repo->findBy(['statut' => 'active']));
         $pendingCount  = count($repo->findBy(['statut' => 'pending']));
         $disabledCount = count($repo->findBy(['statut' => 'desactive']));

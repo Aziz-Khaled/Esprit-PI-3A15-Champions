@@ -293,7 +293,6 @@ public function initiateRecharge(
         'code' => $verificationCode
     ]);
 
-    // Send the email
     $user = $this->getUser() ?: $em->getRepository(Utilisateur::class)->find(1);
     try {
         $mailService->sendVerificationCode($user->getEmail(), $verificationCode);
@@ -303,11 +302,9 @@ public function initiateRecharge(
         return $this->redirectToRoute('app_wallet_index');
     }
 
-    // Redirect to index with a trigger for the popup
     return $this->redirectToRoute('app_wallet_index', ['verify' => 1]);
 }
 
-// STEP 2: Verify the code and execute Stripe/Blockchain logic
 #[Route('/recharge/confirm', name: 'app_wallet_recharge_confirm', methods: ['POST'])]
 public function confirmRecharge(
     Request $request, 
@@ -319,18 +316,15 @@ public function confirmRecharge(
     $pending = $session->get('pending_recharge');
     $inputCode = $request->request->get('verification_code');
 
-    // Security check
     if (!$pending || $inputCode != $pending['code']) {
         $this->addFlash('error', 'Invalid verification code. Please try again.');
         return $this->redirectToRoute('app_wallet_index');
     }
 
-    // Recover data from session
     $walletId = $pending['wallet_id'];
     $currencyId = $pending['currency_id'];
     $amount = $pending['amount'];
 
-    // --- YOUR ORIGINAL STRIPE & BLOCKCHAIN LOGIC ---
     $user = $this->getUser() ?: $em->getRepository(Utilisateur::class)->find(1);
     $wallet = $em->getRepository(Wallet::class)->find($walletId);
     $currency = $em->getRepository(Currency::class)->find($currencyId);
@@ -356,7 +350,6 @@ public function confirmRecharge(
         );
 
         if ($intent->status === 'succeeded') {
-            // 1. Update WalletCurrency balance
             $walletCurrency = $em->getRepository(WalletCurrency::class)->findOneBy([
                 'wallet' => $wallet,
                 'currency' => $currency
@@ -373,7 +366,6 @@ public function confirmRecharge(
                 $walletCurrency->setSolde($walletCurrency->getSolde() + $amount);
             }
 
-            // 2. Create Transaction entity
             $transaction = new \App\Entity\Transaction();
             $transaction->setWalletDestination($wallet);
             $transaction->setWalletSource(null);
@@ -387,14 +379,11 @@ public function confirmRecharge(
             $em->persist($transaction);
             $em->flush(); 
 
-            // 3. Blockchain Logic
             try {
                 $blockchainService->addBlock($transaction);
             } catch (\Exception $e) {
-                // Blockchain error is optional, we don't block the successful recharge
             }
 
-            // Clean session and success message
             $session->remove('pending_recharge');
             $this->addFlash('success', 'Wallet recharged and transaction secured in Blockchain!');
         }
@@ -426,7 +415,6 @@ public function confirmRecharge(
                 throw new \Exception("Required data missing (Wallet or Currency).");
             }
 
-            // Appel au TransactionManager avec correction des noms de méthodes (getIdCurrency)
             $transactionManager->execute(
                 $wSource->getRib(),
                 $wDest->getRib(),
@@ -439,7 +427,6 @@ public function confirmRecharge(
             $this->addFlash('success', "✅ Transaction successfully sealed and recorded.");
 
         } catch (\Exception $e) {
-            // Le message d'erreur inclura les restrictions Fiat/Crypto venant du service
             $this->addFlash('error', "Transaction Failed: " . $e->getMessage());
         }
 

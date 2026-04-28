@@ -18,7 +18,7 @@ use App\Service\CloudinaryService;
 use App\Service\GeminiService;
 use Knp\Component\Pager\PaginatorInterface;
 
-#[Route('/admin/products')]
+#[Route('/commercant/products')]
 class ProductController extends AbstractController
 {
     private const ITEMS_PER_PAGE = 10;

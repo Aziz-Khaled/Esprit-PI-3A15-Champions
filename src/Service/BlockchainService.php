@@ -239,7 +239,6 @@ private function sendDetailedWhatsApp(Transaction $t): void
         return;
     }
 
-    // Ton numéro de test (Format international requis)
     $userPhone = "+21695558576"; 
 
     try {
@@ -248,13 +247,11 @@ private function sendDetailedWhatsApp(Transaction $t): void
             $this->params->get('twilio_token')
         );
 
-        // --- PRÉPARATION DES DONNÉES ---
         $type = strtoupper($t->getType());
         $amount = number_format($t->getMontant(), 2, '.', ' ');
         $currency = $t->getCurrency() ? $t->getCurrency()->getNom() : 'DT';
         $date = $t->getDateTransaction()->format('d/m/Y H:i');
         
-        // Identification Source
         $source = "N/A";
         if ($t->getWalletSource()) {
             $source = "💳 RIB: " . $t->getWalletSource()->getRib();
@@ -262,11 +259,9 @@ private function sendDetailedWhatsApp(Transaction $t): void
             $source = "💳 Carte: **** " . $t->getCreditCard()->getLast4Digits();
         }
 
-        // Identification Destination
         $dest = $t->getWalletDestination() ? "📥 RIB: " . $t->getWalletDestination()->getRib() : "Externe";
 
-        // --- CONSTRUCTION DU MESSAGE ---
-        // --- MESSAGE CONSTRUCTION (English Version) ---
+       
         $messageBody = "🔔 *ChampionsPi Notification*\n\n";
         $messageBody .= "✅ *Transaction Successful!*\n";
         $messageBody .= "------------------------------------------\n";
@@ -279,12 +274,12 @@ private function sendDetailedWhatsApp(Transaction $t): void
         $messageBody .= "------------------------------------------\n";
         $messageBody .= "🛡️ _Secured by Champions Blockchain_";
 
-        // --- ENVOI DU MESSAGE LIBRE ---
+        
         $client->messages->create(
             "whatsapp:" . $userPhone,
             [
                 "from" => "whatsapp:" . $this->params->get('twilio_whatsapp_from'),
-                "body" => $messageBody // Utilisation du body au lieu du contentSid
+                "body" => $messageBody 
             ]
         );
 

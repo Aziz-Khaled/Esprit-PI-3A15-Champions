@@ -43,4 +43,19 @@ class WalletCurrencyRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+    public function findTndByWallet(Wallet $wallet): ?WalletCurrency
+    {
+        return $this->createQueryBuilder('wc')
+            ->join('wc.currency', 'c')
+            ->where('wc.wallet = :wallet')
+            ->andWhere(
+                'UPPER(c.code) = :code OR LOWER(c.nom) LIKE :nom'
+            )
+            ->setParameter('wallet', $wallet)
+            ->setParameter('code', 'TND')
+            ->setParameter('nom', '%dinar%')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

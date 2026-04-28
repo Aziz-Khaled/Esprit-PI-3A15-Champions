@@ -22,25 +22,20 @@ class AdminTransactionController extends AbstractController
         NotificationRepository $notifRepo
     ): Response
     {
-        // 1. Audit de la blockchain
         $blockchainService->verifyIntegrity();
 
         $userName = $request->query->get('user_name');
         $type = $request->query->get('type');
 
-        // 2. Filtrage des transactions
         if ($userName || $type) {
             $transactions = $repo->findByFilters($userName, $type);
         } else {
             $transactions = $repo->findBy([], ['dateTransaction' => 'DESC']);
         }
 
-        // 3. ANALYSE IA POUR CHAQUE TRANSACTION
         foreach ($transactions as $t) {
-            // CORRECTION : Appel direct de la bonne méthode getIdTransaction()
             $aiResult = $fraudService->verifyTransaction($t->getIdTransaction());
             
-            // Attachement dynamique des résultats pour Twig
             $t->aiPrediction = [
                 'is_fraud' => $aiResult['fraud_alert'] ?? false,
                 'score'    => $aiResult['percentage'] ?? 0,
@@ -48,7 +43,6 @@ class AdminTransactionController extends AbstractController
             ];
         }
 
-        // 4. Notifications
         $notifications = $notifRepo->findBy(['is_read' => [false, null]], ['created_at' => 'DESC']);
         $count = count($notifications);
 
@@ -78,16 +72,13 @@ class AdminTransactionController extends AbstractController
     #[Route('/admin/fraud/analyze', name: 'admin_fraud_analyze')]
     public function analyze(TransactionRepository $repo, FraudDetectionService $fraudService): Response
     {
-        // On récupère toutes les transactions pour le rapport global
         $transactions = $repo->findAll(); 
         
-        // Appel au rapport global
         $report = $fraudService->getGlobalFraudReport($transactions);
 
         if (empty($report)) {
             $this->addFlash('info', 'Aucune activité suspecte détectée par l\'IA.');
         } else {
-            // Stockage du JSON pour SweetAlert2
             $this->addFlash('fraud_report', json_encode(array_values($report)));
         }
 
