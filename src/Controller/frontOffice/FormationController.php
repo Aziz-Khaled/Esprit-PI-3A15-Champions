@@ -138,12 +138,12 @@ public function enroll(
     }
 
     try {
-        // 1. Execute Transaction (Debits student, Credits trainer)
+        
         $transactionManager->execute(
             $buyerWallet->getRib(),
             $sellerWallet->getRib(),
             (float) $formation->getPrix(),
-            'TRANSFER', 
+            'TRANSFERT', 
             $currencyId
         );
 
@@ -152,12 +152,12 @@ public function enroll(
         $participation->setFormation($formation);
         $participation->setUtilisateur($user);
         $participation->setDateInscription(new \DateTime());
-        $participation->setStatut('PAID');
+        $participation->setStatut('PAYEE');
 
         $em->persist($participation);
         $em->flush();
 
-        // 3. SEND CONFIRMATION EMAIL IN ENGLISH
+        
         try {
             $email = (new Email())
                 ->from('eya.bouraoui2005@gmail.com')
