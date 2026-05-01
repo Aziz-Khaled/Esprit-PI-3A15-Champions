@@ -548,10 +548,19 @@
 
     {% for label, messages in app.flashes %}
       {% for message in messages %}
-        <div class="flash-msg {{ (label == 'error' or label == 'danger') ? 'error' : 'success' }}">
+        <div class="flash-msg {{ (label == 'error' or label == 'danger') ? 'error' : 'success' }}" id="flash-msg-{{ loop.index }}">
           <i class="fas {{ (label == 'error' or label == 'danger') ? 'fa-exclamation-circle' : 'fa-check-circle' }}"></i>
           {{ message }}
           <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+          {% if label == 'success' and app.session.get('last_enrolled_formation') %}
+            {% set calData = app.session.get('last_enrolled_formation') %}
+            {% do app.session.remove('last_enrolled_formation') %}
+            <a href="https://www.google.com/calendar/render?action=TEMPLATE&text={{ calData.titre|url_encode }}&dates={{ calData.dateDebut }}T080000Z%2F{{ calData.dateFin }}T170000Z&details={{ calData.description|url_encode }}&sf=true&output=xml"
+               target="_blank"
+               style="display:inline-flex;align-items:center;gap:6px;margin-left:12px;padding:5px 14px;border-radius:8px;background:rgba(66,133,244,.2);color:#fff;border:1px solid rgba(66,133,244,.4);text-decoration:none;font-size:13px;font-weight:600;">
+              <i class="fab fa-google" style="color:#4285f4;"></i> Ajouter à Google Calendar
+            </a>
+          {% endif %}
         </div>
       {% endfor %}
     {% endfor %}
@@ -561,6 +570,16 @@
         <div class="page-label">Learning Hub</div>
         <div class="page-title">Formations</div>
         <div class="page-sub">Browse and enroll in our available training programs.</div>
+      </div>
+      <div class="header-actions">
+        {% if app.user %}
+        <a href="{{ path('app_formations_mes_certificats') }}" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: var(--font-body); background: rgba(240,180,41,.1); color: var(--gold); border: 1px solid rgba(240,180,41,.25); text-decoration: none; transition: all .2s;" onmouseover="this.style.background='rgba(240,180,41,.2)'" onmouseout="this.style.background='rgba(240,180,41,.1)'">
+            <i class="fas fa-certificate"></i> Mes Certificats
+        </a>
+        <a href="{{ path('app_formations_mes_favoris') }}" id="btn-mes-favoris" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: var(--font-body); background: rgba(255,23,68,.1); color: #ff6b8a; border: 1px solid rgba(255,23,68,.25); text-decoration: none; transition: all .2s;" onmouseover="this.style.background='rgba(255,23,68,.2)'" onmouseout="this.style.background='rgba(255,23,68,.1)'">
+            <i class="fas fa-heart"></i> Mes Favoris <span id="fav-count-badge" style="background:#ff1744;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;">0</span>
+        </a>
+        {% endif %}
       </div>
     </div>
 
@@ -632,9 +651,21 @@
 
     <div class="formations-grid">
     {% for f in formations %}
-    <div class="formation-card">
-        <div class="card-img-wrap">
+    <div class="formation-card" id="card-formation-{{ f.idFormation }}">
+        <div class="card-img-wrap" style="position:relative;">
             <i class="fas fa-graduation-cap"></i>
+            {# ❤️ Favourite Button #}
+            {% if app.user %}
+            <button
+                class="btn-favori"
+                id="fav-btn-{{ f.idFormation }}"
+                data-id="{{ f.idFormation }}"
+                onclick="toggleFavori({{ f.idFormation }})"
+                title="Ajouter aux favoris"
+                style="position:absolute;top:10px;right:12px;background:rgba(8,13,20,.7);border:1px solid rgba(255,23,68,.3);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;">
+                <i class="fas fa-heart" style="color:#ff6b8a;font-size:14px;"></i>
+            </button>
+            {% endif %}
         </div>
 
         <div class="card-body">
@@ -662,6 +693,24 @@
                 <div class="meta-item"><i class="fas fa-users"></i> {{ f.capaciteMax }} seats</div>
             </div>
 
+            {# ⭐ Star Rating — visible pour les participants connectés #}
+            {% if app.user %}
+            <div class="card-rating" id="rating-{{ f.idFormation }}" style="display:flex;align-items:center;gap:6px;margin-top:10px;">
+                <span style="font-size:12px;color:var(--text-3);">Votre note :</span>
+                {% for star in 1..5 %}
+                <i class="fas fa-star rating-star"
+                   data-formation="{{ f.idFormation }}"
+                   data-star="{{ star }}"
+                   onclick="rateFormation({{ f.idFormation }}, {{ star }})"
+                   style="cursor:pointer;font-size:16px;color:var(--text-3);transition:color .15s;"
+                   onmouseover="hoverStars({{ f.idFormation }}, {{ star }})"
+                   onmouseout="resetStars({{ f.idFormation }})"
+                ></i>
+                {% endfor %}
+                <span id="rating-label-{{ f.idFormation }}" style="font-size:11px;color:var(--text-3);"></span>
+            </div>
+            {% endif %}
+
 <div class="card-footer">
     <div class="card-price">
         {{ f.prix|number_format(0, ',', ' ') }} <small>TND</small>
@@ -671,7 +720,11 @@
     <button
         class="btn-enroll-card"
         type="button"
-        onclick="window.openEnrollModal('{{ f.idFormation }}', '{{ f.prix|number_format(2, '.', '') }}', '{{ f.titre|e('js') }}')"
+        onclick="window.openEnrollModal('{{ f.idFormation }}', '{{ f.prix|number_format(2, '.', '') }}', '{{ f.titre|e('js') }}', '{{ f.dateDebut|date('Ymd') }}', '{{ f.dateFin|date('Ymd') }}', '{{ f.description|default('')|slice(0,100)|e('js') }}')"
+        data-formation-id="{{ f.idFormation }}"
+        data-formation-titre="{{ f.titre|e('html_attr') }}"
+        data-date-debut="{{ f.dateDebut|date('Ymd') }}"
+        data-date-fin="{{ f.dateFin|date('Ymd') }}"
     >
         <i class="fas fa-paper-plane"></i> Enroll
     </button>
@@ -797,5 +850,269 @@
     </div>
   </div>
 </div>
+
+{# ════════════ AI CHAT WIDGET ════════════ #}
+<div id="ai-chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; font-family: var(--font-body);">
+  <!-- Chat Button -->
+  <button id="ai-chat-btn" style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #0099cc); border: none; color: #080d14; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,229,255,0.4); display: flex; align-items: center; justify-content: center; transition: transform 0.3s;">
+    <i class="fas fa-robot"></i>
+  </button>
+
+  <!-- Chat Window -->
+  <div id="ai-chat-window" style="display: none; position: absolute; bottom: 80px; right: 0; width: 350px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); flex-direction: column;">
+    <div style="background: rgba(8,13,20,0.9); padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+      <div style="font-family: var(--font-head); font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-robot" style="font-size: 1.2rem;"></i> Champions IA
+      </div>
+      <button id="ai-chat-close" style="background: none; border: none; color: var(--text-2); cursor: pointer; font-size: 20px;">&times;</button>
+    </div>
+    
+    <div id="ai-chat-messages" style="height: 320px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+      <div style="background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 14px 14px 14px 0; color: var(--text-1); font-size: 14px; max-width: 85%; line-height: 1.5;">
+        Bonjour ! Je suis l'assistant virtuel de Champions. Posez-moi vos questions sur nos formations !
+      </div>
+    </div>
+
+    <div style="padding: 15px; border-top: 1px solid var(--border); display: flex; gap: 10px; background: rgba(8,13,20,0.9);">
+      <input type="text" id="ai-chat-input" placeholder="Écrivez votre message..." style="flex: 1; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,229,255,0.2); border-radius: 10px; color: var(--text-1); outline: none; font-family: var(--font-body);">
+      <button id="ai-chat-send" style="background: var(--accent); color: #080d14; border: none; padding: 0 16px; border-radius: 10px; cursor: pointer; transition: opacity 0.2s;"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatBtn = document.getElementById('ai-chat-btn');
+    const chatWindow = document.getElementById('ai-chat-window');
+    const chatClose = document.getElementById('ai-chat-close');
+    const chatInput = document.getElementById('ai-chat-input');
+    const chatSend = document.getElementById('ai-chat-send');
+    const chatMessages = document.getElementById('ai-chat-messages');
+
+    chatBtn.addEventListener('click', () => {
+        chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+        if (chatWindow.style.display === 'flex') {
+            chatInput.focus();
+        }
+    });
+
+    chatClose.addEventListener('click', () => {
+        chatWindow.style.display = 'none';
+    });
+
+    function addMessage(text, isUser = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.style.padding = '12px 15px';
+        msgDiv.style.fontSize = '14px';
+        msgDiv.style.maxWidth = '85%';
+        msgDiv.style.lineHeight = '1.5';
+        
+        // Convert Markdown-style bold and newlines
+        let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        formattedText = formattedText.replace(/\n/g, '<br>');
+        msgDiv.innerHTML = formattedText;
+
+        if (isUser) {
+            msgDiv.style.alignSelf = 'flex-end';
+            msgDiv.style.background = 'rgba(0, 229, 255, 0.1)';
+            msgDiv.style.color = 'var(--text-1)';
+            msgDiv.style.borderRadius = '14px 14px 0 14px';
+            msgDiv.style.border = '1px solid rgba(0, 229, 255, 0.2)';
+        } else {
+            msgDiv.style.alignSelf = 'flex-start';
+            msgDiv.style.background = 'rgba(255, 255, 255, 0.05)';
+            msgDiv.style.color = 'var(--text-1)';
+            msgDiv.style.borderRadius = '14px 14px 14px 0';
+        }
+
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        addMessage(text, true);
+        chatInput.value = '';
+
+        // Add loading indicator
+        const loadingId = 'loading-' + Date.now();
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = loadingId;
+        loadingDiv.style.alignSelf = 'flex-start';
+        loadingDiv.style.color = 'var(--text-3)';
+        loadingDiv.style.fontSize = '12px';
+        loadingDiv.style.padding = '5px 10px';
+        loadingDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> IA écrit...';
+        chatMessages.appendChild(loadingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        fetch('{{ path("app_formations_ai_chat") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const loadingEl = document.getElementById(loadingId);
+            if(loadingEl) loadingEl.remove();
+            
+            if (data.error) {
+                addMessage('Erreur: ' + data.error);
+            } else if (data.reply) {
+                addMessage(data.reply);
+            }
+        })
+        .catch(err => {
+            const loadingEl = document.getElementById(loadingId);
+            if(loadingEl) loadingEl.remove();
+            addMessage('Désolé, une erreur réseau est survenue.');
+            console.error(err);
+        });
+    }
+
+    chatSend.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+});
+</script>
+
+{# ===== FAVOURITES (localStorage) ===== #}
+<script>
+const FAV_KEY = 'champions_formation_favoris';
+
+function getFavoris() {
+    return JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+}
+function saveFavoris(arr) {
+    localStorage.setItem(FAV_KEY, JSON.stringify(arr));
+}
+function toggleFavori(id) {
+    let favs = getFavoris();
+    const idx = favs.indexOf(id);
+    if (idx === -1) {
+        favs.push(id);
+    } else {
+        favs.splice(idx, 1);
+    }
+    saveFavoris(favs);
+    updateFavoriUI();
+}
+function updateFavoriUI() {
+    const favs = getFavoris();
+    // Update badge
+    const badge = document.getElementById('fav-count-badge');
+    if (badge) badge.textContent = favs.length;
+    // Update each heart button style
+    document.querySelectorAll('.btn-favori').forEach(btn => {
+        const id = parseInt(btn.dataset.id);
+        const isFav = favs.includes(id);
+        btn.style.background = isFav ? 'rgba(255,23,68,.35)' : 'rgba(8,13,20,.7)';
+        btn.style.borderColor = isFav ? '#ff1744' : 'rgba(255,23,68,.3)';
+        btn.querySelector('i').style.color = isFav ? '#ff1744' : '#ff6b8a';
+    });
+}
+// Init on page load
+document.addEventListener('DOMContentLoaded', updateFavoriUI);
+</script>
+
+{# ===== STAR RATING (AJAX -> Participation.note) ===== #}
+<script>
+const RATING_KEY = 'champions_formation_ratings';
+
+function getSavedRatings() {
+    return JSON.parse(localStorage.getItem(RATING_KEY) || '{}');
+}
+function hoverStars(formationId, upTo) {
+    document.querySelectorAll(`[data-formation="${formationId}"].rating-star`).forEach(star => {
+        star.style.color = parseInt(star.dataset.star) <= upTo ? 'var(--gold)' : 'var(--text-3)';
+    });
+}
+function resetStars(formationId) {
+    const saved = getSavedRatings()[formationId] || 0;
+    document.querySelectorAll(`[data-formation="${formationId}"].rating-star`).forEach(star => {
+        star.style.color = parseInt(star.dataset.star) <= saved ? 'var(--gold)' : 'var(--text-3)';
+    });
+}
+function rateFormation(formationId, note) {
+    const ratings = getSavedRatings();
+    ratings[formationId] = note;
+    localStorage.setItem(RATING_KEY, JSON.stringify(ratings));
+    resetStars(formationId);
+    const label = document.getElementById(`rating-label-${formationId}`);
+    if (label) label.textContent = `${note}/5 ✓`;
+
+    // Send AJAX to server to save note in Participation
+    fetch(`/formations/${formationId}/rate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ note: note })
+    }).catch(() => {});
+}
+// Init ratings on load
+document.addEventListener('DOMContentLoaded', () => {
+    const ratings = getSavedRatings();
+    Object.entries(ratings).forEach(([fId, note]) => {
+        resetStars(parseInt(fId));
+        const label = document.getElementById(`rating-label-${fId}`);
+        if (label) label.textContent = `${note}/5 ✓`;
+    });
+});
+</script>
+
+{# ===== GOOGLE CALENDAR (add to modal after enroll) ===== #}
+<script>
+function generateGCalLink(titre, dateDebut, dateFin, description) {
+    // dateDebut and dateFin should be in format YYYYMMDD
+    const startFormatted = dateDebut + 'T080000Z';
+    const endFormatted = dateFin + 'T170000Z';
+    const base = 'https://www.google.com/calendar/render?action=TEMPLATE';
+    const params = new URLSearchParams({
+        text: titre,
+        dates: startFormatted + '/' + endFormatted,
+        details: description || '',
+        sf: 'true',
+        output: 'xml'
+    });
+    return base + '&' + params.toString();
+}
+
+// Patch openEnrollModal to capture calendar data
+const _origOpenEnrollModal = window.openEnrollModal;
+window.openEnrollModal = function(id, price, titre, dateDebut, dateFin, description) {
+    // store for later use
+    window._lastEnrollData = { id, price, titre, dateDebut, dateFin, description };
+    // call original if it exists
+    if (typeof _origOpenEnrollModal === 'function') {
+        _origOpenEnrollModal(id, price, titre);
+    }
+};
+
+// After a success flash is detected, inject the Google Calendar button
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.flash-msg.success').forEach(flash => {
+        if (flash.textContent.includes('enrolled') || flash.textContent.includes('enrolled')) {
+            // Try to read last stored enroll data from sessionStorage
+            const stored = sessionStorage.getItem('last_enrolled_formation');
+            if (stored) {
+                const data = JSON.parse(stored);
+                const gcalUrl = generateGCalLink(data.titre, data.dateDebut, data.dateFin, data.description);
+                const btn = document.createElement('a');
+                btn.href = gcalUrl;
+                btn.target = '_blank';
+                btn.innerHTML = ' &nbsp;<i class="fab fa-google" style="color:#4285f4;"></i> <strong>Ajouter à Google Calendar</strong>';
+                btn.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:5px 14px;border-radius:8px;background:rgba(66,133,244,.15);color:#fff;border:1px solid rgba(66,133,244,.3);text-decoration:none;font-size:13px;vertical-align:middle;';
+                flash.appendChild(btn);
+                sessionStorage.removeItem('last_enrolled_formation');
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
 

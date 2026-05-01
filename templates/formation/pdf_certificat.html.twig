@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificat de réussite</title>
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; background: #fff; margin: 0; padding: 0; }
+        .cert-container { 
+            width: 950px; height: 650px; 
+            margin: 0 auto; 
+            border: 15px solid #00e5ff;
+            padding: 20px; 
+            text-align: center;
+            position: relative;
+            box-sizing: border-box;
+            background: #fff;
+        }
+        .cert-inner {
+            border: 3px solid #f0b429;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .header { margin-top: 30px; font-size: 42px; color: #080d14; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;}
+        .subtitle { font-size: 20px; color: #5a7090; margin-top: 10px; }
+        .recipient { margin-top: 50px; font-size: 32px; color: #f0b429; font-weight: bold; text-transform: capitalize; border-bottom: 2px solid #ccc; display: inline-block; padding-bottom: 5px; min-width: 300px; }
+        .description { font-size: 18px; color: #333; margin-top: 30px; }
+        .course-title { font-size: 28px; color: #00e5ff; font-weight: bold; margin-top: 20px; text-transform: uppercase; }
+        .date { font-size: 16px; color: #777; margin-top: 40px; }
+        .qr-code { position: absolute; bottom: 40px; left: 60px; }
+        .qr-code img { width: 100px; height: 100px; }
+        .qr-code p { font-size: 12px; color: #888; margin-top: 5px; }
+        .signature { position: absolute; bottom: 60px; right: 60px; text-align: center; }
+        .signature-line { width: 150px; border-bottom: 1px solid #333; margin-bottom: 10px; }
+        .signature p { font-size: 14px; color: #333; margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="cert-container">
+        <div class="cert-inner">
+            <div class="header">CERTIFICAT DE RÉUSSITE</div>
+            <div class="subtitle">Délivré par Champions</div>
+            
+            <div class="description">Ce document certifie que</div>
+            
+            {% set user = certificat.participation.utilisateur %}
+            {% set userName = (user.nom is defined and user.nom) ? user.prenom ~ ' ' ~ user.nom : user.email %}
+            
+            <div class="recipient">{{ userName }}</div>
+            
+            <div class="description">a participé avec succès et validé la formation :</div>
+            
+            <div class="course-title">{{ certificat.participation.formation.titre }}</div>
+            
+            {% if certificat.mention %}
+                <div class="description" style="margin-top: 15px; font-weight: bold;">Mention : {{ certificat.mention }}</div>
+            {% endif %}
+            
+            <div class="date">Délivré le : {{ certificat.dateEmission|date('d/m/Y') }}</div>
+            
+            {% if qrCode %}
+            <div class="qr-code">
+                <img src="{{ qrCode }}" alt="QR Code de Vérification">
+                <p>Scanner pour vérifier</p>
+            </div>
+            {% endif %}
+            
+            <div class="signature">
+                <div class="signature-line"></div>
+                <p>La Direction</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

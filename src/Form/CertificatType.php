@@ -22,7 +22,8 @@ class CertificatType extends AbstractType
                 'class' => Participation::class,
                 'choice_label' => function (Participation $participation) {
                     $formationTitle = $participation->getFormation()?->getTitre() ?? 'Sans formation';
-                    return sprintf('#%s — %s', $participation->getIdParticipation(), $formationTitle);
+                    $userEmail = $participation->getUtilisateur() ? (method_exists($participation->getUtilisateur(), 'getEmail') ? $participation->getUtilisateur()->getEmail() : 'Inconnu') : 'Sans participant';
+                    return sprintf('#%s — %s (Participant : %s)', $participation->getIdParticipation(), $formationTitle, $userEmail);
                 },
                 'label' => 'Participation',
                 'placeholder' => 'Sélectionnez une participation',

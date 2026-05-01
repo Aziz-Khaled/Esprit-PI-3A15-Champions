@@ -64,6 +64,23 @@
                 </a>
             </li>
 
+            <!-- Nav Item - E-Learning Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseELearning"
+                    aria-expanded="true" aria-controls="collapseELearning">
+                    <i class="fas fa-fw fa-graduation-cap"></i>
+                    <span>E-Learning</span>
+                </a>
+                <div id="collapseELearning" class="collapse" aria-labelledby="headingELearning" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Gestion :</h6>
+                        <a class="collapse-item" href="{{ path('app_admin_formation_index') }}">Formations</a>
+                        <a class="collapse-item" href="{{ path('app_admin_participation_index') }}">Participations</a>
+                        <a class="collapse-item" href="{{ path('app_admin_certificat_index') }}">Certificats</a>
+                    </div>
+                </div>
+            </li>
+
             <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"

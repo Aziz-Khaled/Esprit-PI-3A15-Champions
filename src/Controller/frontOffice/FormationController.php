@@ -193,6 +193,15 @@ public function enroll(
         }
 
         $this->addFlash('success', 'Success! You have been enrolled. Please check your email for confirmation.');
+        
+        // Store formation data in session for Google Calendar button
+        $session = $request->getSession();
+        $session->set('last_enrolled_formation', [
+            'titre'       => $formation->getTitre(),
+            'dateDebut'   => $formation->getDateDebut()->format('Ymd'),
+            'dateFin'     => $formation->getDateFin()->format('Ymd'),
+            'description' => substr($formation->getDescription() ?? '', 0, 150),
+        ]);
 
     } catch (\Exception $e) {
         $this->addFlash('error', 'Transaction failed: ' . $e->getMessage());
@@ -200,4 +209,214 @@ public function enroll(
 
     return $this->redirectToRoute('app_formations_index');
 }
+
+    #[Route('/formations/ai-chat', name: 'app_formations_ai_chat', methods: ['POST'])]
+    public function chatAi(Request $request, FormationRepository $formationRepository, \Symfony\Contracts\HttpClient\HttpClientInterface $httpClient): \Symfony\Component\HttpFoundation\JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $userMessage = $data['message'] ?? '';
+
+        if (empty($userMessage)) {
+            return $this->json(['error' => 'Message vide'], 400);
+        }
+
+        $rawKey = $_ENV['GEMINI_API_KEY'] ?? $_SERVER['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?? '';
+        $apiKey = is_array($rawKey) ? (string) end($rawKey) : (string) $rawKey;
+        $apiKey = trim(str_replace(['"', "'"], '', $apiKey));
+
+        if (empty($apiKey)) {
+            $projectDir = $this->getParameter('kernel.project_dir');
+            foreach (['.env.local', '.env'] as $envFile) {
+                $envPath = $projectDir . '/' . $envFile;
+                if (file_exists($envPath) && preg_match('/^GEMINI_API_KEY=(.+)$/m', file_get_contents($envPath), $matches)) {
+                    $apiKey = trim(str_replace(['"', "'"], '', $matches[1]));
+                    if (!empty($apiKey)) break;
+                }
+            }
+        }
+        
+        if (empty($apiKey)) {
+            return $this->json(['error' => 'Clé API Gemini non configurée.'], 500);
+        }
+
+        // Get open formations to build context
+        $formations = $formationRepository->findBy(['statut' => 'OUVERTE']);
+        $context = "Tu es un assistant virtuel pour la plateforme ChampionsPi. Voici la liste des formations disponibles actuellement :\n";
+        foreach ($formations as $f) {
+            $context .= "- " . $f->getTitre() . " (Domaine: " . $f->getDomaine() . ", Prix: " . $f->getPrix() . " TND)\n";
+        }
+        $context .= "\nRéponds à la question de l'utilisateur de manière concise, polie et utile en te basant UNIQUEMENT sur ces informations. Si l'utilisateur demande quelque chose qui n'est pas dans la liste, dis-lui poliment que tu n'as pas l'information.\n\nQuestion de l'utilisateur : " . $userMessage;
+
+        try {
+            $response = $httpClient->request('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' . $apiKey, [
+                'json' => [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $context]
+                            ]
+                        ]
+                    ]
+                ]
+            ]);
+
+            if ($response->getStatusCode() === 429) {
+                return $this->json(['reply' => "Désolé, j'ai atteint ma limite de questions pour cette minute. Veuillez patienter 60 secondes avant de me reposer une question !"]);
+            }
+
+            $result = $response->toArray();
+            $generatedText = $result['candidates'][0]['content']['parts'][0]['text'] ?? 'Désolé, je ne peux pas répondre pour le moment.';
+
+            return $this->json(['reply' => trim($generatedText)]);
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), '429')) {
+                return $this->json(['reply' => "Quota dépassé (429). Attendez une minute."]);
+            }
+            return $this->json(['error' => 'Erreur lors de la génération avec IA : ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/formations/mes-certificats', name: 'app_formations_mes_certificats', methods: ['GET'])]
+    public function mesCertificats(): Response
+    {
+        /** @var \App\Entity\Utilisateur $user */
+        $user = $this->getUser();
+        if (!$user) {
+            $this->addFlash('error', 'Vous devez être connecté pour voir vos certificats.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $certificats = [];
+        if (method_exists($user, 'getParticipations')) {
+            $participations = $user->getParticipations();
+            if ($participations) {
+                foreach ($participations as $p) {
+                    if (method_exists($p, 'getCertificats') && $p->getCertificats()) {
+                        foreach ($p->getCertificats() as $c) {
+                            $certificats[] = $c;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sort by date_emission descending if possible
+        usort($certificats, function($a, $b) {
+            $dateA = method_exists($a, 'getDateEmission') ? $a->getDateEmission() : null;
+            $dateB = method_exists($b, 'getDateEmission') ? $b->getDateEmission() : null;
+            if ($dateA == $dateB) return 0;
+            if (!$dateA) return 1;
+            if (!$dateB) return -1;
+            return $dateA > $dateB ? -1 : 1;
+        });
+
+        return $this->render('formation/mes_certificats.html.twig', [
+            'certificats' => $certificats,
+        ]);
+    }
+
+    #[Route('/formations/certificat/{id}/pdf', name: 'app_formations_certificat_pdf', methods: ['GET'])]
+    public function downloadPdf(\App\Entity\Certificat $certificat, \Symfony\Component\Routing\Generator\UrlGeneratorInterface $urlGenerator): Response
+    {
+        $user = $this->getUser();
+        if (!$user || $certificat->getParticipation()->getUtilisateur() !== $user) {
+            $this->addFlash('error', 'Vous n\'êtes pas autorisé à télécharger ce certificat.');
+            return $this->redirectToRoute('app_formations_mes_certificats');
+        }
+
+        // Generate Verification URL
+        $verifyUrl = $urlGenerator->generate('app_verify_certificat', ['id' => $certificat->getIdCertificat()], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL);
+        
+        // Generate QR Code via external API as Base64 to embed in PDF (Using JPEG to avoid GD extension requirement)
+        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($verifyUrl) . '&format=jpeg';
+        
+        // Fetch image safely
+        $qrCodeBase64 = '';
+        try {
+            $qrContent = @file_get_contents($qrCodeUrl);
+            if ($qrContent !== false) {
+                $qrCodeBase64 = 'data:image/jpeg;base64,' . base64_encode($qrContent);
+            }
+        } catch (\Exception $e) {}
+
+        // Render HTML
+        $html = $this->renderView('formation/pdf_certificat.html.twig', [
+            'certificat' => $certificat,
+            'qrCode' => $qrCodeBase64,
+            'verifyUrl' => $verifyUrl
+        ]);
+
+        // Configure Dompdf
+        $options = new \Dompdf\Options();
+        $options->set('defaultFont', 'Arial');
+        $options->set('isRemoteEnabled', true); // Allow remote images if any
+        $options->set('isHtml5ParserEnabled', true);
+        
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        return new Response(
+            $dompdf->output(),
+            200,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="Certificat_'.$certificat->getIdCertificat().'.pdf"'
+            ]
+        );
+    }
+
+    #[Route('/verify-certificat/{id}', name: 'app_verify_certificat', methods: ['GET'])]
+    public function verify(\App\Entity\Certificat $certificat): Response
+    {
+        return $this->render('formation/verify_certificat.html.twig', [
+            'certificat' => $certificat,
+        ]);
+    }
+    #[Route('/formations/{id}/rate', name: 'app_formations_rate', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function rate(int $id, Request $request, \App\Repository\FormationRepository $formationRepository, EntityManagerInterface $em): \Symfony\Component\HttpFoundation\JsonResponse
+    {
+        /** @var \App\Entity\Utilisateur $user */
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'Non authentifié'], 401);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $note = (float) ($data['note'] ?? 0);
+        
+        if ($note < 1 || $note > 5) {
+            return $this->json(['error' => 'Note invalide'], 400);
+        }
+
+        $formation = $formationRepository->find($id);
+        if (!$formation) {
+            return $this->json(['error' => 'Formation introuvable'], 404);
+        }
+
+        // Find existing participation and update the note
+        $participation = $em->getRepository(\App\Entity\Participation::class)->findOneBy([
+            'formation'   => $formation,
+            'utilisateur' => $user,
+        ]);
+
+        if ($participation) {
+            // Scale 1-5 stars → 1-20 note
+            $participation->setNote($note * 4);
+            $em->flush();
+            return $this->json(['success' => true, 'note_saved' => $note * 4]);
+        }
+
+        return $this->json(['error' => 'Participation introuvable'], 404);
+    }
+
+    #[Route('/formations/mes-favoris', name: 'app_formations_mes_favoris', methods: ['GET'])]
+    public function mesFavoris(\App\Repository\FormationRepository $formationRepository): Response
+    {
+        $formations = $formationRepository->findAll();
+        return $this->render('formation/mes_favoris.html.twig', [
+            'formations' => $formations,
+        ]);
+    }
 }

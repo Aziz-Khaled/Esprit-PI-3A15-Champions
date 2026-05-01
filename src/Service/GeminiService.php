@@ -73,7 +73,7 @@ class GeminiService
         Your response must be valid JSON only.";
 
         try {
-            $response = $this->httpClient->request('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $this->apiKey, [
+            $response = $this->httpClient->request('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' . $this->apiKey, [
                 'json' => [
                     'contents' => [
                         ['parts' => [['text' => $prompt]]]
@@ -83,6 +83,10 @@ class GeminiService
                     ]
                 ]
             ]);
+
+            if ($response->getStatusCode() === 429) {
+                return []; // Or handle quota error specifically
+            }
 
             $data = $response->toArray();
             $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '[]';
@@ -123,7 +127,7 @@ class GeminiService
     private function callGemini(string $prompt): string
     {
         try {
-            $response = $this->httpClient->request('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $this->apiKey, [
+            $response = $this->httpClient->request('POST', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' . $this->apiKey, [
                 'headers' => [
                     'Content-Type' => 'application/json',
                 ],
@@ -134,6 +138,10 @@ class GeminiService
                 ]
             ]);
 
+            if ($response->getStatusCode() === 429) {
+                return "Limite de quota atteinte (429). Veuillez patienter une minute avant de réessayer.";
+            }
+
             $data = $response->toArray();
 
             if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
@@ -142,7 +150,9 @@ class GeminiService
 
             return "Désolé, l'IA n'a pas pu générer de texte pour le moment. Vérifiez votre clé API.";
         } catch (\Exception $e) {
-            // Log or return more info for debugging
+            if (str_contains($e->getMessage(), '429')) {
+                return "Limite de quota atteinte (429). Veuillez patienter une minute avant de réessayer.";
+            }
             return "Erreur Gemini API: " . $e->getMessage();
         }
     }

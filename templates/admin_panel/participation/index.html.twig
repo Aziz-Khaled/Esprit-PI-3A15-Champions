@@ -1,0 +1,95 @@
+{% extends 'back_base.html.twig' %}
+
+{% block title %}Gestion des Participations{% endblock %}
+
+{% block body_back %}
+<div class="container-fluid">
+    <h1 class="h3 mb-2 text-gray-800">Gestion des Participations</h1>
+    <p class="mb-4">Consultez et notez les participations aux différentes formations.</p>
+
+    <!-- Filter Card -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-9">
+                    <label for="search" class="form-label">Recherche</label>
+                    <input id="search" name="q" type="search" value="{{ search ?? '' }}" class="form-control" placeholder="Formation, Email, Statut...">
+                </div>
+                <div class="col-md-3 text-right">
+                    <button type="submit" class="btn btn-outline-primary w-100" style="margin-top: 32px;">
+                        <i class="fas fa-filter fa-sm mr-1"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Participations Table Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Liste des participations</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Participant</th>
+                            <th>Formation</th>
+                            <th>Date Inscription</th>
+                            <th>Statut</th>
+                            <th>Note / Présence</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for participation in participations %}
+                            <tr>
+                                <td>
+                                    <div class="font-weight-bold text-gray-800">
+                                        {{ participation.utilisateur.email }}
+                                    </div>
+                                </td>
+                                <td>{{ participation.formation.titre }}</td>
+                                <td>
+                                    {{ participation.dateInscription ? participation.dateInscription|date('d/m/Y') : '' }}
+                                </td>
+                                <td>
+                                    {% if participation.statut == 'TERMINEE' %}
+                                        <span class="badge badge-success">Terminée</span>
+                                    {% elseif participation.statut == 'EN_COURS' %}
+                                        <span class="badge badge-warning">En cours</span>
+                                    {% elseif participation.statut == 'ANNULEE' %}
+                                        <span class="badge badge-danger">Annulée</span>
+                                    {% else %}
+                                        <span class="badge badge-primary">Inscrit</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if participation.presence %}
+                                        <i class="fas fa-check text-success mr-2" title="Présent"></i>
+                                    {% else %}
+                                        <i class="fas fa-times text-danger mr-2" title="Absent"></i>
+                                    {% endif %}
+                                    <strong>{{ participation.note ? participation.note ~ '/20' : 'N/A' }}</strong>
+                                </td>
+                                <td class="text-center text-nowrap">
+                                    <a href="{{ path('app_admin_participation_edit', {'id': participation.idParticipation}) }}" class="btn btn-warning btn-circle btn-sm shadow-sm" title="Évaluer / Modifier">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    Aucune participation trouvée.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
