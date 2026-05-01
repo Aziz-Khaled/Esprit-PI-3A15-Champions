@@ -13,7 +13,6 @@ class Certificat
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    // Correction : On force le nom de la colonne pour correspondre à ta base de données
     #[ORM\Column(name: "idCertificat", type: "integer")]
     private ?int $idCertificat = null;
 
@@ -24,9 +23,8 @@ class Certificat
 
     #[ORM\Column(name: "dateEmission", type: 'date', nullable: false)]
     #[Assert\NotBlank(message: "La date d'émission est requise.")]
-    // Contrôle de saisie : La date d'émission ne peut pas être dans le futur
     #[Assert\LessThanOrEqual("today", message: "La date d'émission ne peut pas être une date future.")]
-    private ?\DateTimeInterface $dateEmission = null;
+    private \DateTimeInterface $dateEmission;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     #[Assert\Length(max: 255, maxMessage: "La mention ne peut pas dépasser 255 caractères.")]
@@ -35,56 +33,22 @@ class Certificat
     #[ORM\Column(name: "urlFichier", type: 'string', length: 255, nullable: true)]
     private ?string $urlFichier = null;
 
-    // --- GETTERS & SETTERS ---
-
-    public function getIdCertificat(): ?int
+    public function __construct()
     {
-        return $this->idCertificat;
+        $this->dateEmission = new \DateTime();
     }
 
-    // Pas de setter pour l'ID car il est auto-incrémenté
+    public function getIdCertificat(): ?int { return $this->idCertificat; }
 
-    public function getParticipation(): ?Participation
-    {
-        return $this->participation;
-    }
+    public function getParticipation(): ?Participation { return $this->participation; }
+    public function setParticipation(?Participation $participation): self { $this->participation = $participation; return $this; }
 
-    public function setParticipation(?Participation $participation): self
-    {
-        $this->participation = $participation;
-        return $this;
-    }
+    public function getDateEmission(): \DateTimeInterface { return $this->dateEmission; }
+    public function setDateEmission(\DateTimeInterface $dateEmission): self { $this->dateEmission = $dateEmission; return $this; }
 
-    public function getDateEmission(): ?\DateTimeInterface
-    {
-        return $this->dateEmission;
-    }
+    public function getMention(): ?string { return $this->mention; }
+    public function setMention(?string $mention): self { $this->mention = $mention; return $this; }
 
-    public function setDateEmission(\DateTimeInterface $dateEmission): self
-    {
-        $this->dateEmission = $dateEmission;
-        return $this;
-    }
-
-    public function getMention(): ?string
-    {
-        return $this->mention;
-    }
-
-    public function setMention(?string $mention): self
-    {
-        $this->mention = $mention;
-        return $this;
-    }
-
-    public function getUrlFichier(): ?string
-    {
-        return $this->urlFichier;
-    }
-
-    public function setUrlFichier(?string $urlFichier): self
-    {
-        $this->urlFichier = $urlFichier;
-        return $this;
-    }
+    public function getUrlFichier(): ?string { return $this->urlFichier; }
+    public function setUrlFichier(?string $urlFichier): self { $this->urlFichier = $urlFichier; return $this; }
 }

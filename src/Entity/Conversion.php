@@ -17,11 +17,10 @@ class Conversion
     private ?int $id_conversion = null;
 
     #[ORM\Column(type: 'decimal', precision: 18, scale: 8, nullable: false)]
-    private ?string $amount_from = null;
+    private string $amount_from = '0';
 
-    // --- AJOUT : Propriété pour stocker le montant final converti ---
     #[ORM\Column(type: 'decimal', precision: 18, scale: 8, nullable: false)]
-    private ?string $amount_to = null;
+    private string $amount_to = '0';
 
     #[ORM\ManyToOne(targetEntity: Currency::class, inversedBy: 'conversionsFrom')]
     #[ORM\JoinColumn(name: 'currency_from', referencedColumnName: 'id_currency')]
@@ -32,10 +31,10 @@ class Conversion
     private ?Currency $currencyTo = null;
 
     #[ORM\Column(type: 'decimal', precision: 18, scale: 8, nullable: false)]
-    private ?string $exchange_rate = null;
+    private string $exchange_rate = '0';
 
     #[ORM\Column(type: 'datetime', nullable: false)]
-    private ?\DateTimeInterface $created_at = null;
+    private \DateTimeInterface $created_at;
 
     /** @var Collection<int, Transaction> */
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'conversion')]
@@ -43,52 +42,29 @@ class Conversion
 
     public function __construct()
     {
+        $this->created_at = new \DateTime();
         $this->transactions = new ArrayCollection();
     }
 
     public function getId_conversion(): ?int { return $this->id_conversion; }
 
-    public function getAmount_from(): ?string { return $this->amount_from; }
-    public function setAmount_from(string $amount_from): self { 
-        $this->amount_from = $amount_from; 
-        return $this; 
-    }
+    public function getAmount_from(): string { return $this->amount_from; }
+    public function setAmount_from(string $amount_from): self { $this->amount_from = $amount_from; return $this; }
 
-    // --- AJOUT : Getter et Setter pour amount_to ---
-    public function getAmount_to(): ?string { 
-        return $this->amount_to; 
-    }
-    public function setAmount_to(string $amount_to): self { 
-        $this->amount_to = $amount_to; 
-        return $this; 
-    }
+    public function getAmount_to(): string { return $this->amount_to; }
+    public function setAmount_to(string $amount_to): self { $this->amount_to = $amount_to; return $this; }
 
     public function getCurrencyFrom(): ?Currency { return $this->currencyFrom; }
-    public function setCurrencyFrom(?Currency $currencyFrom): self { 
-        $this->currencyFrom = $currencyFrom; 
-        return $this; 
-    }
+    public function setCurrencyFrom(?Currency $currencyFrom): self { $this->currencyFrom = $currencyFrom; return $this; }
 
     public function getCurrencyTo(): ?Currency { return $this->currencyTo; }
-    public function setCurrencyTo(?Currency $currencyTo): self { 
-        $this->currencyTo = $currencyTo; 
-        return $this; 
-    }
+    public function setCurrencyTo(?Currency $currencyTo): self { $this->currencyTo = $currencyTo; return $this; }
 
-    public function getExchange_rate(): ?string { return $this->exchange_rate; }
-    public function setExchange_rate(string $exchange_rate): self { 
-        $this->exchange_rate = $exchange_rate; 
-        return $this; 
-    }
+    public function getExchange_rate(): string { return $this->exchange_rate; }
+    public function setExchange_rate(string $exchange_rate): self { $this->exchange_rate = $exchange_rate; return $this; }
 
-    public function getCreated_at(): ?\DateTimeInterface { return $this->created_at; }
-    public function setCreated_at(\DateTimeInterface $created_at): self { 
-        $this->created_at = $created_at; 
-        return $this; 
-    }
+    public function getCreated_at(): \DateTimeInterface { return $this->created_at; }
 
-    /**
-     * @return Collection<int, Transaction>
-     */
+    /** @return Collection<int, Transaction> */
     public function getTransactions(): Collection { return $this->transactions; }
 }

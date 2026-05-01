@@ -1,6 +1,5 @@
 <?php
 
-// src/Entity/AdminLog.php
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -39,10 +38,10 @@ class AdminLog
         $this->createdAt   = new \DateTime();
     }
 
-    public function getId(): ?int                        { return $this->id; }
-    public function getAction(): string                  { return $this->action; }
-    public function getEntity(): string                  { return $this->entity; }
-    public function getDetails(): ?string                { return $this->details; }
-    public function getPerformedBy(): string             { return $this->performedBy; }
-    public function getCreatedAt(): \DateTimeInterface   { return $this->createdAt; }
-}   
+    public function getId(): ?int                      { return $this->id; }
+    public function getAction(): string                { return $this->action; }
+    public function getEntity(): string                { return $this->entity; }
+    public function getDetails(): ?string              { return $this->details; }
+    public function getPerformedBy(): string           { return $this->performedBy; }
+    public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
+}

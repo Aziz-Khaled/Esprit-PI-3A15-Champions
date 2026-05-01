@@ -9,7 +9,7 @@ use App\Repository\WalletRepository;
 
 #[ORM\Entity(repositoryClass: WalletRepository::class)]
 #[ORM\Table(name: 'wallet')]
-#[ORM\HasLifecycleCallbacks] // Pour automatiser les dates
+#[ORM\HasLifecycleCallbacks]
 class Wallet
 {
     #[ORM\Id]
@@ -22,48 +22,41 @@ class Wallet
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\Column(type: 'string', length: 8, nullable: false)]
-    private ?string $rib = null;
+    private string $rib = '';
 
-   
     #[ORM\Column(name: 'type_wallet', type: 'string', columnDefinition: "ENUM('fiat', 'crypto', 'trading')", nullable: true)]
     private ?string $typeWallet = null;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private ?string $solde = null;
 
-   
     #[ORM\Column(type: 'string', columnDefinition: "ENUM('bloque', 'actif')", nullable: true)]
     private ?string $statut = null;
 
     #[ORM\Column(name: 'date_creation', type: 'datetime', nullable: false, options: ["default" => "CURRENT_TIMESTAMP"])]
-    private ?\DateTimeInterface $dateCreation = null;
+    private \DateTimeInterface $dateCreation;
 
     #[ORM\Column(name: 'date_derniere_modification', type: 'datetime', nullable: false, options: ["default" => "CURRENT_TIMESTAMP"])]
-    private ?\DateTimeInterface $dateDerniereModification = null;
+    private \DateTimeInterface $dateDerniereModification;
 
     /** @var Collection<int, Blockchain> */
     #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'walletSource')]
-   
     private Collection $blockchainSources;
 
     /** @var Collection<int, Blockchain> */
     #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'walletDestination')]
-   
     private Collection $blockchainDestinations;
 
     /** @var Collection<int, Transaction> */
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'walletSource')]
-   
     private Collection $transactionsSource;
 
     /** @var Collection<int, Transaction> */
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'walletDestination')]
-   
     private Collection $transactionsDestination;
 
     /** @var Collection<int, WalletCurrency> */
     #[ORM\OneToMany(targetEntity: WalletCurrency::class, mappedBy: 'wallet', cascade: ['remove'], orphanRemoval: true)]
-   
     private Collection $walletCurrencys;
 
     public function __construct()
@@ -73,19 +66,13 @@ class Wallet
         $this->transactionsSource = new ArrayCollection();
         $this->transactionsDestination = new ArrayCollection();
         $this->walletCurrencys = new ArrayCollection();
-        // Initialisation des dates par défaut
         $this->dateCreation = new \DateTime();
         $this->dateDerniereModification = new \DateTime();
     }
 
-    /* --- Lifecycle Callbacks pour automatiser les dates --- */
-
     #[ORM\PrePersist]
     public function setInitialDates(): void
     {
-        if ($this->dateCreation === null) {
-            $this->dateCreation = new \DateTime();
-        }
         $this->dateDerniereModification = new \DateTime();
     }
 
@@ -95,15 +82,12 @@ class Wallet
         $this->dateDerniereModification = new \DateTime();
     }
 
-    /* --- Getters & Setters --- */
-
     public function getIdWallet(): ?int { return $this->idWallet; }
-    // Pas de setIdWallet car auto-incrémenté
 
     public function getUtilisateur(): ?Utilisateur { return $this->utilisateur; }
     public function setUtilisateur(?Utilisateur $utilisateur): self { $this->utilisateur = $utilisateur; return $this; }
 
-    public function getRib(): ?string { return $this->rib; }
+    public function getRib(): string { return $this->rib; }
     public function setRib(string $rib): self { $this->rib = $rib; return $this; }
 
     public function getTypeWallet(): ?string { return $this->typeWallet; }
@@ -115,13 +99,9 @@ class Wallet
     public function getStatut(): ?string { return $this->statut; }
     public function setStatut(?string $statut): self { $this->statut = $statut; return $this; }
 
-    public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
-    public function setDateCreation(\DateTimeInterface $dateCreation): self { $this->dateCreation = $dateCreation; return $this; }
+    public function getDateCreation(): \DateTimeInterface { return $this->dateCreation; }
 
-    public function getDateDerniereModification(): ?\DateTimeInterface { return $this->dateDerniereModification; }
-    public function setDateDerniereModification(\DateTimeInterface $dateDerniereModification): self { $this->dateDerniereModification = $dateDerniereModification; return $this; }
-
-    /* --- Relations --- */
+    public function getDateDerniereModification(): \DateTimeInterface { return $this->dateDerniereModification; }
 
     /** @return Collection<int, Blockchain> */
     public function getBlockchainSources(): Collection { return $this->blockchainSources; }
@@ -150,7 +130,6 @@ class Wallet
     public function removeWalletCurrency(WalletCurrency $walletCurrency): self
     {
         if ($this->walletCurrencys->removeElement($walletCurrency)) {
-            // set the owning side to null (unless already changed)
             if ($walletCurrency->getWallet() === $this) {
                 $walletCurrency->setWallet(null);
             }

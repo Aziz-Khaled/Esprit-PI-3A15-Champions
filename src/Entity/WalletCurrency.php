@@ -23,32 +23,17 @@ class WalletCurrency
     private ?Currency $currency = null;
 
     #[ORM\Column(type: 'float', options: ['default' => 0])]
-    private ?float $solde = 0.0;
+    private float $solde = 0.0;
 
     #[ORM\Column(name: 'nom_currency', type: 'string', length: 255, nullable: false)]
-    private ?string $nomCurrency = null;
+    private string $nomCurrency = '';
 
-    public function getIdWalletCurrency(): ?int
-    {
-        return $this->idWalletCurrency;
-    }
+    public function getIdWalletCurrency(): ?int { return $this->idWalletCurrency; }
 
-    public function getWallet(): ?Wallet
-    {
-        return $this->wallet;
-    }
+    public function getWallet(): ?Wallet { return $this->wallet; }
+    public function setWallet(?Wallet $wallet): static { $this->wallet = $wallet; return $this; }
 
-    public function setWallet(?Wallet $wallet): static
-    {
-        $this->wallet = $wallet;
-        return $this;
-    }
-
-    public function getCurrency(): ?Currency
-    {
-        return $this->currency;
-    }
-
+    public function getCurrency(): ?Currency { return $this->currency; }
     public function setCurrency(?Currency $currency): static
     {
         $this->currency = $currency;
@@ -58,25 +43,9 @@ class WalletCurrency
         return $this;
     }
 
-    public function getSolde(): ?float
-    {
-        return $this->solde;
-    }
+    public function getSolde(): float { return $this->solde; }
+    public function setSolde(float $solde): static { $this->solde = $solde; return $this; }
 
-    public function setSolde(float $solde): static
-    {
-        $this->solde = $solde;
-        return $this;
-    }
-
-    public function getNomCurrency(): ?string
-    {
-        return $this->nomCurrency;
-    }
-
-    public function setNomCurrency(string $nomCurrency): static
-    {
-        $this->nomCurrency = $nomCurrency;
-        return $this;
-    }
+    public function getNomCurrency(): string { return $this->nomCurrency; }
+    public function setNomCurrency(string $nomCurrency): static { $this->nomCurrency = $nomCurrency; return $this; }
 }

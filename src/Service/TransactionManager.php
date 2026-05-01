@@ -13,7 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class TransactionManager 
 {
-   private EntityManagerInterface $em;
+    private EntityManagerInterface $em;
     private WalletRepository $walletRepo;
     private CurrencyRepository $currencyRepo;
     private BlockchainService $blockchain;
@@ -55,7 +55,7 @@ class TransactionManager
         $isConversion = ($typeUpper === 'CONVERSION');
         $isTrade = in_array($typeUpper, ['ACHAT', 'VENTE', 'BUY', 'SELL']);
 
-        // 3. LOGIQUE DE SÉCURITÉ INTER-WALLET (TA DEMANDE)
+        // 3. LOGIQUE DE SÉCURITÉ INTER-WALLET
         
         // Règle A : Empêcher l'envoi direct Fiat -> Crypto/Trading sans conversion
         if ($srcType === 'fiat' && $destType !== 'fiat') {
@@ -108,7 +108,6 @@ class TransactionManager
 
                 $targetCurrencyType = strtolower($targetCurrency->getTypeCurrency());
 
-                // Validation compatibilité destination finale
                 if ($targetCurrencyType === 'fiat' && $destType !== 'fiat') {
                     throw new \Exception("Conversion failed: Target currency (Fiat) incompatible with $destType wallet.");
                 }
@@ -122,7 +121,6 @@ class TransactionManager
                 $conversionRecord->setCurrencyFrom($currency);
                 $conversionRecord->setCurrencyTo($targetCurrency);
                 $conversionRecord->setExchange_rate((string)$rate);
-                $conversionRecord->setCreated_at(new \DateTime());
 
                 $this->em->persist($conversionRecord);
             }
@@ -148,23 +146,19 @@ class TransactionManager
             // D. CRÉATION DE LA TRANSACTION
             $t = new Transaction();
             $t->setWalletSource($srcWallet)
-            ->setWalletDestination($destWallet)
-            ->setMontant($amount)
-            ->setType($typeUpper)
-            ->setStatut('VALID')
-            ->setCurrency($currency)
-            ->setDateTransaction(new \DateTime());
-            
+              ->setWalletDestination($destWallet)
+              ->setMontant($amount)
+              ->setType($typeUpper)
+              ->setStatut('VALID')
+              ->setCurrency($currency);
+
             if ($conversionRecord) {
                 $t->setConversion($conversionRecord);
             }
-            
+
             $this->em->persist($t);
 
             // E. AUDIT & BLOCKCHAIN
-            $srcWallet->setDateDerniereModification(new \DateTime());
-            $destWallet->setDateDerniereModification(new \DateTime());
-
             $this->em->flush();
             $this->blockchain->addBlock($t);
             $this->em->flush();

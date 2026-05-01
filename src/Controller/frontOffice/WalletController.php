@@ -37,16 +37,14 @@ class WalletController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): Response {
-        // 1. User Management
         $user = $this->getUser();
         if (!$user instanceof Utilisateur) {
-                $user = $entityManager->getRepository(Utilisateur::class)->find(1);
-            }
-            if (!$user) {
+            $user = $entityManager->getRepository(Utilisateur::class)->find(1);
+        }
+        if (!$user) {
             throw $this->createNotFoundException("Test user not found.");
-            }
+        }
 
-        // 2. Wallet Creation Form
         $newWallet = new Wallet();
         $walletForm = $this->createForm(WalletType::class, $newWallet);
         $walletForm->handleRequest($request);
@@ -54,14 +52,13 @@ class WalletController extends AbstractController
         if ($walletForm->isSubmitted() && $walletForm->isValid()) {
             $newWallet->setUtilisateur($user);
             $newWallet->setSolde('0');
-            
+
             do {
                 $rib = (string)random_int(10000000, 99999999);
                 $exists = $walletRepository->findOneBy(['rib' => $rib]);
             } while ($exists);
-            
+
             $newWallet->setRib($rib);
-            $newWallet->setDateCreation(new \DateTime());
             $newWallet->setStatut('actif');
 
             $entityManager->persist($newWallet);
@@ -71,34 +68,30 @@ class WalletController extends AbstractController
             return $this->redirectToRoute('app_wallet_index');
         }
 
-        // 3. Data Retrieval for View
         $walletsList = $walletRepository->findBy(['utilisateur' => $user]);
         $allCurrencies = $currencyRepo->findAll();
         $transactionForm = $this->createForm(TransactionType::class);
 
-        // 4. Active Credit Card Management
         $creditCard = $entityManager->getRepository(CreditCard::class)->findOneBy([
             'utilisateur' => $user,
             'statut' => 'ACTIVE'
         ]);
 
-        // Form for EDITING an existing card
         $cardFormView = null;
         if ($creditCard) {
             $cardFormView = $this->createForm(CreditCardType::class, $creditCard, ['is_edit' => true])->createView();
         }
 
-        // ADDITION: Form for CREATING a new card (used by addCardModal)
         $newCardForm = $this->createForm(CreditCardType::class, new CreditCard(), [
             'is_edit' => false,
-            'action' => $this->generateUrl('app_card_new') 
+            'action' => $this->generateUrl('app_card_new')
         ]);
 
         return $this->render('wallet/wallet.html.twig', [
             'wallets' => $walletsList,
             'walletForm' => $walletForm->createView(),
-            'cardForm' => $cardFormView,           
-            'newCardForm' => $newCardForm->createView(), 
+            'cardForm' => $cardFormView,
+            'newCardForm' => $newCardForm->createView(),
             'all_available_currencies' => $allCurrencies,
             'transactionForm' => $transactionForm->createView(),
             'creditCard' => $creditCard,
@@ -129,7 +122,6 @@ class WalletController extends AbstractController
         $wc->setCurrency($currency);
         $wc->setNomCurrency($nomCurrency ?: $currency->getNom());
         $wc->setSolde(0.0);
-        $wallet->setDateDerniereModification(new \DateTime());
 
         $entityManager->persist($wc);
         $entityManager->flush();
@@ -144,7 +136,6 @@ class WalletController extends AbstractController
         $statut = $request->request->get('statut');
         if ($statut) {
             $wallet->setStatut($statut);
-            $wallet->setDateDerniereModification(new \DateTime());
             $entityManager->flush();
             $this->addFlash('success', 'Status updated successfully.');
         }
@@ -183,12 +174,10 @@ class WalletController extends AbstractController
     public function getChartData(WalletCurrencyRepository $wcRepo, EntityManagerInterface $entityManager): JsonResponse
     {
         $user = $this->getUser();
+        if (!$user instanceof Utilisateur) {
+            $user = $entityManager->getRepository(Utilisateur::class)->find(1);
+        }
 
-if (!$user instanceof Utilisateur) {
-    $user = $entityManager->getRepository(Utilisateur::class)->find(1);
-}
-
-$data = $wcRepo->sumBalancesByUser($user);
         $data = $wcRepo->sumBalancesByUser($user);
         return new JsonResponse($data);
     }
@@ -219,198 +208,193 @@ $data = $wcRepo->sumBalancesByUser($user);
         ]);
     }
 
-#[Route('/{id}/history-json', name: 'app_wallet_history_json', methods: ['GET'])]
-public function getHistoryJson(int $id, WalletRepository $walletRepository, TransactionRepository $transactionRepository): JsonResponse
-{
-    $wallet = $walletRepository->find($id);
-    if (!$wallet) return new JsonResponse(['error' => 'Wallet not found'], 404);
+    #[Route('/{id}/history-json', name: 'app_wallet_history_json', methods: ['GET'])]
+    public function getHistoryJson(int $id, WalletRepository $walletRepository, TransactionRepository $transactionRepository): JsonResponse
+    {
+        $wallet = $walletRepository->find($id);
+        if (!$wallet) return new JsonResponse(['error' => 'Wallet not found'], 404);
 
-    $transactions = $transactionRepository->createQueryBuilder('t')
-        ->leftJoin('t.conversion', 'c') // On joint la table conversion
-        ->addSelect('c')
-        ->where('t.walletSource = :wallet OR t.walletDestination = :wallet')
-        ->setParameter('wallet', $wallet)
-        ->orderBy('t.dateTransaction', 'DESC')
-        ->getQuery()
-        ->getResult();
+        $transactions = $transactionRepository->createQueryBuilder('t')
+            ->leftJoin('t.conversion', 'c')
+            ->addSelect('c')
+            ->where('t.walletSource = :wallet OR t.walletDestination = :wallet')
+            ->setParameter('wallet', $wallet)
+            ->orderBy('t.dateTransaction', 'DESC')
+            ->getQuery()
+            ->getResult();
 
-    $data = [];
-    foreach ($transactions as $t) {
-        $isDebit = ($t->getWalletSource() && $t->getWalletSource()->getIdWallet() === $wallet->getIdWallet());
-        $isConversion = (strtoupper($t->getType()) === 'CONVERSION');
-        
-        // Initialisation par défaut
-        $displayAmount = $t->getMontant();
-        $displayCurrency = $t->getCurrency() ? $t->getCurrency()->getNom() : '';
-        $counterparty = 'N/A';
+        $data = [];
+        foreach ($transactions as $t) {
+            $isDebit = ($t->getWalletSource() && $t->getWalletSource()->getIdWallet() === $wallet->getIdWallet());
+            $isConversion = (strtoupper($t->getType()) === 'CONVERSION');
 
-        // LOGIQUE SPÉCIFIQUE POUR CONVERSION
-        if ($isConversion && $t->getConversion()) {
-            if (!$isDebit) {
-                // Si on est le destinataire de la conversion, on montre ce qu'on a REÇU
-                $displayAmount = (float)$t->getConversion()->getAmount_to();
-                $displayCurrency = $t->getConversion()->getCurrencyTo() ? $t->getConversion()->getCurrencyTo()->getNom() : $displayCurrency;
+            $displayAmount = $t->getMontant();
+            $displayCurrency = $t->getCurrency() ? $t->getCurrency()->getNom() : '';
+            $counterparty = 'N/A';
+
+            if ($isConversion && $t->getConversion()) {
+                if (!$isDebit) {
+                    $displayAmount = (float)$t->getConversion()->getAmount_to();
+                    $displayCurrency = $t->getConversion()->getCurrencyTo() ? $t->getConversion()->getCurrencyTo()->getNom() : $displayCurrency;
+                }
             }
-        }
 
-        // Gestion de la contrepartie (Recharge vs Transfert)
-        if (strtolower($t->getType()) === 'recharge') {
-            if ($t->getCreditCard()) {
-                $last4 = $t->getCreditCard()->getLast4Digits(); 
-                $counterparty = $last4 ? "**** **** " . $last4 : "Credit Card";
+            if (strtolower($t->getType()) === 'recharge') {
+                if ($t->getCreditCard()) {
+                    $last4 = $t->getCreditCard()->getLast4Digits();
+                    $counterparty = $last4 ? "**** **** " . $last4 : "Credit Card";
+                } else {
+                    $counterparty = "External Source";
+                }
             } else {
-                $counterparty = "External Source"; 
+                $counterparty = $isDebit ?
+                    ($t->getWalletDestination() ? $t->getWalletDestination()->getRib() : 'N/A') :
+                    ($t->getWalletSource() ? $t->getWalletSource()->getRib() : 'N/A');
             }
-        } else {
-            $counterparty = $isDebit ? 
-                ($t->getWalletDestination() ? $t->getWalletDestination()->getRib() : 'N/A') :
-                ($t->getWalletSource() ? $t->getWalletSource()->getRib() : 'N/A');
+
+            $data[] = [
+                'date' => $t->getDateTransaction() ? $t->getDateTransaction()->format('d/m/Y H:i') : 'N/A',
+                'type' => strtoupper($t->getType()),
+                'amount' => number_format($displayAmount, 2),
+                'currency' => $displayCurrency,
+                'counterparty' => $counterparty,
+                'direction' => $isDebit ? 'out' : 'in'
+            ];
         }
-
-        $data[] = [
-            'date' => $t->getDateTransaction() ? $t->getDateTransaction()->format('d/m/Y H:i') : 'N/A',
-            'type' => strtoupper($t->getType()), 
-            'amount' => number_format($displayAmount, 2), // Utilise le montant calculé
-            'currency' => $displayCurrency,             // Utilise la devise calculée
-            'counterparty' => $counterparty,
-            'direction' => $isDebit ? 'out' : 'in'
-        ];
+        return new JsonResponse($data);
     }
-    return new JsonResponse($data);
-}
- // STEP 1: Send the email and store data in session
-#[Route('/recharge', name: 'app_wallet_recharge', methods: ['POST'])]
-public function initiateRecharge(
-    Request $request, 
-    \App\Service\MailService $mailService, 
-    EntityManagerInterface $em
-): Response {
-    $walletId = $request->request->get('wallet_id');
-    $currencyId = $request->request->get('currency_id');
-    $amount = (float)$request->request->get('amount');
 
-    // Generate 6-digit verification code
-    $verificationCode = random_int(100000, 999999);
+    #[Route('/recharge', name: 'app_wallet_recharge', methods: ['POST'])]
+    public function initiateRecharge(
+        Request $request,
+        \App\Service\MailService $mailService,
+        EntityManagerInterface $em
+    ): Response {
+        $walletId = $request->request->get('wallet_id');
+        $currencyId = $request->request->get('currency_id');
+        $amount = (float)$request->request->get('amount');
 
-    // Save data in session
-    $session = $request->getSession();
-    $session->set('pending_recharge', [
-        'wallet_id' => $walletId,
-        'currency_id' => $currencyId,
-        'amount' => $amount,
-        'code' => $verificationCode
-    ]);
+        $verificationCode = random_int(100000, 999999);
+
+        $session = $request->getSession();
+        $session->set('pending_recharge', [
+            'wallet_id' => $walletId,
+            'currency_id' => $currencyId,
+            'amount' => $amount,
+            'code' => $verificationCode
+        ]);
 
         $user = $this->getUser();
-    if (!$user instanceof Utilisateur) {
-    $user = $em->getRepository(Utilisateur::class)->find(1);
-    }
-    try {
-        $mailService->sendVerificationCode($user->getEmail(), $verificationCode);
-        $this->addFlash('info', 'A verification code has been sent to your email.');
-    } catch (\Exception $e) {
-        $this->addFlash('error', 'Failed to send verification email: ' . $e->getMessage());
-        return $this->redirectToRoute('app_wallet_index');
-    }
-
-    return $this->redirectToRoute('app_wallet_index', ['verify' => 1]);
-}
-
-#[Route('/recharge/confirm', name: 'app_wallet_recharge_confirm', methods: ['POST'])]
-public function confirmRecharge(
-    Request $request, 
-    StripeService $stripeService, 
-    EntityManagerInterface $em,
-    \App\Service\BlockchainService $blockchainService
-): Response {
-    $session = $request->getSession();
-    $pending = $session->get('pending_recharge');
-    $inputCode = $request->request->get('verification_code');
-
-    if (!$pending || $inputCode != $pending['code']) {
-        $this->addFlash('error', 'Invalid verification code. Please try again.');
-        return $this->redirectToRoute('app_wallet_index');
-    }
-
-    $walletId = $pending['wallet_id'];
-    $currencyId = $pending['currency_id'];
-    $amount = $pending['amount'];
-
-    $user = $this->getUser();
-    if (!$user instanceof Utilisateur) {
-    $user = $em->getRepository(Utilisateur::class)->find(1);
-    }
-    $wallet = $em->getRepository(Wallet::class)->find($walletId);
-    $currency = $em->getRepository(Currency::class)->find($currencyId);
-    $card = $em->getRepository(CreditCard::class)->findOneBy(['utilisateur' => $user, 'statut' => 'ACTIVE']);
-
-    if (!$card || !$card->getStripePaymentMethodId()) {
-        $this->addFlash('error', 'No active card found.');
-        return $this->redirectToRoute('app_wallet_index');
-    }
-
-    try {
-        if (!$card->getStripeCustomerId()) {
-            $customer = $stripeService->createCustomer($user->getEmail() ?? 'user@example.com');
-            $card->setStripeCustomerId($customer->id);
-            $em->flush();
+        if (!$user instanceof Utilisateur) {
+            $user = $em->getRepository(Utilisateur::class)->find(1);
+        }
+        try {
+            $mailService->sendVerificationCode($user->getEmail(), $verificationCode);
+            $this->addFlash('info', 'A verification code has been sent to your email.');
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Failed to send verification email: ' . $e->getMessage());
+            return $this->redirectToRoute('app_wallet_index');
         }
 
-        $intent = $stripeService->createPaymentIntent(
-            $amount, 
-            $currency->getNom(), 
-            $card->getStripeCustomerId(), 
-            $card->getStripePaymentMethodId()
-        );
-
-        if ($intent->status === 'succeeded') {
-            $walletCurrency = $em->getRepository(WalletCurrency::class)->findOneBy([
-                'wallet' => $wallet,
-                'currency' => $currency
-            ]);
-
-            if (!$walletCurrency) {
-                $walletCurrency = new \App\Entity\WalletCurrency();
-                $walletCurrency->setWallet($wallet);
-                $walletCurrency->setCurrency($currency);
-                $walletCurrency->setNomCurrency($currency->getNom());
-                $walletCurrency->setSolde($amount);
-                $em->persist($walletCurrency);
-            } else {
-                $walletCurrency->setSolde($walletCurrency->getSolde() + $amount);
-            }
-
-            $transaction = new \App\Entity\Transaction();
-            $transaction->setWalletDestination($wallet);
-            $transaction->setWalletSource(null);
-            $transaction->setCreditCard($card);
-            $transaction->setMontant($amount);
-            $transaction->setCurrency($currency);
-            $transaction->setType('RECHARGE');
-            $transaction->setStatut('COMPLETED');
-            $transaction->setDateTransaction(new \DateTime());
-
-            $em->persist($transaction);
-            $em->flush(); 
-
-            try {
-                $blockchainService->addBlock($transaction);
-            } catch (\Exception $e) {
-            }
-
-            $session->remove('pending_recharge');
-            $this->addFlash('success', 'Wallet recharged and transaction secured in Blockchain!');
-        }
-    } catch (\Exception $e) {
-        $this->addFlash('error', 'Error: ' . $e->getMessage());
+        return $this->redirectToRoute('app_wallet_index', ['verify' => 1]);
     }
 
-    return $this->redirectToRoute('app_wallet_index');
-}
-#[Route('/convert', name: 'app_wallet_convert', methods: ['POST'])]
+    #[Route('/recharge/confirm', name: 'app_wallet_recharge_confirm', methods: ['POST'])]
+    public function confirmRecharge(
+        Request $request,
+        StripeService $stripeService,
+        EntityManagerInterface $em,
+        \App\Service\BlockchainService $blockchainService
+    ): Response {
+        $session = $request->getSession();
+        $pending = $session->get('pending_recharge');
+        $inputCode = $request->request->get('verification_code');
+
+        if (!$pending || $inputCode != $pending['code']) {
+            $this->addFlash('error', 'Invalid verification code. Please try again.');
+            return $this->redirectToRoute('app_wallet_index');
+        }
+
+        $walletId = $pending['wallet_id'];
+        $currencyId = $pending['currency_id'];
+        $amount = $pending['amount'];
+
+        $user = $this->getUser();
+        if (!$user instanceof Utilisateur) {
+            $user = $em->getRepository(Utilisateur::class)->find(1);
+        }
+        $wallet = $em->getRepository(Wallet::class)->find($walletId);
+        $currency = $em->getRepository(Currency::class)->find($currencyId);
+        $card = $em->getRepository(CreditCard::class)->findOneBy(['utilisateur' => $user, 'statut' => 'ACTIVE']);
+
+        if (!$card || !$card->getStripePaymentMethodId()) {
+            $this->addFlash('error', 'No active card found.');
+            return $this->redirectToRoute('app_wallet_index');
+        }
+
+        try {
+            if (!$card->getStripeCustomerId()) {
+                $customer = $stripeService->createCustomer($user->getEmail() ?? 'user@example.com');
+                $card->setStripeCustomerId($customer->id);
+                $em->flush();
+            }
+
+            $intent = $stripeService->createPaymentIntent(
+                $amount,
+                $currency->getNom(),
+                $card->getStripeCustomerId(),
+                $card->getStripePaymentMethodId()
+            );
+
+            if ($intent->status === 'succeeded') {
+                $walletCurrency = $em->getRepository(WalletCurrency::class)->findOneBy([
+                    'wallet' => $wallet,
+                    'currency' => $currency
+                ]);
+
+                if (!$walletCurrency) {
+                    $walletCurrency = new WalletCurrency();
+                    $walletCurrency->setWallet($wallet);
+                    $walletCurrency->setCurrency($currency);
+                    $walletCurrency->setNomCurrency($currency->getNom());
+                    $walletCurrency->setSolde($amount);
+                    $em->persist($walletCurrency);
+                } else {
+                    $walletCurrency->setSolde($walletCurrency->getSolde() + $amount);
+                }
+
+                $transaction = new \App\Entity\Transaction();
+                $transaction->setWalletDestination($wallet);
+                $transaction->setWalletSource(null);
+                $transaction->setCreditCard($card);
+                $transaction->setMontant($amount);
+                $transaction->setCurrency($currency);
+                $transaction->setType('RECHARGE');
+                $transaction->setStatut('COMPLETED');
+                $transaction->setDateTransaction(new \DateTime());
+
+                $em->persist($transaction);
+                $em->flush();
+
+                try {
+                    $blockchainService->addBlock($transaction);
+                } catch (\Exception $e) {
+                }
+
+                $session->remove('pending_recharge');
+                $this->addFlash('success', 'Wallet recharged and transaction secured in Blockchain!');
+            }
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Error: ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_wallet_index');
+    }
+
+    #[Route('/convert', name: 'app_wallet_convert', methods: ['POST'])]
     public function convert(
-        Request $request, 
-        EntityManagerInterface $em, 
+        Request $request,
+        EntityManagerInterface $em,
         TransactionManager $transactionManager
     ): Response {
         try {
@@ -434,7 +418,7 @@ public function confirmRecharge(
                 $wDest->getRib(),
                 $amountFrom,
                 'CONVERSION',
-                $curFrom->getId(), 
+                $curFrom->getId(),
                 $curTo->getId()
             );
 
