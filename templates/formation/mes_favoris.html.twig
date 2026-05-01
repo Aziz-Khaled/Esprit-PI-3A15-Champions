@@ -1,0 +1,161 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Champions — Mes Favoris{% endblock %}
+
+{% block stylesheets %}
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  :root {
+    --bg-base:   #080d14; --bg-card:  #0e1623; --border: #1a2a40;
+    --accent:    #00e5ff; --gold:     #f0b429;
+    --text-1:    #f0f4ff; --text-2:  #b0bdd0; --text-3: #5a7090;
+    --font-head: 'Syne', sans-serif; --font-body: 'Space Grotesk', sans-serif;
+    --radius:    16px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: var(--bg-base); color: var(--text-1); min-height: 100vh; }
+
+  .page-header {
+    max-width: 1200px; margin: 48px auto 32px; padding: 0 24px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+  }
+  .page-title { font-family: var(--font-head); font-size: 32px; font-weight: 800; }
+  .page-title span { color: #ff6b8a; }
+  .page-sub { font-size: 15px; color: var(--text-3); margin-top: 6px; }
+
+  .formations-grid {
+    max-width: 1200px; margin: 0 auto 60px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px; padding: 0 24px;
+  }
+  .formation-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; transition: transform .2s, box-shadow .2s;
+  }
+  .formation-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,229,255,.08); }
+  .card-img-wrap {
+    height: 120px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg,rgba(0,229,255,.08),rgba(240,180,41,.05));
+    font-size: 42px; color: rgba(0,229,255,.3); position: relative;
+  }
+  .fav-remove-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(255,23,68,.25); border: 1px solid rgba(255,23,68,.4);
+    border-radius: 50%; width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .2s;
+  }
+  .fav-remove-btn:hover { background: rgba(255,23,68,.5); }
+  .card-body { padding: 20px; }
+  .card-title { font-family: var(--font-head); font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .card-domaine { font-size: 11px; color: var(--accent); background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.15); border-radius: 20px; padding: 2px 10px; display: inline-block; margin-bottom: 10px; }
+  .card-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--text-3); margin-top: 10px; }
+  .card-footer { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--border); }
+  .card-price { font-size: 18px; font-weight: 700; color: var(--gold); }
+  .btn-enroll { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; background: rgba(0,229,255,.1); color: var(--accent); border: 1px solid rgba(0,229,255,.25); text-decoration: none; font-size: 13px; font-weight: 600; transition: all .2s; }
+  .btn-enroll:hover { background: rgba(0,229,255,.2); }
+
+  .empty-state {
+    grid-column: 1/-1; text-align: center; padding: 80px 24px;
+    color: var(--text-3); font-size: 18px;
+  }
+  .empty-state i { font-size: 52px; color: rgba(255,23,68,.3); display: block; margin-bottom: 16px; }
+  .btn-back { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; background: rgba(0,229,255,.1); color: var(--accent); border: 1px solid rgba(0,229,255,.25); text-decoration: none; transition: all .2s; }
+  .btn-back:hover { background: rgba(0,229,255,.2); }
+</style>
+{% endblock %}
+
+{% block body %}
+{# Pass all formations as JSON to JS #}
+<script>
+const ALL_FORMATIONS = {{ formations|map(f => {
+    'id': f.idFormation,
+    'titre': f.titre,
+    'domaine': f.domaine,
+    'statut': f.statut,
+    'prix': f.prix,
+    'dateDebut': f.dateDebut|date('d/m/Y'),
+    'dateFin': f.dateFin|date('d/m/Y'),
+    'capaciteMax': f.capaciteMax
+})|json_encode|raw }};
+</script>
+
+<div class="page-header">
+    <div>
+        <div class="page-title"><span>❤</span> Mes Favoris</div>
+        <div class="page-sub">Vos formations sauvegardées, retrouvez-les ici en un clic.</div>
+    </div>
+    <a href="{{ path('app_formations_index') }}" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Retour aux formations
+    </a>
+</div>
+
+<div class="formations-grid" id="favoris-grid">
+    <div class="empty-state" id="empty-state" style="display:none;">
+        <i class="fas fa-heart-broken"></i>
+        <p>Vous n'avez pas encore de formation en favoris.</p>
+        <a href="{{ path('app_formations_index') }}" class="btn-back" style="margin-top:20px;">
+            <i class="fas fa-search"></i> Explorer les formations
+        </a>
+    </div>
+</div>
+
+<script>
+const FAV_KEY = 'champions_formation_favoris';
+function getFavoris() { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); }
+
+function removeFromFavoris(id) {
+    let favs = getFavoris();
+    favs = favs.filter(f => f !== id);
+    localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+    renderFavoris();
+}
+
+function renderFavoris() {
+    const favIds = getFavoris();
+    const grid = document.getElementById('favoris-grid');
+    const emptyState = document.getElementById('empty-state');
+
+    // Remove old cards (keep empty state)
+    grid.querySelectorAll('.formation-card').forEach(c => c.remove());
+
+    const favFormations = ALL_FORMATIONS.filter(f => favIds.includes(f.id));
+
+    if (favFormations.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+    }
+    emptyState.style.display = 'none';
+
+    favFormations.forEach(f => {
+        const card = document.createElement('div');
+        card.className = 'formation-card';
+        card.innerHTML = `
+            <div class="card-img-wrap">
+                <i class="fas fa-graduation-cap"></i>
+                <button class="fav-remove-btn" onclick="removeFromFavoris(${f.id})" title="Retirer des favoris">
+                    <i class="fas fa-heart" style="color:#ff1744;font-size:13px;"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="card-title">${f.titre}</div>
+                ${f.domaine ? `<div class="card-domaine"><i class="fas fa-tag" style="font-size:10px;"></i> ${f.domaine}</div>` : ''}
+                <div class="card-meta">
+                    <span><i class="far fa-calendar-days"></i> ${f.dateDebut}</span>
+                    <span><i class="far fa-calendar-check"></i> ${f.dateFin}</span>
+                    <span><i class="fas fa-users"></i> ${f.capaciteMax} places</span>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="card-price">${f.prix.toLocaleString('fr-FR', {maximumFractionDigits:0})} <small>TND</small></div>
+                <a href="/formations" class="btn-enroll"><i class="fas fa-paper-plane"></i> S'inscrire</a>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', renderFavoris);
+</script>
+{% endblock %}

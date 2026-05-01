@@ -16,6 +16,30 @@
         </a>
     </div>
 
+    <!-- Filter Card -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="search" class="form-label">Recherche</label>
+                    <input id="search" name="q" type="search" value="{{ search ?? '' }}" class="form-control" placeholder="Mention, Titre formation, Email...">
+                </div>
+                <div class="col-md-4">
+                    <label for="sort" class="form-label">Trier par</label>
+                    <select id="sort" name="sort" class="form-control">
+                        <option value="date_desc" {{ (sort ?? 'date_desc') == 'date_desc' ? 'selected' : '' }}>Plus récents d'abord</option>
+                        <option value="date_asc" {{ (sort ?? '') == 'date_asc' ? 'selected' : '' }}>Plus anciens d'abord</option>
+                    </select>
+                </div>
+                <div class="col-md-3 text-right">
+                    <button type="submit" class="btn btn-outline-primary w-100" style="margin-top: 32px;">
+                        <i class="fas fa-filter fa-sm mr-1"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Certificats Table Card -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -41,8 +65,19 @@
                                     <span class="badge badge-light border font-weight-bold">{{ certificat.idCertificat }}</span>
                                 </td>
                                 <td>
-                                    <i class="fas fa-user-tag mr-1 text-gray-400" style="font-size: 0.8rem;"></i>
-                                    {{ certificat.participation ? ('Réf. #' ~ certificat.participation.idParticipation) : '-' }}
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-2">
+                                            <i class="fas fa-user-graduate text-gray-400 fa-lg"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold text-gray-800" style="font-size: 0.9rem;">
+                                                {{ certificat.participation and certificat.participation.utilisateur and certificat.participation.utilisateur.email ? certificat.participation.utilisateur.email : 'Utilisateur inconnu' }}
+                                            </div>
+                                            <div class="small text-muted">
+                                                <i class="fas fa-book mr-1" style="font-size: 0.7rem;"></i> {{ certificat.participation and certificat.participation.formation ? certificat.participation.formation.titre : 'Formation Inconnue' }}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
                                     <i class="far fa-calendar-alt mr-1 text-gray-400"></i>

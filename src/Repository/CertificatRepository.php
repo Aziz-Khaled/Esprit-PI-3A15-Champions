@@ -16,28 +16,31 @@ class CertificatRepository extends ServiceEntityRepository
         parent::__construct($registry, Certificat::class);
     }
 
-//    /**
-//     * @return Certificat[] Returns an array of Certificat objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('c.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findForAdminList(?string $search, ?string $sort): array
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->leftJoin('c.participation', 'p')
+            ->addSelect('p')
+            ->leftJoin('p.formation', 'f')
+            ->addSelect('f')
+            ->leftJoin('p.utilisateur', 'u')
+            ->addSelect('u');
 
-//    public function findOneBySomeField($value): ?Certificat
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        if ($search) {
+            $qb->andWhere('c.mention LIKE :search OR f.titre LIKE :search OR u.email LIKE :search')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        switch ($sort) {
+            case 'date_asc':
+                $qb->orderBy('c.dateEmission', 'ASC');
+                break;
+            case 'date_desc':
+            default:
+                $qb->orderBy('c.dateEmission', 'DESC');
+                break;
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

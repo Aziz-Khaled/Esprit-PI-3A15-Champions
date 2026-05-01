@@ -14,12 +14,17 @@ use Symfony\Component\Routing\Annotation\Route;
 final class CertificatAdminController extends AbstractController
 {
     #[Route('/admin/certificat', name: 'app_admin_certificat_index', methods: ['GET'])]
-    public function index(CertificatRepository $certificatRepository): Response
+    public function index(Request $request, CertificatRepository $certificatRepository): Response
     {
-        $certificats = $certificatRepository->findAll();
+        $search = $request->query->get('q');
+        $sort = $request->query->get('sort');
+
+        $certificats = $certificatRepository->findForAdminList($search, $sort);
 
         return $this->render('admin_panel/certificat/index.html.twig', [
             'certificats' => $certificats,
+            'search' => $search,
+            'sort' => $sort,
         ]);
     }
 
