@@ -12,31 +12,38 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Twilio\Rest\Client;
 
-class BlockchainService 
+class BlockchainService
 {
-    private $managerRegistry;
-    private $em;
-    private $repository;
-    private $params; // 2. AJOUTER CETTE PROPRIÉTÉ
+
     private const AES_KEY = "Champions_Secure";
+     private EntityManagerInterface $em;
 
     // 3. METTRE À JOUR LE CONSTRUCTEUR
-    public function __construct(
-        ManagerRegistry $managerRegistry, 
-        BlockchainRepository $repository,
-        ParameterBagInterface $params // <--- Symfony va injecter le service ici
-    ) {
-        $this->managerRegistry = $managerRegistry;
-        $this->em = $managerRegistry->getManager();
-        $this->repository = $repository;
-        $this->params = $params; // <--- C'est ici qu'on remplit $this->params !
+   public function __construct(
+    private ManagerRegistry $managerRegistry,
+    private BlockchainRepository $repository,
+    private ParameterBagInterface $params,
+) {
+    $em = $managerRegistry->getManager();
+
+    if (!$em instanceof EntityManagerInterface) {
+        throw new \RuntimeException('Invalid EntityManager');
     }
 
-    private function ensureManagerIsOpen(): void {
-        if (!$this->em->isOpen()) {
-            $this->em = $this->managerRegistry->resetManager();
+    $this->em = $em;
+}
+
+   private function ensureManagerIsOpen(): void {
+    if (!$this->em->isOpen()) {
+        $em = $this->managerRegistry->resetManager();
+       
+        if (!$em instanceof EntityManagerInterface) {
+            throw new \RuntimeException('Invalid EntityManager after reset');
         }
+       
+        $this->em = $em;
     }
+}
 
     private function encrypt(string $data): string {
         return base64_encode(openssl_encrypt($data, 'AES-128-ECB', self::AES_KEY));
@@ -46,7 +53,7 @@ class BlockchainService
         return openssl_decrypt(base64_decode($data), 'AES-128-ECB', self::AES_KEY);
     }
 
-public function addBlock(Transaction $t): void 
+public function addBlock(Transaction $t): void
 {
     $this->ensureManagerIsOpen();
     $lastBlock = $this->repository->findOneBy([], ['block_index' => 'DESC']);
@@ -130,7 +137,7 @@ public function addBlock(Transaction $t): void
             if (count($parts) > 1 && !empty($parts[1])) {
                 $decrypted = $this->decrypt($parts[1]);
                 $d = $this->parseBackupChain($decrypted);
-                
+               
                 try {
                     $oldId = (int) $d['ID'];
                     $oldAmount = (float) $d['MT'];
@@ -148,6 +155,9 @@ public function addBlock(Transaction $t): void
         }
     }
 
+     /**
+ * @return array<string, string>
+ */
     private function parseBackupChain(string $decrypted): array {
         $data = explode('|', $decrypted);
         $result = [];
@@ -160,6 +170,10 @@ public function addBlock(Transaction $t): void
         return $result;
     }
 
+
+    /**
+ * @param array<int, string> $nextBlockParts
+ */
     private function handleDeleteDetected(int $missingIdx, array $nextBlockParts): void {
         $msg = "🚨 ALERTE : DELETE_detected\n";
         $msg .= "------------------------------------------\n";
@@ -176,6 +190,10 @@ public function addBlock(Transaction $t): void
         $this->createAlert("DELETE_DETECTED", $msg);
     }
 
+
+    /**
+ * @param array<string, string> $d
+ */
     private function checkAndTriggerRupture(int $transId, float $backupAmount, array $d): void {
         $this->ensureManagerIsOpen();
         $transaction = $this->em->getRepository(Transaction::class)->find($transId);
@@ -191,7 +209,7 @@ public function addBlock(Transaction $t): void
                 $msg .= "📜 ANCIEN : " . number_format($backupAmount, 2, '.', '') . " DT\n";
                 $msg .= "🕵️ NOUVEAU : " . number_format($currentAmount, 2, '.', '') . " DT\n";
                 $msg .= "------------------------------------------\n";
-                
+               
                 $this->createAlert("UPDATE_DETECTED", $msg, $transId);
                 $this->breakChainOnUpdate($transId, $currentAmount);
             }
@@ -216,7 +234,7 @@ public function addBlock(Transaction $t): void
     private function createAlert(string $type, string $message, ?int $txId = null): void {
         $this->ensureManagerIsOpen();
         $repo = $this->em->getRepository(Notification::class);
-        $exists = $txId 
+        $exists = $txId
             ? $repo->findOneBy(['id_transaction' => $txId, 'type_notification' => $type])
             : $repo->findOneBy(['message' => $message, 'type_notification' => $type]);
 
@@ -232,14 +250,14 @@ public function addBlock(Transaction $t): void
         }
     }
 
-private function sendDetailedWhatsApp(Transaction $t): void 
+private function sendDetailedWhatsApp(Transaction $t): void
 {
     $destWallet = $t->getWalletDestination();
     if (!$destWallet) {
         return;
     }
 
-    $userPhone = "+21695558576"; 
+    $userPhone = "+21695558576";
 
     try {
         $client = new \Twilio\Rest\Client(
@@ -251,7 +269,7 @@ private function sendDetailedWhatsApp(Transaction $t): void
         $amount = number_format($t->getMontant(), 2, '.', ' ');
         $currency = $t->getCurrency() ? $t->getCurrency()->getNom() : 'DT';
         $date = $t->getDateTransaction()->format('d/m/Y H:i');
-        
+       
         $source = "N/A";
         if ($t->getWalletSource()) {
             $source = "💳 RIB: " . $t->getWalletSource()->getRib();
@@ -274,12 +292,12 @@ private function sendDetailedWhatsApp(Transaction $t): void
         $messageBody .= "------------------------------------------\n";
         $messageBody .= "🛡️ _Secured by Champions Blockchain_";
 
-        
+       
         $client->messages->create(
             "whatsapp:" . $userPhone,
             [
                 "from" => "whatsapp:" . $this->params->get('twilio_whatsapp_from'),
-                "body" => $messageBody 
+                "body" => $messageBody
             ]
         );
 

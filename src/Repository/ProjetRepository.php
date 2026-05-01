@@ -15,7 +15,11 @@ class ProjetRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Projet::class);
     }
-   public function findProjetsAdvanced(?string $term, ?string $status, ?string $secteur, string $sortBy = 'date_desc')
+
+    /**
+ * @return Projet[]
+ */
+   public function findProjetsAdvanced(?string $term, ?string $status, ?string $secteur, string $sortBy = 'date_desc') : array
 {
     $qb = $this->createQueryBuilder('p');
 

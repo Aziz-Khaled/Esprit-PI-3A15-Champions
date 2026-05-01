@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use App\Service\CloudinaryService;
-use App\Service\GeminiService;
+use App\Service\GrokService;
 use Knp\Component\Pager\PaginatorInterface;
 
 #[Route('/commercant/products')]
@@ -103,7 +103,7 @@ class ProductController extends AbstractController
             if ($user) {
                 $product->setUtilisateur($user);
             }
-            
+           
             $product->setCreatedAt(new \DateTime());
             $product->setUpdatedAt(new \DateTime());
             $product->setStatus('available');
@@ -127,7 +127,7 @@ class ProductController extends AbstractController
      * MUST be defined BEFORE /{id} to avoid route conflict.
      */
     #[Route('/ai/generate', name: 'app_back_product_ai_generate', methods: ['POST'])]
-    public function aiGenerateDescription(Request $request, GeminiService $geminiService): JsonResponse
+    public function aiGenerateDescription(Request $request, GrokService $grokService): JsonResponse
     {
         $name = $request->request->get('name', '');
         $category = $request->request->get('category', '');
@@ -136,7 +136,7 @@ class ProductController extends AbstractController
             return $this->json(['error' => 'Le nom du produit est requis pour la génération.'], 400);
         }
 
-        $description = $geminiService->generateDescription($name, $category);
+        $description = $grokService->generateDescription($name, $category);
 
         return $this->json(['description' => $description]);
     }
@@ -146,7 +146,7 @@ class ProductController extends AbstractController
      * MUST be defined BEFORE /{id} to avoid route conflict.
      */
     #[Route('/ai/refine', name: 'app_back_product_ai_refine', methods: ['POST'])]
-    public function aiRefineDescription(Request $request, GeminiService $geminiService): JsonResponse
+    public function aiRefineDescription(Request $request, GrokService $grokService): JsonResponse
     {
         $description = $request->request->get('description', '');
 
@@ -154,7 +154,7 @@ class ProductController extends AbstractController
             return $this->json(['error' => 'La description est vide.'], 400);
         }
 
-        $refined = $geminiService->refineDescription($description);
+        $refined = $grokService->refineDescription($description);
 
         return $this->json(['description' => $refined]);
     }

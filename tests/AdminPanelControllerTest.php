@@ -11,7 +11,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 /**
  * Functional tests for App\Controller\frontOffice\AuthController
  */
-class AuthControllerTest extends WebTestCase
+class AdminPanelControllerTest extends WebTestCase
 {
     // ═══════════════════════════════════════════════════════════
     //  HELPERS

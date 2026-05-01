@@ -21,6 +21,7 @@ class BotTradingCommand extends Command
 {
     private string $geckoBase = 'https://api.coingecko.com/api/v3';
 
+    /** @var array<string, string> */
     private array $geckoIds = [
         'BTC'   => 'bitcoin',
         'ETH'   => 'ethereum',
@@ -62,6 +63,8 @@ class BotTradingCommand extends Command
         $output->writeln('');
 
         $cycle = 0;
+        
+        /** @phpstan-ignore-next-line */
         while (true) {
             $cycle++;
             $this->em->clear();
@@ -75,7 +78,7 @@ class BotTradingCommand extends Command
             $output->writeln('');
             sleep(15);
         }
-
+        /** @phpstan-ignore deadCode.unreachable */
         return Command::SUCCESS;
     }
 
@@ -94,6 +97,7 @@ class BotTradingCommand extends Command
         $output->writeln(sprintf('  <info>%d ordre(s) PENDING a surveiller...</info>', count($pendingTrades)));
 
         // Grouper par symbole pour limiter les appels API
+        /** @var array<string, list<Trade>> $tradesBySymbol */
         $tradesBySymbol = [];
         foreach ($pendingTrades as $trade) {
             $symbol = $this->getTradeSymbol($trade);
@@ -187,20 +191,19 @@ class BotTradingCommand extends Command
                 $this->em->flush();
                 return;
             }
-            $wallet->setSolde($solde - $total);
+            
+            $wallet->setSolde((string) ($solde - $total));
         } elseif ($tradeType === 'SELL') {
-            $wallet->setSolde($solde + $total);
+           $wallet->setSolde((string) ($solde + $total));
         } else {
             return;
         }
 
         // PENDING -> COMPLETED
         $trade->setStatus('COMPLETED');
-        $trade->setPrice((string) $marketPrice);
+        $trade->setPrice($marketPrice);
 
-        if (method_exists($trade, 'setExecutedAt')) {
-            $trade->setExecutedAt(new \DateTime());
-        }
+        $trade->setExecutedAt(new \DateTime());
 
         $this->em->persist($wallet);
         $this->em->persist($trade);
@@ -230,13 +233,15 @@ class BotTradingCommand extends Command
         }
 
         // Cas 3 : via assetId en DB
-        if (method_exists($trade, 'getAssetId') && $trade->getAssetId()) {
+        if ($trade->getAssetId()) {
             try {
                 $row = $this->em->getConnection()->fetchAssociative(
                     'SELECT symbol FROM asset WHERE id = :id',
                     ['id' => $trade->getAssetId()]
                 );
-                if ($row) return strtoupper($row['symbol']);
+                if ($row) {
+                    return strtoupper($row['symbol']);
+                }
             } catch (\Exception) {}
         }
 

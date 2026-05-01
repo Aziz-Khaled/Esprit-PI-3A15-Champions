@@ -26,11 +26,9 @@ class UserChecker implements UserCheckerInterface
         if ($user->getStatut() === 'BANNED') {
             throw new CustomUserMessageAuthenticationException('ACCOUNT_BANNED');
         }
-        if (!$user instanceof Utilisateur) return;
+        
 
-        if ($user->getStatut() === 'BANNED') {
-        throw new CustomUserMessageAuthenticationException('ACCOUNT_BANNED');
-        }
+        
     }
 
     public function checkPostAuth(UserInterface $user): void {}

@@ -38,11 +38,13 @@ class WalletController extends AbstractController
         EntityManagerInterface $entityManager
     ): Response {
         // 1. User Management
-        $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
-
-        if (!$user) {
+        $user = $this->getUser();
+        if (!$user instanceof Utilisateur) {
+                $user = $entityManager->getRepository(Utilisateur::class)->find(1);
+            }
+            if (!$user) {
             throw $this->createNotFoundException("Test user not found.");
-        }
+            }
 
         // 2. Wallet Creation Form
         $newWallet = new Wallet();
@@ -51,7 +53,7 @@ class WalletController extends AbstractController
 
         if ($walletForm->isSubmitted() && $walletForm->isValid()) {
             $newWallet->setUtilisateur($user);
-            $newWallet->setSolde(0.0);
+            $newWallet->setSolde('0');
             
             do {
                 $rib = (string)random_int(10000000, 99999999);
@@ -180,7 +182,13 @@ class WalletController extends AbstractController
     #[Route('/stats/chart-data', name: 'app_wallet_chart_data', methods: ['GET'])]
     public function getChartData(WalletCurrencyRepository $wcRepo, EntityManagerInterface $entityManager): JsonResponse
     {
-        $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
+        $user = $this->getUser();
+
+if (!$user instanceof Utilisateur) {
+    $user = $entityManager->getRepository(Utilisateur::class)->find(1);
+}
+
+$data = $wcRepo->sumBalancesByUser($user);
         $data = $wcRepo->sumBalancesByUser($user);
         return new JsonResponse($data);
     }
@@ -293,7 +301,10 @@ public function initiateRecharge(
         'code' => $verificationCode
     ]);
 
-    $user = $this->getUser() ?: $em->getRepository(Utilisateur::class)->find(1);
+        $user = $this->getUser();
+    if (!$user instanceof Utilisateur) {
+    $user = $em->getRepository(Utilisateur::class)->find(1);
+    }
     try {
         $mailService->sendVerificationCode($user->getEmail(), $verificationCode);
         $this->addFlash('info', 'A verification code has been sent to your email.');
@@ -325,7 +336,10 @@ public function confirmRecharge(
     $currencyId = $pending['currency_id'];
     $amount = $pending['amount'];
 
-    $user = $this->getUser() ?: $em->getRepository(Utilisateur::class)->find(1);
+    $user = $this->getUser();
+    if (!$user instanceof Utilisateur) {
+    $user = $em->getRepository(Utilisateur::class)->find(1);
+    }
     $wallet = $em->getRepository(Wallet::class)->find($walletId);
     $currency = $em->getRepository(Currency::class)->find($currencyId);
     $card = $em->getRepository(CreditCard::class)->findOneBy(['utilisateur' => $user, 'statut' => 'ACTIVE']);

@@ -37,6 +37,7 @@ class Conversion
     #[ORM\Column(type: 'datetime', nullable: false)]
     private ?\DateTimeInterface $created_at = null;
 
+    /** @var Collection<int, Transaction> */
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'conversion')]
     private Collection $transactions;
 

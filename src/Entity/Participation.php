@@ -36,6 +36,8 @@ class Participation
     #[ORM\JoinColumn(name: 'idUtilisateur', referencedColumnName: 'id_user')]
     private ?Utilisateur $utilisateur = null;
 
+    /** @var Collection<int, Certificat> */
+
     #[ORM\OneToMany(targetEntity: Certificat::class, mappedBy: 'participation')]
     private Collection $certificats;
 
@@ -57,5 +59,6 @@ class Participation
     public function setNote(?float $note): self { $this->note = $note; return $this; }
     public function getUtilisateur(): ?Utilisateur { return $this->utilisateur; }
     public function setUtilisateur(?Utilisateur $utilisateur): self { $this->utilisateur = $utilisateur; return $this; }
+    /** @return Collection<int, Certificat> */
     public function getCertificats(): Collection { return $this->certificats; }
 }

@@ -21,7 +21,7 @@ class StripeService
     public function createPaymentIntent(float $amount, string $currency, string $customerId, string $paymentMethodId): PaymentIntent
     {
         return PaymentIntent::create([
-            'amount' => $amount * 100, // Conversion en cents
+            'amount' => (int) round($amount * 100), // Conversion en cents
             'currency' => strtolower($currency),
             'customer' => $customerId,
             'payment_method' => $paymentMethodId,

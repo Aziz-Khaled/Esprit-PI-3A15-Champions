@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Knp\Component\Pager\PaginatorInterface;
-use App\Service\GeminiService;
+use App\Service\GrokService;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 #[Route('/marketplace')]
@@ -24,7 +24,7 @@ class MarketplaceController extends AbstractController
     public function index(Request $request, ProductRepository $productRepository, PaginatorInterface $paginator): Response
     {
         $query = $productRepository->searchAndSortQuery();
-        
+       
         $pagination = $paginator->paginate(
             $query,
             $request->query->getInt('page', 1),
@@ -48,7 +48,7 @@ class MarketplaceController extends AbstractController
         $sortDir = $request->query->get('sortDir', 'ASC');
 
         $query = $productRepository->searchAndSortQuery($keyword, $sortBy, $sortDir);
-        
+       
         $pagination = $paginator->paginate(
             $query,
             $request->query->getInt('page', 1),
@@ -61,13 +61,20 @@ class MarketplaceController extends AbstractController
     }
 
     #[Route('/product/{id}', name: 'app_marketplace_product_show', methods: ['GET'])]
-    public function show(Product $product, ProductRepository $productRepository, GeminiService $geminiService): Response
+    public function show(Product $product, ProductRepository $productRepository, GrokService $grokService): Response
     {
-        // For recommendations, get some candidate products
-        $candidates = $productRepository->findBy([], ['createdAt' => 'DESC'], 30);
-        
-        $aiData = $geminiService->recommendSimilarProducts($product, $candidates, 4);
-        
+        // Fetch candidate products from the SAME category
+        $candidates = $productRepository->findBy(
+            ['category' => $product->getCategory()],
+            ['createdAt' => 'DESC'],
+            30
+        );
+       
+        $aiData = [];
+        if (count($candidates) > 1) {
+            $aiData = $grokService->recommendSimilarProducts($product, $candidates, 4);
+        }
+       
         // Fetch the recommended products from DB and attach reasons
         $recommendations = [];
         if (!empty($aiData)) {
@@ -82,14 +89,20 @@ class MarketplaceController extends AbstractController
                 }
             }
         }
-        
+       
         // Final fallback if AI returns nothing or fails
         if (empty($recommendations)) {
-            $fallbacks = $productRepository->findBy(['status' => 'available'], ['avgRating' => 'DESC'], 4);
+            $fallbacks = $productRepository->findBy(
+                ['category' => $product->getCategory()],
+                ['avgRating' => 'DESC'],
+                4
+            );
+           
             foreach ($fallbacks as $f) {
+                if ($f->getId() === $product->getId()) continue;
                 $recommendations[] = [
                     'product' => $f,
-                    'reason'  => 'Produit populaire sur le marché'
+                    'reason'  => 'Produit populaire dans cette catégorie'
                 ];
             }
         }
@@ -105,7 +118,7 @@ class MarketplaceController extends AbstractController
     {
         // For now, assign to the first user
         $user = $userRepo->findOneBy([]);
-        
+       
         if (!$user) {
             return $this->redirectToRoute('app_marketplace_index');
         }
@@ -147,7 +160,7 @@ class MarketplaceController extends AbstractController
         try {
             // Send to the fixed recipient as requested
             $emailService->sendOrderConfirmation($order, 'thassanjebri99@gmail.com');
-            
+           
             // Also send to the user's email if it exists
             if ($user && $user->getEmail()) {
                 $emailService->sendOrderConfirmation($order, $user->getEmail());
@@ -157,7 +170,7 @@ class MarketplaceController extends AbstractController
         }
 
 
-        
+       
         return $this->redirectToRoute('app_order_index');
     }
 
@@ -165,7 +178,7 @@ class MarketplaceController extends AbstractController
     public function toggleWishlist(Product $product, SessionInterface $session): Response
     {
         $wishlist = $session->get('wishlist', []);
-        
+       
         if (in_array($product->getId(), $wishlist)) {
             $wishlist = array_diff($wishlist, [$product->getId()]);
             $isWishlisted = false;
@@ -173,9 +186,9 @@ class MarketplaceController extends AbstractController
             $wishlist[] = $product->getId();
             $isWishlisted = true;
         }
-        
+       
         $session->set('wishlist', $wishlist);
-        
+       
         return $this->json([
             'success' => true,
             'isWishlisted' => $isWishlisted,

@@ -14,7 +14,7 @@ class Negociation
     private ?int $id_negociation = null;
 
     #[ORM\ManyToOne(targetEntity: Credit::class, inversedBy: 'negociations')]
-    #[ORM\JoinColumn(name: 'credit_id', referencedColumnName: 'id_credit')]
+    #[ORM\JoinColumn(name: 'credit_id', referencedColumnName: 'id_credit', nullable: false)] // Changé ici
     private ?Credit $credit = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'negociations')]

@@ -115,40 +115,34 @@ class OrderItem
         return $this;
     }
 
-    public function getUnitPrice(): ?string
-    {
-        return $this->unit_price;
-    }
+public function getUnitPrice(): ?float
+{
+    return $this->unit_price;
+}
+public function setUnitPrice(float $unit_price): static
+{
+    $this->unit_price = $unit_price;
+    return $this;
+}
 
-    public function setUnitPrice(string $unit_price): static
-    {
-        $this->unit_price = $unit_price;
+public function getSubTotal(): ?float
+{
+    return $this->sub_total;
+}
+public function setSubTotal(float $sub_total): static
+{
+    $this->sub_total = $sub_total;
+    return $this;
+}
 
-        return $this;
-    }
-
-    public function getSubTotal(): ?string
-    {
-        return $this->sub_total;
-    }
-
-    public function setSubTotal(string $sub_total): static
-    {
-        $this->sub_total = $sub_total;
-
-        return $this;
-    }
-
-    public function getDiscountApplied(): ?string
-    {
-        return $this->discount_applied;
-    }
-
-    public function setDiscountApplied(string $discount_applied): static
-    {
-        $this->discount_applied = $discount_applied;
-
-        return $this;
-    }
+public function getDiscountApplied(): ?float
+{
+    return $this->discount_applied;
+}
+public function setDiscountApplied(float $discount_applied): static
+{
+    $this->discount_applied = $discount_applied;
+    return $this;
+}
 
 }

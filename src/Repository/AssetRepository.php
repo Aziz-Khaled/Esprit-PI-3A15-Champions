@@ -15,6 +15,10 @@ class AssetRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Asset::class);
     }
+
+    /**
+ * @return Asset[]
+ */
        public function search(string $query): array
     {
         return $this->createQueryBuilder('a')

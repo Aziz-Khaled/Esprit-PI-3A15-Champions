@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\CreditCardRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
@@ -44,13 +46,26 @@ class CreditCard
     #[ORM\Column(name: "statut", type: "string", length: 20)]
     private string $statut = 'ACTIVE';
 
-    #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
+    // ✅ CORRECTION : ajout de inversedBy pour compléter la relation bidirectionnelle
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'creditCards')]
     #[ORM\JoinColumn(name: "id_user", referencedColumnName: "id_user", nullable: false)]
     private ?Utilisateur $utilisateur = null;
+
+    // ✅ CORRECTION : ajout de la collection transactions
+    // Transaction#creditCard fait inversedBy: 'transactions' — cette collection doit exister ici
+    #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'creditCard')]
+    private Collection $transactions;
+
+    // ✅ CORRECTION : ajout de la collection blockchains
+    // Blockchain#creditCard fait inversedBy: 'blockchains' — cette collection doit exister ici
+    #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'creditCard')]
+    private Collection $blockchains;
 
     public function __construct()
     {
         $this->dateAjout = new \DateTime();
+        $this->transactions = new ArrayCollection();
+        $this->blockchains = new ArrayCollection();
     }
 
     #[Assert\Callback]
@@ -59,9 +74,8 @@ class CreditCard
         $currentYear = (int)date('Y');
         $currentMonth = (int)date('m');
 
-        if ($this->expiryYear < $currentYear || 
+        if ($this->expiryYear < $currentYear ||
            ($this->expiryYear === $currentYear && $this->expiryMonth < $currentMonth)) {
-            
             $context->buildViolation("The expiration date must be in the future.")
                 ->atPath('expiryMonth')
                 ->addViolation();
@@ -96,7 +110,6 @@ class CreditCard
         return $this;
     }
 
-    // AJOUT DES MÉTHODES MANQUANTES POUR STRIPE
     public function getStripeCustomerId(): ?string { return $this->stripeCustomerId; }
     public function setStripeCustomerId(?string $id): self {
         $this->stripeCustomerId = $id;
@@ -122,4 +135,10 @@ class CreditCard
         $this->utilisateur = $user;
         return $this;
     }
+
+    /** @return Collection<int, Transaction> */
+    public function getTransactions(): Collection { return $this->transactions; }
+
+    /** @return Collection<int, Blockchain> */
+    public function getBlockchains(): Collection { return $this->blockchains; }
 }

@@ -16,6 +16,10 @@ class FormationRepository extends ServiceEntityRepository
         parent::__construct($registry, Formation::class);
     }
 
+
+    /**
+ * @return Formation[]
+ */
     public function findForAdminList(?string $search, ?string $domaine, ?string $sort): array
     {
         $qb = $this->createQueryBuilder('f');
@@ -49,6 +53,10 @@ class FormationRepository extends ServiceEntityRepository
     /**
      * Server-side filtering + sorting with statut filter added.
      */
+
+    /**
+ * @return Formation[]
+ */
     public function findFiltered(
         ?string $search,
         ?string $domaine,
@@ -92,6 +100,9 @@ class FormationRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+ * @return string[]
+ */
     public function findDistinctDomaines(): array
     {
         $rows = $this->createQueryBuilder('f')

@@ -16,7 +16,9 @@ class UtilisateurRepository extends ServiceEntityRepository
         parent::__construct($registry, Utilisateur::class);
     }
 
-
+/**
+ * @return Utilisateur[]
+ */
     public function searchByKeyword(string $q): array
     {
         return $this->createQueryBuilder('u')

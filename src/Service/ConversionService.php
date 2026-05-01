@@ -6,7 +6,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class ConversionService
 {
-    private $client;
+     private HttpClientInterface $client;
 
     public function __construct(HttpClientInterface $client)
     {

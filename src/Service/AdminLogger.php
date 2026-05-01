@@ -20,6 +20,9 @@ class AdminLogger
         ]);
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function findByDateRange(?string $from, ?string $to): array
     {
         $sql    = 'SELECT * FROM admin_log WHERE 1=1';
@@ -43,6 +46,9 @@ class AdminLogger
         return $this->connection->fetchAllAssociative($sql, $params, $types);
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function findRecent(int $limit = 5): array
     {
         return $this->connection->fetchAllAssociative(

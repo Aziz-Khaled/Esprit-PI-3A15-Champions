@@ -18,8 +18,15 @@ class CreditCardController extends AbstractController
 #[Route('/new', name: 'app_card_new', methods: ['POST'])]
 public function new(Request $request, EntityManagerInterface $em, StripeService $stripeService): Response
 {
+
+
     $card = new CreditCard();
-    $user = $this->getUser() ?: $em->getRepository(Utilisateur::class)->find(1);
+
+
+    $user = $this->getUser();
+    if (!$user instanceof Utilisateur) {
+    $user = $em->getRepository(Utilisateur::class)->find(1);
+    }
     
     $form = $this->createForm(CreditCardType::class, $card, ['is_edit' => false]);
     $form->handleRequest($request);

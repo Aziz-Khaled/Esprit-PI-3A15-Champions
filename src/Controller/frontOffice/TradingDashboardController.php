@@ -85,7 +85,7 @@ private string $grokApiKey = '';
         // Create default wallet if none exists
         if (empty($wallets)) {
             $defaultWallet = new Wallet();
-            $defaultWallet->setUtilisateur($userId);
+            $defaultWallet->setUtilisateur($user);
             $defaultWallet->setSolde('0');
             $defaultWallet->setRib('TRADING-' . uniqid());
             $defaultWallet->setTypeWallet('trading');
@@ -492,7 +492,7 @@ private string $grokApiKey = '';
             $trade->setTradeType($tradeType);
             $trade->setOrderMode('LIMIT');
             $trade->setStatus('PENDING');
-            $trade->setPrice((string) $targetPrice);
+            $trade->setPrice($targetPrice);
             $trade->setCreatedAt(new \DateTime());
             $this->em->persist($trade);
             $this->em->flush();
@@ -543,7 +543,7 @@ private string $grokApiKey = '';
         $trade->setTradeType($tradeType);
         $trade->setOrderMode('MARKET');
         $trade->setStatus('COMPLETED');
-        $trade->setPrice((string) $currentPrice);
+        $trade->setPrice( $currentPrice);
         $trade->setCreatedAt(new \DateTime());
         $this->em->persist($trade);
         $this->em->flush();
@@ -975,7 +975,7 @@ public function initCryptoWallets(): JsonResponse
     
     if (empty($cryptoWallets)) {
         $wallet = new Wallet();
-        $wallet->setUtilisateur($userId);
+        $wallet->setUtilisateur($user);
         $wallet->setSolde('0');
         $wallet->setRib('CRYPTO-' . date('Ymd') . '-' . uniqid());
         $wallet->setTypeWallet('trading');
@@ -1082,7 +1082,7 @@ private function getUserWallet(int $userId, ?int $walletId = null): ?Wallet
         return $total;
     }
 
-    private function getUsdtCurrency(): ?Currency
+    private function getUsdtCurrency(): Currency
     {
         $usdt = $this->currencyRepo->findOneBy([
             'code' => 'USDT',
@@ -1118,6 +1118,9 @@ private function getUserWallet(int $userId, ?int $walletId = null): ?Wallet
         }
     }
 
+    /**
+ * @return array<int, array{title: string, description: string, url: string, image: string, publishedAt: string, source: string}>
+ */
     private function getMockNews(): array
     {
         return [

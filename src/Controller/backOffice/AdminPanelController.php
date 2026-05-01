@@ -506,6 +506,10 @@ final class AdminPanelController extends AbstractController
     // =========================================================================
     //  PRIVATE HELPERS
     // =========================================================================
+
+    /**
+ * @return array{cin: string|null, nom: string|null, prenom: string|null, dob: string|null, expiry: string|null, mrz_line: string|null}
+ */
     private function parseIdCard(string $text): array
     {
         $text  = str_replace(["\r\n", "\r"], "\n", $text);

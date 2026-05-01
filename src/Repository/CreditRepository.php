@@ -15,6 +15,10 @@ class CreditRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Credit::class);
     }
+
+    /**
+ * @return Credit[]
+ */
    public function findByAdvancedFilters(?string $term, ?string $status, ?float $minAmount, string $sortBy = 'date_desc')
 {
     $qb = $this->createQueryBuilder('c')->leftJoin('c.projet', 'p');

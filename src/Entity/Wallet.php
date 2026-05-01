@@ -24,14 +24,14 @@ class Wallet
     #[ORM\Column(type: 'string', length: 8, nullable: false)]
     private ?string $rib = null;
 
-    
+   
     #[ORM\Column(name: 'type_wallet', type: 'string', columnDefinition: "ENUM('fiat', 'crypto', 'trading')", nullable: true)]
     private ?string $typeWallet = null;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private ?string $solde = null;
 
-    
+   
     #[ORM\Column(type: 'string', columnDefinition: "ENUM('bloque', 'actif')", nullable: true)]
     private ?string $statut = null;
 
@@ -41,19 +41,29 @@ class Wallet
     #[ORM\Column(name: 'date_derniere_modification', type: 'datetime', nullable: false, options: ["default" => "CURRENT_TIMESTAMP"])]
     private ?\DateTimeInterface $dateDerniereModification = null;
 
+    /** @var Collection<int, Blockchain> */
     #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'walletSource')]
+   
     private Collection $blockchainSources;
 
+    /** @var Collection<int, Blockchain> */
     #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'walletDestination')]
+   
     private Collection $blockchainDestinations;
 
+    /** @var Collection<int, Transaction> */
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'walletSource')]
+   
     private Collection $transactionsSource;
 
+    /** @var Collection<int, Transaction> */
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'walletDestination')]
+   
     private Collection $transactionsDestination;
 
+    /** @var Collection<int, WalletCurrency> */
     #[ORM\OneToMany(targetEntity: WalletCurrency::class, mappedBy: 'wallet', cascade: ['remove'], orphanRemoval: true)]
+   
     private Collection $walletCurrencys;
 
     public function __construct()

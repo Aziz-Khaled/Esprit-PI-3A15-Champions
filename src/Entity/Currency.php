@@ -29,6 +29,7 @@ class Currency
     private ?bool $is_trading = null;
 
     // Relation avec les portefeuilles des utilisateurs
+    /** @var Collection<int, WalletCurrency> */
     #[ORM\OneToMany(mappedBy: 'currency', targetEntity: WalletCurrency::class)]
     private Collection $walletCurrencys;
 
@@ -37,9 +38,9 @@ class Currency
         $this->walletCurrencys = new ArrayCollection();
     }
 
-    public function getId(): ?int 
-    { 
-        return $this->id_currency; 
+    public function getId(): ?int
+    {
+        return $this->id_currency;
     }
 
     public function getCode(): ?string { return $this->code; }
@@ -47,20 +48,20 @@ class Currency
 
     public function getNom(): ?string { return $this->nom; }
     public function setNom(string $nom): self { $this->nom = $nom; return $this; }
-    
+   
     public function getTypeCurrency(): ?string { return $this->type_currency; }
     public function setTypeCurrency(string $type_currency): self { $this->type_currency = $type_currency; return $this; }
 
     public function isTrading(): ?bool { return $this->is_trading; }
-    public function setIsTrading(bool $is_trading): self 
-    { 
+    public function setIsTrading(bool $is_trading): self
+    {
         // Strict Rule: Fiat cannot be traded
         if ($this->type_currency === 'fiat') {
             $this->is_trading = false;
         } else {
             $this->is_trading = $is_trading;
         }
-        return $this; 
+        return $this;
     }
 
     /**

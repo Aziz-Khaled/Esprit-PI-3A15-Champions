@@ -39,6 +39,7 @@ class Order
     #[ORM\Column(type: 'string')]
     private ?string $phoneNumber = null;
 
+    /** @var Collection<int, OrderItem> */
     #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order')]
     private Collection $orderItems;
 

@@ -64,7 +64,7 @@ class Credit
 
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $date_contrat = null;
-
+/** @var Collection<int, Negociation> */
     #[ORM\OneToMany(targetEntity: Negociation::class, mappedBy: 'credit', cascade: ['persist', 'remove'])]
     private Collection $negociations;
 

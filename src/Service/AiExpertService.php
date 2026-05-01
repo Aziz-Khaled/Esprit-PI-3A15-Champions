@@ -5,8 +5,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class AiExpertService
 {
-    private $httpClient;
-    private $apiKey;
+    private HttpClientInterface $httpClient;
+    private string $apiKey;
 
     public function __construct(HttpClientInterface $httpClient, string $apiKey)
     {

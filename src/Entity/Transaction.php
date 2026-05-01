@@ -47,7 +47,7 @@ class Transaction
     #[ORM\ManyToOne(targetEntity: Conversion::class, inversedBy: 'transactions')]
     #[ORM\JoinColumn(name: 'id_conversion', referencedColumnName: 'id_conversion', nullable: true)]
     private ?Conversion $conversion = null;
-
+/** @var Collection<int, Blockchain> */
     #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'transaction')]
     private Collection $blockchains;
 
@@ -75,5 +75,6 @@ class Transaction
     public function setCurrency(?Currency $currency): self { $this->currency = $currency; return $this; }
     public function getConversion(): ?Conversion { return $this->conversion; }
     public function setConversion(?Conversion $conversion): self { $this->conversion = $conversion; return $this; }
+    /** @return Collection<int, Blockchain> */
     public function getBlockchains(): Collection { return $this->blockchains; }
 }

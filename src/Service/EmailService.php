@@ -9,8 +9,8 @@ use Twig\Environment;
 
 class EmailService
 {
-    private $mailer;
-    private $twig;
+     private MailerInterface $mailer;
+    private Environment $twig;
 
     public function __construct(
         MailerInterface $mailer,
