@@ -24,6 +24,9 @@ class OrderRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    /**
+ * @return array<int, array{month: int|string, total: float|string}>
+ */
     public function getMonthlyRevenue(): array
     {
         // Simple monthly aggregation
@@ -37,6 +40,9 @@ class OrderRepository extends ServiceEntityRepository
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 
+    /**
+ * @return array<int, array{shippingAddress: string|null, count: int}>
+ */
     public function getShippingAddressStats(): array
     {
         return $this->createQueryBuilder('o')

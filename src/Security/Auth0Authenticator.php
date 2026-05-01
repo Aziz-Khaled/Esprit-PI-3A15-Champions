@@ -19,7 +19,8 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 class Auth0Authenticator extends OAuth2Authenticator
 {
     // Flag to track whether this is a brand-new user needing KYC
-    private bool $isNewUser = false;
+
+
 
     public function __construct(
         private ClientRegistry $clientRegistry,

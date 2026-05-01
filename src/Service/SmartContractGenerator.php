@@ -9,6 +9,17 @@ class SmartContractGenerator
     /**
      * Correction du nom pour correspondre au Contrôleur : generateSmartContract
      */
+    
+    /**
+ * @return array{
+ *     body: string,
+ *     hash: string,
+ *     metadata: array{
+ *         gen_version: string,
+ *         encryption: string
+ *     }
+ * }
+ */
     public function generateSmartContract(Negociation $negociation): array
     {
         $borrower = $negociation->getCredit()->getBorrower();
@@ -46,7 +57,7 @@ class SmartContractGenerator
             '#INVESTOR_EMAIL' => $investor->getEmail(),
             '#BORROWER_NAME' => $borrower->getNom(),
             '#BORROWER_EMAIL' => $borrower->getEmail(),
-            '#AMOUNT' => number_format($amount, 2, '.', ' '),
+            '#AMOUNT' => number_format((float) $amount, 2, '.', ' '),
             '#RATE' => $rate,
             '#DATE' => $date->format('d/m/Y H:i:s'),
         ]);

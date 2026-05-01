@@ -13,7 +13,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class UserSignatureWrapper implements UserInterface
 {
-    private $user;
+    private Utilisateur $user;
     public function __construct(Utilisateur $user) { $this->user = $user; }
     public function getRoles(): array { return ['ROLE_USER']; }
     public function eraseCredentials(): void {}
@@ -23,7 +23,7 @@ class UserSignatureWrapper implements UserInterface
 
 class SignatureProvider
 {
-    private $jwtManager;
+    private JWTTokenManagerInterface $jwtManager;
 
     public function __construct(JWTTokenManagerInterface $jwtManager)
     {

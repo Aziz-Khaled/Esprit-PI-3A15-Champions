@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Product;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Query;
 
 /**
  * @extends ServiceEntityRepository<Product>
@@ -28,31 +29,39 @@ class ProductRepository extends ServiceEntityRepository
     /**
      * Exact same logic as searchAndSort but returns the Query object for pagination.
      */
-    public function searchAndSortQuery(?string $keyword = null, string $sortBy = 'name', string $sortDir = 'ASC')
-    {
-        $qb = $this->createQueryBuilder('p');
 
-        if ($keyword && trim($keyword) !== '') {
-            $qb->andWhere('p.name LIKE :kw OR p.description LIKE :kw OR p.brand LIKE :kw OR p.category LIKE :kw')
-               ->setParameter('kw', '%' . trim($keyword) . '%');
-        }
+    
+    public function searchAndSortQuery(?string $keyword = null, string $sortBy = 'name', string $sortDir = 'ASC'): Query
+{
+    $qb = $this->createQueryBuilder('p');
 
-        $allowedSortFields = ['name', 'price', 'stock', 'category', 'createdAt', 'brand', 'avgRating'];
-        if (!in_array($sortBy, $allowedSortFields)) {
-            $sortBy = 'name';
-        }
-
-        $sortDir = strtoupper($sortDir) === 'DESC' ? 'DESC' : 'ASC';
-        $qb->orderBy('p.' . $sortBy, $sortDir);
-
-        return $qb->getQuery();
+    if ($keyword && trim($keyword) !== '') {
+        $qb->andWhere('p.name LIKE :kw OR p.description LIKE :kw OR p.brand LIKE :kw OR p.category LIKE :kw')
+           ->setParameter('kw', '%' . trim($keyword) . '%');
     }
 
+    $allowedSortFields = ['name', 'price', 'stock', 'category', 'createdAt', 'brand', 'avgRating'];
+    if (!in_array($sortBy, $allowedSortFields)) {
+        $sortBy = 'name';
+    }
+
+    $sortDir = strtoupper($sortDir) === 'DESC' ? 'DESC' : 'ASC';
+    $qb->orderBy('p.' . $sortBy, $sortDir);
+
+    return $qb->getQuery();
+}
+
+/**
+ * @return Product[]
+ */
     public function searchAndSort(?string $keyword = null, string $sortBy = 'name', string $sortDir = 'ASC'): array
     {
         return $this->searchAndSortQuery($keyword, $sortBy, $sortDir)->getResult();
     }
 
+/**
+ * @return array<int, array{category: string|null, count: int}>
+ */
     public function getCategoryDistribution(): array
     {
         return $this->createQueryBuilder('p')

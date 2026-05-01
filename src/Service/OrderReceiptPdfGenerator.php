@@ -31,8 +31,8 @@ class OrderReceiptPdfGenerator
         $dompdf->render();
 
         $output = $dompdf->output();
-        if (!is_string($output)) {
-            throw new \RuntimeException('Dompdf output is empty.');
+        if (empty($output)) {
+        throw new \RuntimeException('Dompdf output is empty.');
         }
 
         return $output;

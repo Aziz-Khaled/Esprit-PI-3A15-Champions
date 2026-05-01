@@ -7,6 +7,9 @@ use App\Entity\AdminLog;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<AdminLog>
+ */
 class AdminLogRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -14,6 +17,9 @@ class AdminLogRepository extends ServiceEntityRepository
         parent::__construct($registry, AdminLog::class);
     }
 
+    /**
+ * @return AdminLog[]
+ */
     public function findByDateRange(?\DateTime $from, ?\DateTime $to): array
     {
         $qb = $this->createQueryBuilder('l')

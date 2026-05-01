@@ -3,7 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\WalletCurrency;
-use App\Entity\Utilisateur; // Changé de User à Utilisateur pour correspondre à votre projet
+use App\Entity\Utilisateur;
+use App\Entity\Wallet;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -19,8 +20,11 @@ class WalletCurrencyRepository extends ServiceEntityRepository
 
     /**
      * Calcule le total des soldes par devise pour un utilisateur spécifique.
+     *
+     * @param Utilisateur $user
+     * @return array<int, array{name: string, total: string}>
      */
-    public function sumBalancesByUser($user): array
+    public function sumBalancesByUser(Utilisateur $user): array
     {
         return $this->createQueryBuilder('wc')
             ->select('wc.nomCurrency as name', 'SUM(wc.solde) as total')
@@ -32,7 +36,11 @@ class WalletCurrencyRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findByWalletType($user, string $type): array
+    /**
+     * @param Utilisateur $user
+     * @return WalletCurrency[]
+     */
+    public function findByWalletType(Utilisateur $user, string $type): array
     {
         return $this->createQueryBuilder('wc')
             ->join('wc.wallet', 'w')
@@ -43,6 +51,7 @@ class WalletCurrencyRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
     public function findTndByWallet(Wallet $wallet): ?WalletCurrency
     {
         return $this->createQueryBuilder('wc')

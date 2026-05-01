@@ -14,23 +14,24 @@ use Twilio\Rest\Client;
 
 class BlockchainService 
 {
-    private $managerRegistry;
-    private $em;
-    private $repository;
-    private $params; // 2. AJOUTER CETTE PROPRIÉTÉ
+
     private const AES_KEY = "Champions_Secure";
+     private EntityManagerInterface $em;
 
     // 3. METTRE À JOUR LE CONSTRUCTEUR
-    public function __construct(
-        ManagerRegistry $managerRegistry, 
-        BlockchainRepository $repository,
-        ParameterBagInterface $params // <--- Symfony va injecter le service ici
-    ) {
-        $this->managerRegistry = $managerRegistry;
-        $this->em = $managerRegistry->getManager();
-        $this->repository = $repository;
-        $this->params = $params; // <--- C'est ici qu'on remplit $this->params !
+   public function __construct(
+    private ManagerRegistry $managerRegistry,
+    private BlockchainRepository $repository,
+    private ParameterBagInterface $params,
+) {
+    $em = $managerRegistry->getManager();
+
+    if (!$em instanceof EntityManagerInterface) {
+        throw new \RuntimeException('Invalid EntityManager');
     }
+
+    $this->em = $em;
+}
 
     private function ensureManagerIsOpen(): void {
         if (!$this->em->isOpen()) {
@@ -148,6 +149,9 @@ public function addBlock(Transaction $t): void
         }
     }
 
+     /**
+ * @return array<string, string>
+ */
     private function parseBackupChain(string $decrypted): array {
         $data = explode('|', $decrypted);
         $result = [];
@@ -160,6 +164,10 @@ public function addBlock(Transaction $t): void
         return $result;
     }
 
+
+    /**
+ * @param array<int, string> $nextBlockParts
+ */
     private function handleDeleteDetected(int $missingIdx, array $nextBlockParts): void {
         $msg = "🚨 ALERTE : DELETE_detected\n";
         $msg .= "------------------------------------------\n";
@@ -176,6 +184,10 @@ public function addBlock(Transaction $t): void
         $this->createAlert("DELETE_DETECTED", $msg);
     }
 
+
+    /**
+ * @param array<string, string> $d
+ */
     private function checkAndTriggerRupture(int $transId, float $backupAmount, array $d): void {
         $this->ensureManagerIsOpen();
         $transaction = $this->em->getRepository(Transaction::class)->find($transId);

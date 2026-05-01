@@ -52,36 +52,47 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $statut = null;
 
     #[ORM\OneToMany(targetEntity: Asset::class, mappedBy: 'utilisateur')]
+    /** @var Collection<int, Asset> */
     private Collection $assets;
 
     #[ORM\OneToMany(targetEntity: Credit::class, mappedBy: 'borrower')]
+    /** @var Collection<int, Credit> */
     private Collection $creditsBorrowed;
 
     #[ORM\OneToMany(targetEntity: Credit::class, mappedBy: 'investisseur')]
+    /** @var Collection<int, Credit> */
     private Collection $creditsInvested;
 
     #[ORM\OneToMany(targetEntity: CreditCard::class, mappedBy: 'utilisateur')]
+    /** @var Collection<int, CreditCard> */
     private Collection $creditCards;
 
     #[ORM\OneToMany(targetEntity: Formation::class, mappedBy: 'utilisateur')]
+    /** @var Collection<int, Formation> */
     private Collection $formations;
 
     #[ORM\OneToMany(targetEntity: Negociation::class, mappedBy: 'utilisateur')]
+    /** @var Collection<int, Negociation> */
     private Collection $negociations;
 
     #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'utilisateur')]
+    /** @var Collection<int, Order> */
     private Collection $orders;
 
     #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'utilisateur')]
+    /** @var Collection<int, Participation> */
     private Collection $participations;
 
     #[ORM\OneToMany(targetEntity: Product::class, mappedBy: 'utilisateur')]
+    /** @var Collection<int, Product> */
     private Collection $products;
 
     #[ORM\OneToMany(targetEntity: Projet::class, mappedBy: 'utilisateur')]
+    /** @var Collection<int, Projet> */
     private Collection $projets;
 
     #[ORM\OneToMany(targetEntity: Wallet::class, mappedBy: 'utilisateur')]
+    /** @var Collection<int, Wallet> */
     private Collection $wallets;
 
     public function __construct()
@@ -124,17 +135,38 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function getStatut(): ?string { return $this->statut; }
     public function setStatut(string $statut): self { $this->statut = $statut; return $this; }
 
-    public function getAssets(): Collection { return $this->assets; }
-    public function getCreditsBorrowed(): Collection { return $this->creditsBorrowed; }
-    public function getCreditsInvested(): Collection { return $this->creditsInvested; }
-    public function getCreditCards(): Collection { return $this->creditCards; }
-    public function getFormations(): Collection { return $this->formations; }
-    public function getNegociations(): Collection { return $this->negociations; }
-    public function getOrders(): Collection { return $this->orders; }
-    public function getParticipations(): Collection { return $this->participations; }
-    public function getProducts(): Collection { return $this->products; }
-    public function getProjets(): Collection { return $this->projets; }
-    public function getWallets(): Collection { return $this->wallets; }
+/** @return Collection<int, Asset> */
+public function getAssets(): Collection { return $this->assets; }
+
+/** @return Collection<int, Credit> */
+public function getCreditsBorrowed(): Collection { return $this->creditsBorrowed; }
+
+/** @return Collection<int, Credit> */
+public function getCreditsInvested(): Collection { return $this->creditsInvested; }
+
+/** @return Collection<int, CreditCard> */
+public function getCreditCards(): Collection { return $this->creditCards; }
+
+/** @return Collection<int, Formation> */
+public function getFormations(): Collection { return $this->formations; }
+
+/** @return Collection<int, Negociation> */
+public function getNegociations(): Collection { return $this->negociations; }
+
+/** @return Collection<int, Order> */
+public function getOrders(): Collection { return $this->orders; }
+
+/** @return Collection<int, Participation> */
+public function getParticipations(): Collection { return $this->participations; }
+
+/** @return Collection<int, Product> */
+public function getProducts(): Collection { return $this->products; }
+
+/** @return Collection<int, Projet> */
+public function getProjets(): Collection { return $this->projets; }
+
+/** @return Collection<int, Wallet> */
+public function getWallets(): Collection { return $this->wallets; }
 
 
     public function getUserIdentifier(): string

@@ -77,7 +77,8 @@ class MarketplaceController extends AbstractController
                 if ($p) {
                     $recommendations[] = [
                         'product' => $p,
-                        'reason'  => $item['reason'] ?? 'Recommandé par notre IA'
+                        
+                        'reason' => isset($item['reason']) ? (string)$item['reason'] : 'Recommandé par notre IA'
                     ];
                 }
             }
@@ -149,9 +150,9 @@ class MarketplaceController extends AbstractController
             $emailService->sendOrderConfirmation($order, 'thassanjebri99@gmail.com');
             
             // Also send to the user's email if it exists
-            if ($user && $user->getEmail()) {
-                $emailService->sendOrderConfirmation($order, $user->getEmail());
-            }
+                if ($user->getEmail()) {
+                    $emailService->sendOrderConfirmation($order, $user->getEmail());
+                }
         } catch (\Exception $e) {
             // Silently fail email or log it so it doesn't break the purchase flow
         }

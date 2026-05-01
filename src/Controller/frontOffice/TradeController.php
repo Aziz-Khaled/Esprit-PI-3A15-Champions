@@ -14,6 +14,10 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/trade', name: 'app_frontoffice_trade_')]
 class TradeController extends AbstractController
 {
+
+/**
+ * @return array<string, int>
+ */
     private function getAssetChoices(EntityManagerInterface $em): array
     {
         $rows = $em->getConnection()->fetchAllAssociative(
@@ -26,6 +30,9 @@ class TradeController extends AbstractController
         return $choices;
     }
 
+    /**
+ * @return array<int, array{id: int, symbol: string, name: string}>
+ */
     private function getAssetMap(EntityManagerInterface $em): array
     {
         $rows = $em->getConnection()->fetchAllAssociative(

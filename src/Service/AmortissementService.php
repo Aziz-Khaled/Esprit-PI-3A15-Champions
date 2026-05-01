@@ -2,7 +2,17 @@
 namespace App\Service;
 
 class AmortissementService {
-    public function calculerTableau($montant, $tauxAnnuel, $dureeMois): array {
+    /**
+ * @return array<int, array{
+ *     numero: int,
+ *     date: \DateTime,
+ *     mensualite: float,
+ *     interets: float,
+ *     principal: float,
+ *     solde: float
+ * }>
+ */
+    public function calculerTableau( float $montant,float $tauxAnnuel,int $dureeMois): array {
         $tauxMensuel = ($tauxAnnuel / 100) / 12;
         $mensualite = ($montant * $tauxMensuel) / (1 - pow(1 + $tauxMensuel, -$dureeMois));
         

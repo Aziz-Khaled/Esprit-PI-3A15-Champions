@@ -13,11 +13,11 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class TransactionManager 
 {
-    private $em;
-    private $walletRepo;
-    private $currencyRepo;
-    private $blockchain;
-    private $conversionService;
+   private EntityManagerInterface $em;
+    private WalletRepository $walletRepo;
+    private CurrencyRepository $currencyRepo;
+    private BlockchainService $blockchain;
+    private ConversionService $conversionService;
 
     public function __construct(
         EntityManagerInterface $em, 
@@ -148,12 +148,12 @@ class TransactionManager
             // D. CRÉATION DE LA TRANSACTION
             $t = new Transaction();
             $t->setWalletSource($srcWallet)
-              ->setWalletDestination($destWallet)
-              ->setMontant($amount)
-              ->setType($typeUpper)
-              ->setStatut('VALID')
-              ->setCurrency($currency)
-              ->setDateTransaction(new \DateTime());
+            ->setWalletDestination($destWallet)
+            ->setMontant($amount)
+            ->setType($typeUpper)
+            ->setStatut('VALID')
+            ->setCurrency($currency)
+            ->setDateTransaction(new \DateTime());
             
             if ($conversionRecord) {
                 $t->setConversion($conversionRecord);
@@ -162,12 +162,8 @@ class TransactionManager
             $this->em->persist($t);
 
             // E. AUDIT & BLOCKCHAIN
-            if (method_exists($srcWallet, 'setDateDerniereModification')) {
-                $srcWallet->setDateDerniereModification(new \DateTime());
-            }
-            if (method_exists($destWallet, 'setDateDerniereModification')) {
-                $destWallet->setDateDerniereModification(new \DateTime());
-            }
+            $srcWallet->setDateDerniereModification(new \DateTime());
+            $destWallet->setDateDerniereModification(new \DateTime());
 
             $this->em->flush();
             $this->blockchain->addBlock($t);

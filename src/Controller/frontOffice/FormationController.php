@@ -30,12 +30,12 @@ class FormationController extends AbstractController
         $formations = $formationRepository->findFiltered($search, $domaine, $statut, $sort);
         $domaines   = $formationRepository->findDistinctDomaines();
 
-        /** @var \App\Entity\Utilisateur $currentUser */
+        
         $currentUser = $this->getUser();
 
         // Build wallet data with TND balance for the JS popup
         $userWalletsData = [];
-        if ($currentUser) {
+        if ($currentUser instanceof \App\Entity\Utilisateur) {
             $wallets = $walletRepository->findBy([
                 'utilisateur' => $currentUser,
                 'typeWallet'  => 'fiat',
@@ -93,10 +93,10 @@ public function enroll(
     $formationId = (int) $request->request->get('formation_id');
     $walletId = (int) $request->request->get('wallet_id');
     
-    /** @var \App\Entity\Utilisateur $user */
+    
     $user = $this->getUser();
 
-    if (!$user) {
+    if (!$user instanceof \App\Entity\Utilisateur) {
         $this->addFlash('error', 'You must be logged in to enroll.');
         return $this->redirectToRoute('app_login');
     }

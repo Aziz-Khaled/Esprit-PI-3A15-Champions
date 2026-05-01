@@ -29,7 +29,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class UserSignatureWrapper implements UserInterface
 {
-    private $user;
+    private Utilisateur $user;
     public function __construct(Utilisateur $user) { $this->user = $user; }
     public function getRoles(): array { return ['ROLE_USER']; }
     public function eraseCredentials(): void {}
@@ -58,7 +58,7 @@ class NegociationController extends AbstractController
             $negociation->setCredit($credit);
             $negociation->setUtilisateur($investisseur); 
             $negociation->setStatus('PROPOSED');
-            $negociation->setCreatedAt(new \DateTimeImmutable());
+           // $negociation->setCreatedAt(new \DateTimeImmutable());
             $em->persist($negociation);
             $em->flush();
 
@@ -88,8 +88,10 @@ class NegociationController extends AbstractController
         SmartContractGenerator $contractGenerator
     ): Response {
         $credit = $negociation->getCredit();
-        $analyseRisque = $scorer->getRiskAnalysis($negociation->getMontant(), $negociation->getTauxPropose());
-
+      $analyseRisque = $scorer->getRiskAnalysis(
+        (float) $negociation->getMontant(),
+        (float) $negociation->getTauxPropose()
+        );
         // GÉNÉRATION MÉTIER LOCALE (Plus d'IA externe)
         $contractData = $contractGenerator->generateSmartContract($negociation);
 
@@ -244,9 +246,9 @@ public function clientSignFinish(
 
         // PDF 2 : Échéancier
         $tableauEcheance = $amortissementService->calculerTableau(
-            $credit->getMontant(),
-            $credit->getTaux(),
-            $credit->getDuree()
+        (float) $credit->getMontant(),
+        (float) $credit->getTaux(),
+        (int) $credit->getDuree()
         );
         $htmlEcheancier = $this->renderView('front_office/credit/pdf_echeancier.html.twig', [
             'credit' => $credit,

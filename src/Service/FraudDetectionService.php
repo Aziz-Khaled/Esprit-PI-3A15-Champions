@@ -6,20 +6,19 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use App\Repository\TransactionRepository;
 use App\Entity\Transaction;
 
+
 class FraudDetectionService
 {
-    private $client;
-    private $repository;
-    private $apiUrl;
 
-    public function __construct(HttpClientInterface $client, TransactionRepository $repository, string $fraudApiUrl)
-    {
-        $this->client = $client;
-        $this->repository = $repository;
-        $this->apiUrl = $fraudApiUrl;
-    }
+    public function __construct(
+        private HttpClientInterface $client,
+        private TransactionRepository $repository,
+        private string $apiUrl,
+    ) {}
 
-    
+    /**
+ * @return array{fraud_alert: bool, percentage: int|float, error?: string}
+ */
     public function verifyTransaction(int $transactionId): array
     {
         $data = [
@@ -39,24 +38,32 @@ class FraudDetectionService
         }
     }
 
-    
+/**
+ * @param Transaction[] $transactions
+ * @return array<string, array{userName: string, highestProbability: int|float, reason: string}>
+ */
 public function getGlobalFraudReport(array $transactions): array
 {
     $fraudMap = [];
 
     foreach ($transactions as $t) {
-        $user = null;
-        if ($t->getWalletSource()) {
-            $user = $t->getWalletSource()->getUtilisateur();
-        } elseif ($t->getCreditCard()) {
-            $user = $t->getCreditCard()->getUtilisateur();
+
+        $user = $t->getWalletSource()?->getUtilisateur()
+            ?? $t->getCreditCard()?->getUtilisateur();
+
+        if (!$user) {
+            continue;
         }
 
-        if (!$user) continue;
+        $date = $t->getDateTransaction();
 
-        $date  = $t->getDateTransaction() ?? new \DateTime();
-        $start = (clone $date)->setTime(0, 0, 0);
-        $end   = (clone $date)->setTime(23, 59, 59);
+if (!$date instanceof \DateTime) {
+    $date = new \DateTime($date instanceof \DateTimeInterface ? $date->format('Y-m-d H:i:s') : 'now');
+}
+
+$start = (clone $date)->setTime(0, 0, 0);
+$end   = (clone $date)->setTime(23, 59, 59);
+
 
         
         $allUserTransactionsToday = $this->repository->createQueryBuilder('tr')

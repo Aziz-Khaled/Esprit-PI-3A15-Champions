@@ -42,18 +42,23 @@ class Wallet
     private ?\DateTimeInterface $dateDerniereModification = null;
 
     #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'walletSource')]
+    /** @var Collection<int, Blockchain> */
     private Collection $blockchainSources;
 
     #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'walletDestination')]
+    /** @var Collection<int, Blockchain> */
     private Collection $blockchainDestinations;
 
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'walletSource')]
+    /** @var Collection<int, Transaction> */
     private Collection $transactionsSource;
 
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'walletDestination')]
+    /** @var Collection<int, Transaction> */
     private Collection $transactionsDestination;
 
     #[ORM\OneToMany(targetEntity: WalletCurrency::class, mappedBy: 'wallet', cascade: ['remove'], orphanRemoval: true)]
+    /** @var Collection<int, WalletCurrency> */
     private Collection $walletCurrencys;
 
     public function __construct()

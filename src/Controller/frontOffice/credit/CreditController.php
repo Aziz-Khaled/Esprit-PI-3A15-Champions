@@ -177,7 +177,10 @@ public function scanner(
     #[Route('/new-negociation/{id}', name: 'app_credit_new_negociation', requirements: ['id' => '\d+'])]
     public function newNegociation(Request $request, Credit $credit, EntityManagerInterface $entityManager): Response
     {
-        $user = $this->getUser() ?: $entityManager->getRepository(Utilisateur::class)->find(1);
+        $user = $this->getUser();
+if (!$user instanceof Utilisateur) {
+    $user = $entityManager->getRepository(Utilisateur::class)->find(1);
+}
 
         if ($credit->getStatus() !== 'OPEN') {
             throw $this->createAccessDeniedException('Crédit non disponible.');

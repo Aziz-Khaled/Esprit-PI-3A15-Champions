@@ -44,7 +44,7 @@ class CartController extends AbstractController
     }
 
     #[Route('/add/{id}', name: 'app_cart_add')]
-    public function add($id, SessionInterface $session): Response
+    public function add(int $id, SessionInterface $session): Response
     {
         $panier = $session->get('panier', []);
 
@@ -61,7 +61,7 @@ class CartController extends AbstractController
     }
 
     #[Route('/ajax/update/{id}', name: 'app_cart_ajax_update', methods: ['POST'])]
-    public function ajaxUpdate($id, Request $request, SessionInterface $session, ProductRepository $productRepository): Response
+    public function ajaxUpdate(int $id, Request $request, SessionInterface $session, ProductRepository $productRepository): Response
     {
         $panier = $session->get('panier', []);
         $action = $request->request->get('action');
@@ -113,7 +113,10 @@ class CartController extends AbstractController
         ]);
     }
 
-    private function calculateTotal($panier, $productRepository): float
+    /**
+ * @param array<int, int> $panier
+ */
+    private function calculateTotal(array $panier, ProductRepository $productRepository): float
     {
         $total = 0;
         foreach ($panier as $id => $qty) {
@@ -126,17 +129,14 @@ class CartController extends AbstractController
     }
 
     #[Route('/remove/{id}', name: 'app_cart_remove')]
-    public function remove($id, SessionInterface $session): Response
+    public function remove(int $id, SessionInterface $session): Response
     {
         $panier = $session->get('panier', []);
 
         if (!empty($panier[$id])) {
             unset($panier[$id]);
         }
-
         $session->set('panier', $panier);
-
-
         return $this->redirectToRoute('app_cart_index');
     }
 

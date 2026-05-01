@@ -7,6 +7,17 @@ class CreditScorer
     /**
      * Calcule l'analyse complète du risque financier
      */
+
+    /**
+ * @return array{
+ *   note: string,
+ *   fiabilite: float,
+ *   rentabilite: float,
+ *   risque: float,
+ *   solde: float,
+ *   recommandation: string
+ * }
+ */
     public function getRiskAnalysis(float $montantNegocie, float $tauxPropose): array
     {
         // Simulation du solde de l'investisseur (comme sur ta capture)
