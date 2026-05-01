@@ -3,6 +3,127 @@
 {% block title %}Nouvelle Négociation - Champions{% endblock %}
 
 {% block body %}
+<style id="champions-global-css">
+  :root {
+    --bg-base:      #080d14;
+    --bg-card:      #0e1623;
+    --bg-card2:     #111b2b;
+    --border:       #1a2a40;
+    --border-glow:  rgba(0,229,255,.15);
+    --accent:       #00e5ff;
+    --accent2:      #00b4cc;
+    --accent-glow:  rgba(0,229,255,.18);
+    --gold:         #f0b429;
+    --text-1:       #f0f4ff;
+    --text-2:       #f0f4ff;
+    --text-3:       #f0f4ff;
+    --font-head:    'Syne', sans-serif;
+    --font-body:    'Space Grotesk', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+    --radius:       16px;
+    --navbar-h:     64px;
+    --primary-gradient: linear-gradient(135deg, var(--accent) 0%, #0099cc 100%);
+  }
+
+  body { font-family: var(--font-body) !important; background: var(--bg-base) !important; color: var(--text-1) !important; margin: 0; min-height: 100vh; overflow-x: hidden; }
+
+  /* ── BACKGROUND EFFECTS ── */
+  .bg-grid { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px); background-size: 52px 52px; animation: gridDrift 25s linear infinite; }
+  @keyframes gridDrift { 0% { background-position: 0 0; } 100% { background-position: 52px 52px; } }
+  .bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .bg-orb-1 { width: 600px; height: 600px; top: -200px; left: -150px; background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%); }
+  .bg-orb-2 { width: 440px; height: 440px; bottom: -160px; right: -100px; background: radial-gradient(circle, rgba(240,180,41,.07) 0%, transparent 70%); }
+
+  .app-shell { display: flex; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── TOPNAV ── */
+  .topnav { position: sticky; top: 0; z-index: 200; height: var(--navbar-h); background: rgba(8,13,20,.97); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); display: flex; align-items: center; padding: 0 32px; flex-shrink: 0; }
+  .topnav::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent); opacity: 0.25; }
+  .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; margin-right: 36px; }
+  .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #1de9b6, #00b4cc); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #080d14; font-family: var(--font-head); box-shadow: 0 0 16px rgba(0,229,255,.3); }
+  .logo-text { font-family: var(--font-head); font-size: 18px; font-weight: 700; background: linear-gradient(90deg, var(--text-1), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .topnav-links { display: flex; align-items: center; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+  .topnav-links::-webkit-scrollbar { display: none; }
+  .nav-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 10px; text-decoration: none; color: var(--text-1); font-size: 14px; font-weight: 500; transition: all .2s ease; background: none; border: none; cursor: pointer; text-align: left; flex-shrink: 0; font-family: var(--font-body); }
+  .nav-btn:hover { background: rgba(255,255,255,.05); color: var(--text-1); }
+  .nav-btn.active { color: var(--accent); background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.15); }
+  .topnav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 16px; }
+  .user-card { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px; background: rgba(255,255,255,.03); border: 1px solid var(--border); transition: border-color .2s; }
+  .user-avatar { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, rgba(0,229,255,.2), rgba(0,180,204,.2)); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--accent); }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+
+  /* OVERRIDES TO ASSIMILATE OLD UI */
+  .cf-form-card, .form-card, .analytics-card, .card {
+    background: var(--bg-card) !important; border: 1px solid var(--border) !important; border-radius: var(--radius) !important; color: var(--text-1) !important;
+  }
+  .cf-form-card-header, .form-card-header, .analytics-card-header, .card-header {
+    background: rgba(0,229,255,.05) !important; border-bottom: 1px solid var(--border) !important; border-radius: var(--radius) var(--radius) 0 0 !important; color: var(--text-1) !important;
+  }
+  .cf-page-title, .cf-form-card-title, .form-card-title, h1, h2, h3, h4, h5, h6 { color: var(--text-1) !important; font-family: var(--font-head); }
+  .cf-page-subtitle, .cf-form-card-sub, p.text-muted, .text-muted { color: var(--text-3) !important; }
+  .field-label, .cf-label, .section-title, .cf-section-title { color: var(--accent) !important; }
+  .cf-section-num { background: linear-gradient(135deg, var(--accent), #0099cc) !important; color: #080d14 !important; }
+
+  /* inputs */
+  .cf-input, .cf-textarea, .cf-select, .form-input, .form-textarea, .form-select-custom, .form-control, .form-select {
+    background: rgba(0,0,0,.25) !important; border: 1px solid rgba(90,112,144,.3) !important; color: var(--text-1) !important; border-radius: 12px !important;
+  }
+  .cf-input:focus, .cf-textarea:focus, .cf-select:focus, .form-input:focus, .form-textarea:focus, .form-select-custom:focus, .form-control:focus {
+    border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(0,229,255,.1) !important;
+  }
+  .cf-input-suffix { background: rgba(0,229,255,.1) !important; border: 1px solid rgba(0,229,255,.3) !important; color: var(--accent) !important; }
+  .cf-input::placeholder, .form-input::placeholder { color: rgba(255,255,255,0.2) !important; }
+
+  /* buttons */
+  .cf-btn-submit, .btn-submit, .btn-submit-full, .btn-primary {
+    background: var(--primary-gradient) !important; border: none !important; color: #080d14 !important; border-radius: 14px !important; font-family: var(--font-head) !important; text-transform: uppercase; font-weight: 700 !important;
+  }
+  .cf-btn-submit:hover, .btn-submit:hover, .btn-submit-full:hover {
+    box-shadow: 0 12px 28px rgba(0,229,255,.3) !important; transform: translateY(-2px) !important;
+  }
+  .btn-cancel, .btn-secondary, .btn-outline-custom { background: transparent !important; color: var(--text-2) !important; border: 1px solid var(--border) !important; }
+  .btn-outline-custom:hover { background: rgba(0,229,255,.06) !important; color: var(--accent) !important; border-color: var(--accent) !important; }
+
+  /* tables */
+  .table-custom thead tr th, .table thead tr th { background: var(--bg-card2) !important; color: var(--accent) !important; border-bottom: 1px solid var(--border) !important; }
+  .table-custom tbody tr, .table tbody tr { border-bottom: 1px solid var(--border) !important; }
+  .table-custom tbody tr:hover, .table tbody tr:hover { background: rgba(0,229,255,.025) !important; }
+  .table-custom tbody td, .table tbody td { color: var(--text-1) !important; }
+
+  /* general structure alignment mapping */
+  .sidebar, .cf-nav { display: none !important; }
+  .main-content { margin-left: 0 !important; width: 100% !important; flex: 1; padding: 40px; }
+  .cf-container { max-width: 1200px; margin: 0 auto; width: 100%; padding: 40px 24px; flex: 1; }
+ 
+  .site-footer { background: rgba(8,13,20,.98); border-top: 1px solid var(--border); padding: 40px 48px; display: flex; color: var(--text-3); font-size: 13px; margin-top: auto; }
+</style>
+
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<div class="app-shell">
+    <nav class="topnav">
+    <a class="topnav-logo" href="#">
+      <div class="logo-icon">C</div>
+      <div class="logo-text">Champions</div>
+    </a>
+    <div class="topnav-links">
+      <a href="{{ path('app_credit_investor_index') }}" class="nav-btn active"><i class="fas fa-chart-pie"></i> <span>Marketplace Investissements</span></a>
+      <a href="#" class="nav-btn"><i class="fas fa-paper-plane"></i> <span>Mes Propositions</span></a>
+    </div>
+    <div class="topnav-right">
+      <a href="{{ path('app_projet_index') }}" class="nav-btn danger" style="border:1px solid rgba(255,100,100,0.3);"><i class="fas fa-exchange-alt"></i> <span>Vue Emprunteur</span></a>
+      <div class="user-card">
+        <div class="user-avatar" style="background:#00e676;color:#000;"><i class="fas fa-wallet"></i></div>
+        <div class="user-name">Investisseur</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Content Wrapper -->
+  <div style="flex: 1; display: flex; flex-direction: column;">
+
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -34,7 +155,7 @@
                     </div>
 
                     {{ form_start(form, {'attr': {'class': 'needs-validation'}}) }}
-                        
+                       
                         <div class="mb-4">
                             <label class="form-label fw-bold text-secondary">Votre Montant Proposé (DT)</label>
                             <div class="input-group">
@@ -57,7 +178,7 @@
                             <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm" style="border-radius: 10px;">
                                 <i class="fas fa-paper-plane me-2"></i>Envoyer ma proposition
                             </button>
-                            
+                           
                             <a href="{{ path('app_credit_investor_index') }}" class="btn btn-link text-muted mt-2">
                                 <i class="fas fa-arrow-left me-1"></i> Retour à la marketplace
                             </a>
@@ -86,4 +207,10 @@
     .input-group-text { border-radius: 10px 0 0 10px; }
     .form-control { border-radius: 0 10px 10px 0; }
 </style>
+
+  </div>
+  <footer class="site-footer">
+    © {{ "now"|date("Y") }} Champions Group. All rights reserved.
+  </footer>
+</div>
 {% endblock %}

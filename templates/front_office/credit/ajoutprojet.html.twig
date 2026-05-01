@@ -1,276 +1,564 @@
 {# templates/front_office/credit/ajoutprojet.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Ajouter un Projet - Champions{% endblock %}
+{% block title %}Champions — New Project{% endblock %}
+
+{% block stylesheets %}
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:      #080d14;
+    --bg-card:      #0e1623;
+    --bg-card2:     #111b2b;
+    --border:       #1a2a40;
+    --border-glow:  rgba(0,229,255,.15);
+    --accent:       #00e5ff;
+    --accent2:      #00b4cc;
+    --accent-glow:  rgba(0,229,255,.18);
+    --gold:         #f0b429;
+    --gold-dim:     rgba(240,180,41,.10);
+    --green:        #00e676;
+    --red:          #ff1744;
+    --text-1:       #f0f4ff;
+    --text-2:       #b0bdd0;
+    --text-3:       #5a7090;
+    --font-head:    'Syne', sans-serif;
+    --font-body:    'Space Grotesk', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+    --radius:       16px;
+    --navbar-h:     64px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-base);
+    color: var(--text-1);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.2); border-radius: 3px; }
+
+  /* ── BACKGROUND ── */
+  .bg-grid {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+    background-size: 52px 52px;
+    animation: gridDrift 25s linear infinite;
+  }
+  @keyframes gridDrift { 0% { background-position: 0 0; } 100% { background-position: 52px 52px; } }
+
+  .bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .bg-orb-1 {
+    width: 600px; height: 600px; top: -200px; left: -150px;
+    background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%);
+    animation: orbFloat 10s ease-in-out infinite alternate;
+  }
+  .bg-orb-2 {
+    width: 440px; height: 440px; bottom: -160px; right: -100px;
+    background: radial-gradient(circle, rgba(240,180,41,.07) 0%, transparent 70%);
+    animation: orbFloat 14s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes orbFloat { from { transform: translate(0,0) scale(1); } to { transform: translate(28px,18px) scale(1.06); } }
+
+  .app-shell { display: flex; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── NAVBAR ── */
+  .topnav {
+    position: sticky; top: 0; z-index: 200; height: var(--navbar-h);
+    background: rgba(8,13,20,.97); border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    display: flex; align-items: center; padding: 0 32px; gap: 0; overflow: hidden;
+  }
+  .topnav::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+    opacity: 0.25;
+  }
+  .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; margin-right: 36px; }
+  .logo-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, #1de9b6, #00b4cc);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: #080d14; font-family: var(--font-head);
+    box-shadow: 0 0 16px rgba(0,229,255,.3); flex-shrink: 0;
+  }
+  .logo-text {
+    font-family: var(--font-head); font-size: 18px; font-weight: 700;
+    background: linear-gradient(90deg, var(--text-1), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .topnav-links { display: flex; align-items: center; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+  .topnav-links::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 14px; border-radius: 10px; text-decoration: none; color: var(--text-1);
+    font-size: 14px; font-weight: 500; transition: all .2s ease; position: relative;
+    white-space: nowrap; background: none; border: none; cursor: pointer;
+    font-family: var(--font-body); text-align: left; flex-shrink: 0;
+  }
+  .nav-btn i { font-size: 13px; flex-shrink: 0; }
+  .nav-btn:hover { color: var(--text-1); background: rgba(255,255,255,.05); }
+  .nav-btn.active { color: var(--accent); background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.15); }
+  .nav-btn.active i { color: var(--accent); }
+  .nav-btn.danger { color: var(--red); }
+  .nav-btn.danger:hover { background: rgba(255,23,68,.08); color: var(--red); }
+  .topnav-sep { width: 1px; height: 24px; background: var(--border); margin: 0 8px; flex-shrink: 0; }
+  .topnav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 16px; }
+  .user-card {
+    display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px;
+    background: rgba(255,255,255,.03); border: 1px solid var(--border); cursor: pointer; transition: border-color .2s;
+  }
+  .user-card:hover { border-color: rgba(0,229,255,.2); }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, rgba(0,229,255,.2), rgba(0,180,204,.2));
+    border: 1px solid rgba(0,229,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--accent); flex-shrink: 0;
+  }
+  .user-info { line-height: 1.25; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+  .user-role { font-size: 10.5px; color: var(--text-3); font-family: var(--font-mono); }
+
+  /* ── TICKER ── */
+  .ticker-wrap { width: 100%; background: rgba(8,13,20,.95); border-top: 1px solid var(--border); height: 38px; overflow: hidden; flex-shrink: 0; }
+  .ticker-track { display: flex; align-items: center; height: 100%; white-space: nowrap; animation: tickerScroll 35s linear infinite; width: max-content; }
+  .ticker-item { display: inline-flex; align-items: center; gap: 6px; padding: 0 28px; font-size: 13px; font-family: var(--font-mono); color: var(--text-2); border-right: 1px solid var(--border); }
+  .ticker-item .sym { color: var(--accent); font-weight: 600; }
+  .ticker-item .up { color: var(--green); }
+  .ticker-item .dn { color: var(--red); }
+  @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* ── MAIN ── */
+  .main-content { flex: 1; padding: 40px 48px 60px; display: flex; flex-direction: column; gap: 28px; }
+  .cf-container { max-width: 1000px; margin: 0 auto; width: 100%; }
+
+  /* ── BACK LINK ── */
+  .cf-back {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: var(--accent);
+    text-decoration: none; margin-bottom: 28px; transition: color .2s, gap .2s;
+  }
+  .cf-back:hover { color: var(--text-1); gap: 12px; }
+
+  /* ── PAGE HEADER ── */
+  .page-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .page-title { font-family: var(--font-head); font-size: 32px; font-weight: 800; line-height: 1.1; letter-spacing: -.02em; margin-bottom: 6px; color: var(--text-1); }
+  .page-sub { font-size: 15px; color: var(--text-2); margin-bottom: 32px; }
+
+  /* ── FORM CARD ── */
+  .cf-form-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; position: relative;
+  }
+  .cf-form-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+    opacity: 0.3;
+  }
+
+  /* card header */
+  .cf-form-card-header {
+    padding: 22px 32px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(0,229,255,.03);
+  }
+  .cf-form-card-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: 17px; flex-shrink: 0;
+  }
+  .cf-form-card-title { font-family: var(--font-head); font-weight: 700; color: var(--text-1); font-size: 16px; margin: 0 0 3px; }
+  .cf-form-card-sub   { font-size: 13px; color: var(--text-3); margin: 0; }
+
+  /* card body */
+  .cf-form-card-body { padding: 32px; }
+
+  /* ── FORM GRID ── */
+  .cf-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  @media (max-width: 768px) { .cf-form-grid { grid-template-columns: 1fr; } }
+
+  /* ── SECTION HEADS ── */
+  .cf-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .cf-section-num {
+    width: 26px; height: 26px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: #080d14; flex-shrink: 0;
+    font-family: var(--font-head);
+  }
+  .num-cyan { background: linear-gradient(135deg, var(--accent), #0099cc); }
+  .num-gold { background: linear-gradient(135deg, var(--gold), #e09000); }
+  .cf-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-3); margin: 0; font-family: var(--font-mono); }
+  .cf-divider { width: 100%; height: 1px; background: var(--border); margin-bottom: 22px; }
+
+  /* ── FIELDS ── */
+  .cf-field { margin-bottom: 20px; }
+  .cf-label {
+    display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--text-3); margin-bottom: 8px;
+    font-family: var(--font-mono);
+  }
+
+  .cf-input, .cf-textarea, .cf-select {
+    width: 100%; padding: 11px 15px; border-radius: 10px;
+    background: rgba(0,0,0,.25); border: 1px solid rgba(90,112,144,.3);
+    color: var(--text-1); font-size: 14px; font-family: var(--font-body);
+    outline: none; transition: border-color .2s, box-shadow .2s; box-sizing: border-box;
+  }
+  .cf-input::placeholder, .cf-textarea::placeholder { color: var(--text-3); opacity: .7; }
+  .cf-input:focus, .cf-textarea:focus, .cf-select:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,.1);
+  }
+  .cf-textarea { resize: none; }
+  .cf-select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+  .cf-select option { background: #111b2b; }
+
+  /* select wrap */
+  .cf-select-wrap { position: relative; }
+  .cf-select-arrow {
+    position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+    pointer-events: none; color: var(--text-3);
+  }
+
+  /* input group (with suffix) */
+  .cf-input-group { display: flex; }
+  .cf-input-group .cf-input { border-radius: 10px 0 0 10px; border-right: none; flex: 1; }
+  .cf-input-suffix {
+    display: flex; align-items: center; padding: 0 16px;
+    border-radius: 0 10px 10px 0; font-weight: 700; font-size: 13px;
+    background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.2);
+    color: var(--accent); white-space: nowrap; font-family: var(--font-mono);
+  }
+
+  /* input with icon */
+  .cf-input-icon-wrap { position: relative; }
+  .cf-input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-3); }
+  .cf-input-icon-wrap .cf-input { padding-left: 38px; }
+
+  /* dates grid */
+  .cf-dates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* info box */
+  .cf-info-box {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; border-radius: 12px;
+    background: rgba(0,229,255,.04); border: 1px dashed rgba(0,229,255,.2);
+    margin-top: 4px;
+  }
+  .cf-info-icon { color: var(--accent); flex-shrink: 0; margin-top: 2px; font-size: 13px; }
+  .cf-info-text { font-size: 13px; color: var(--text-3); margin: 0; line-height: 1.55; }
+  .cf-info-text strong { color: var(--gold); }
+
+  /* error */
+  .cf-error { font-size: 11.5px; color: var(--red); margin-top: 5px; font-family: var(--font-mono); }
+
+  /* ── SUBMIT SECTION ── */
+  .cf-submit-wrap { margin-top: 36px; }
+  .cf-divider-bottom { width: 100%; height: 1px; background: var(--border); margin-bottom: 28px; }
+  .cf-btn-submit {
+    width: 100%; padding: 16px; border-radius: 12px; border: none; cursor: pointer;
+    font-weight: 700; font-size: 15px; color: #080d14;
+    background: linear-gradient(135deg, var(--accent) 0%, #0099cc 100%);
+    box-shadow: 0 8px 32px rgba(0,229,255,.25);
+    transition: transform .2s, box-shadow .2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    font-family: var(--font-head); letter-spacing: .04em;
+  }
+  .cf-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(0,229,255,.4); }
+
+  /* date input dark */
+  input[type="date"] { color-scheme: dark; }
+
+  /* ── FOOTER ── */
+  .site-footer { background: rgba(8,13,20,.98); border-top: 1px solid var(--border); position: relative; z-index: 10; flex-shrink: 0; }
+  .site-footer::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent); opacity: 0.35; }
+  .footer-inner { max-width: 1400px; margin: 0 auto; padding: 40px 48px 28px; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; }
+  .footer-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 14px; }
+  .footer-tagline { font-size: 13.5px; color: var(--text-3); line-height: 1.65; max-width: 260px; margin-bottom: 20px; }
+  .footer-socials { display: flex; gap: 10px; }
+  .social-btn { width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,.04); border: 1px solid var(--border); color: var(--text-3); font-size: 13px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all .2s; }
+  .social-btn:hover { color: var(--accent); border-color: rgba(0,229,255,.25); background: rgba(0,229,255,.07); }
+  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .footer-links li a { font-size: 14px; color: var(--text-3); text-decoration: none; transition: color .2s; }
+  .footer-links li a:hover { color: var(--text-1); }
+  .footer-bottom { border-top: 1px solid var(--border); padding: 18px 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; max-width: 1400px; margin: 0 auto; }
+  .footer-copy { font-size: 13px; color: var(--text-3); font-family: var(--font-mono); }
+  .footer-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.15); font-size: 11.5px; font-weight: 600; color: var(--accent); font-family: var(--font-mono); }
+  .footer-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1200px) { .footer-inner { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 900px)  { .main-content { padding: 24px 20px 40px; } .topnav { padding: 0 16px; } .topnav-links .nav-btn span:not(.nav-badge) { display: none; } }
+</style>
+{% endblock %}
 
 {% block body %}
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
 
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-    :root { --violet: #8353E2; --violet-light: #a77af5; --violet-glow: rgba(131,83,226,0.35); }
+<div class="app-shell">
 
-    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); min-height: 100vh; }
-
-    /* ── NAV ── */
-    .cf-nav { background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
-    .cf-nav-brand { display: flex; align-items: center; gap: 12px; }
-    .cf-nav-logo { width: 36px; height: 36px; border-radius: 12px; background: linear-gradient(135deg, var(--violet), var(--violet-light)); display: flex; align-items: center; justify-content: center; }
-    .cf-nav-title { font-weight: 800; color: #fff; font-size: 1.05rem; }
-    .cf-nav-links { display: flex; align-items: center; gap: 24px; }
-    .cf-nav-links a { color: rgba(255,255,255,0.45); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: color .2s; }
-    .cf-nav-links a:hover { color: #fff; }
-    .cf-nav-links a.active { color: var(--violet-light); font-weight: 700; }
-    .cf-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--violet), var(--violet-light)); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: #fff; }
-
-    /* ── LAYOUT ── */
-    .cf-container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
-
-    /* ── BREADCRUMB ── */
-    .cf-back { display: inline-flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 600; color: var(--violet-light); text-decoration: none; margin-bottom: 32px; transition: color .2s; }
-    .cf-back:hover { color: #fff; }
-
-    /* ── PAGE HEADER ── */
-    .cf-badge-label { display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; background: rgba(131,83,226,0.2); color: var(--violet-light); border: 1px solid rgba(131,83,226,0.3); border-radius: 50px; padding: 4px 12px; margin-bottom: 12px; }
-    .cf-page-title { font-size: 1.9rem; font-weight: 800; color: #fff; margin: 0 0 6px; letter-spacing: -0.5px; }
-    .cf-page-subtitle { color: rgba(255,255,255,0.45); font-size: 0.875rem; margin: 0 0 32px; }
-
-    /* ── FORM CARD ── */
-    .cf-form-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; overflow: hidden; backdrop-filter: blur(24px); }
-    .cf-form-card-header { padding: 20px 32px; display: flex; align-items: center; gap: 14px; background: rgba(131,83,226,0.1); border-bottom: 1px solid rgba(255,255,255,0.07); }
-    .cf-form-card-icon { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--violet), var(--violet-light)); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(131,83,226,0.4); flex-shrink: 0; }
-    .cf-form-card-title { font-weight: 700; color: #fff; font-size: 0.95rem; margin: 0; }
-    .cf-form-card-sub   { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin: 0; }
-    .cf-form-card-body  { padding: 32px; }
-
-    /* ── FORM GRID ── */
-    .cf-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-    @media (max-width: 768px) { .cf-form-grid { grid-template-columns: 1fr; } }
-
-    /* ── SECTION TITLE ── */
-    .cf-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-    .cf-section-num { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #fff; flex-shrink: 0; }
-    .cf-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #fff; margin: 0; }
-    .cf-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.07); margin-bottom: 24px; }
-
-    /* ── FIELDS ── */
-    .cf-field { margin-bottom: 20px; }
-    .cf-label { display: block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
-    .cf-input, .cf-textarea, .cf-select {
-        width: 100%; padding: 12px 16px; border-radius: 14px;
-        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-        color: #fff; font-size: 0.875rem; font-family: 'Inter', sans-serif;
-        outline: none; transition: border-color .2s, background .2s; box-sizing: border-box;
-    }
-    .cf-input::placeholder, .cf-textarea::placeholder { color: rgba(255,255,255,0.22); }
-    .cf-input:focus, .cf-textarea:focus, .cf-select:focus { border-color: var(--violet); background: rgba(131,83,226,0.06); }
-    .cf-textarea { resize: none; }
-    .cf-select { appearance: none; -webkit-appearance: none; }
-    .cf-select option { background: #1e1a3a; }
-    .cf-select-wrap { position: relative; }
-    .cf-select-arrow { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: rgba(255,255,255,0.3); }
-
-    /* input group with suffix */
-    .cf-input-group { display: flex; }
-    .cf-input-group .cf-input { border-radius: 14px 0 0 14px; border-right: none; flex: 1; }
-    .cf-input-suffix { display: flex; align-items: center; padding: 0 16px; border-radius: 0 14px 14px 0; font-weight: 700; font-size: 0.875rem; background: rgba(131,83,226,0.2); border: 1px solid rgba(131,83,226,0.3); color: var(--violet-light); white-space: nowrap; }
-
-    /* input with icon */
-    .cf-input-icon-wrap { position: relative; }
-    .cf-input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: rgba(255,255,255,0.3); }
-    .cf-input-icon-wrap .cf-input { padding-left: 38px; }
-
-    /* dates grid */
-    .cf-dates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-    /* info box */
-    .cf-info-box { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 16px; background: rgba(131,83,226,0.08); border: 1px dashed rgba(131,83,226,0.3); }
-    .cf-info-icon { color: var(--violet-light); flex-shrink: 0; margin-top: 1px; }
-    .cf-info-text { font-size: 0.78rem; color: rgba(255,255,255,0.45); margin: 0; line-height: 1.5; }
-    .cf-info-text strong { color: #facc15; }
-
-    /* error */
-    .cf-error { font-size: 0.72rem; color: #f87171; margin-top: 5px; }
-
-    /* submit */
-    .cf-submit-wrap { margin-top: 36px; }
-    .cf-divider-bottom { width: 100%; height: 1px; background: rgba(255,255,255,0.06); margin-bottom: 28px; }
-    .cf-btn-submit {
-        width: 100%; padding: 16px; border-radius: 20px; border: none; cursor: pointer;
-        font-weight: 700; font-size: 1rem; color: #fff;
-        background: linear-gradient(135deg, var(--violet) 0%, var(--violet-light) 100%);
-        box-shadow: 0 8px 40px rgba(131,83,226,0.4);
-        transition: transform .2s, box-shadow .2s;
-        display: flex; align-items: center; justify-content: center; gap: 10px;
-    }
-    .cf-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 48px rgba(131,83,226,0.55); }
-
-    /* date input dark */
-    input[type="date"] { color-scheme: dark; }
-</style>
-
-{# ── NAV ── #}
-<nav class="cf-nav">
-    <div class="cf-nav-brand">
-        <div class="cf-nav-logo">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-            </svg>
-        </div>
-        <span class="cf-nav-title">ChampionsFinance</span>
-    </div>
-    <div class="cf-nav-links">
-        <a href="#">Tableau de bord</a>
-        <a href="{{ path('app_projet_index') }}" class="active">Mes Projets</a>
-        <a href="#">Financement</a>
-        <a href="#">Support</a>
-    </div>
-    <div class="cf-avatar">{{ app.user ? app.user.prenom|first ~ app.user.nom|first : 'JD' }}</div>
-</nav>
-
-<div class="cf-container">
-
-    {# Breadcrumb #}
-    <a href="{{ path('app_projet') }}" class="cf-back">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
-        </svg>
-        Retour au Dashboard
+  <!-- ══ NAVBAR ══ -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="#">
+      <div class="logo-icon">C</div>
+      <div class="logo-text">Champions</div>
     </a>
+    <div class="topnav-links">
+      <a href="#" class="nav-btn"><i class="fas fa-th-large"></i> <span>Dashboard</span></a>
+      <a href="{{ path('app_wallet_index') }}" class="nav-btn"><i class="fas fa-wallet"></i> <span>My Wallets</span></a>
+      <a href="{{ path('app_trading_dashboard') }}" class="nav-btn"><i class="fas fa-chart-line"></i> <span>Trades</span></a>
+      <a href="{{ path('app_marketplace_index') }}" class="nav-btn"><i class="fas fa-shopping-cart"></i> <span>Marketplace</span></a>
+      <a href="{{ path('app_credit_index') }}" class="nav-btn"><i class="fas fa-hand-holding-usd"></i> <span>Credit</span></a>
+      <div class="topnav-sep"></div>
+      <a href="{{ path('app_projet_index') }}" class="nav-btn active">
+        <i class="fas fa-rocket"></i> <span>Projects</span>
+      </a>
+      <a href="{{ path('app_formations_index') }}" class="nav-btn"><i class="fas fa-book-open"></i> <span>Formations</span></a>
+      <a href="{{ path('app_front_negociation_received') }}" class="nav-btn"><i class="fas fa-handshake"></i> <span>Negotiations</span></a>
+    </div>
+    <div class="topnav-right">
+      <a href="{{ path('app_credit_investor_index') }}" class="nav-btn danger" style="border:1px solid rgba(255,23,68,.2); padding: 8px 14px;">
+        <i class="fas fa-exchange-alt"></i> <span>Investor View</span>
+      </a>
+      <a href="#" class="nav-btn danger" style="padding:8px 12px"><i class="fas fa-sign-out-alt"></i></a>
+      <div class="user-card">
+        <div class="user-avatar"><i class="fas fa-user-tie"></i></div>
+        <div class="user-info">
+          <div class="user-name">My Account</div>
+          <div class="user-role">BORROWER</div>
+        </div>
+      </div>
+    </div>
+  </nav>
 
-    {# Page Header #}
-    <span class="cf-badge-label">Nouveau Dossier</span>
-    <h1 class="cf-page-title">Ajouter un Projet</h1>
-    <p class="cf-page-subtitle">Configurez votre projet avant de passer à la simulation de crédit.</p>
+  <!-- ══ TICKER ══ -->
+  <div class="ticker-wrap">
+    <div class="ticker-track">
+      {% set ticks = [
+        {sym:'BTC/USD', price:'67,412.50', change:'+2.34%', up:true},
+        {sym:'ETH/USD', price:'3,521.80',  change:'+1.87%', up:true},
+        {sym:'SOL/USD', price:'152.45',    change:'-0.62%', up:false},
+        {sym:'BNB/USD', price:'578.20',    change:'+0.94%', up:true},
+        {sym:'XRP/USD', price:'0.6120',    change:'-1.10%', up:false},
+        {sym:'ADA/USD', price:'0.4530',    change:'+3.21%', up:true},
+        {sym:'DOGE/USD',price:'0.1620',    change:'+5.44%', up:true},
+        {sym:'AVAX/USD',price:'38.91',     change:'-2.15%', up:false},
+        {sym:'LINK/USD',price:'14.72',     change:'+1.23%', up:true},
+      ] %}
+      {% for t in ticks %}{% for i in 1..2 %}
+        <span class="ticker-item">
+          <span class="sym">{{ t.sym }}</span>
+          {{ t.price }}
+          <span class="{{ t.up ? 'up' : 'dn' }}">{{ t.change }}</span>
+        </span>
+      {% endfor %}{% endfor %}
+    </div>
+  </div>
 
-    {# Form Card #}
-    <div class="cf-form-card">
+  <main class="main-content">
+    <div class="cf-container">
+
+      {# ── BACK LINK ── #}
+      <a href="{{ path('app_projet_index') }}" class="cf-back">
+        <i class="fas fa-arrow-left" style="font-size:12px"></i>
+        Back to Projects
+      </a>
+
+      {# ── PAGE HEADER ── #}
+      <div class="page-label">New File</div>
+      <h1 class="page-title">Create a Project</h1>
+      <p class="page-sub">Configure your project before proceeding to the credit simulation.</p>
+
+      {# ── FORM CARD ── #}
+      <div class="cf-form-card">
 
         {# Card Header #}
         <div class="cf-form-card-header">
-            <div class="cf-form-card-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-                    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-                </svg>
-            </div>
-            <div>
-                <p class="cf-form-card-title">Nouveau Projet</p>
-                <p class="cf-form-card-sub">Remplissez les informations ci-dessous</p>
-            </div>
+          <div class="cf-form-card-icon">
+            <i class="fas fa-rocket"></i>
+          </div>
+          <div>
+            <p class="cf-form-card-title">New Project</p>
+            <p class="cf-form-card-sub">Fill in the information below to get started</p>
+          </div>
         </div>
 
         {# Form Body #}
         <div class="cf-form-card-body">
-            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+          {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
-            <div class="cf-form-grid">
+          <div class="cf-form-grid">
 
-                {# ── Section 1 : Informations Générales ── #}
-                <div>
-                    <div class="cf-section-head">
-                        <div class="cf-section-num" style="background: linear-gradient(135deg, #8353E2, #a77af5);">1</div>
-                        <h5 class="cf-section-title">Informations Générales</h5>
-                    </div>
-                    <div class="cf-divider"></div>
+            {# ── Section 1 : General Information ── #}
+            <div>
+              <div class="cf-section-head">
+                <div class="cf-section-num num-cyan">1</div>
+                <h5 class="cf-section-title">General Information</h5>
+              </div>
+              <div class="cf-divider"></div>
 
-                    <div class="cf-field">
-                        {{ form_label(form.title, 'Titre du projet', {'label_attr': {'class': 'cf-label'}}) }}
-                        {{ form_widget(form.title, {'attr': {'class': 'cf-input', 'placeholder': 'Nom de votre entreprise ou idée'}}) }}
-                        <div class="cf-error">{{ form_errors(form.title) }}</div>
-                    </div>
+              <div class="cf-field">
+                {{ form_label(form.title, 'Project Title', {'label_attr': {'class': 'cf-label'}}) }}
+                {{ form_widget(form.title, {'attr': {'class': 'cf-input', 'placeholder': 'Your company name or idea'}}) }}
+                <div class="cf-error">{{ form_errors(form.title) }}</div>
+              </div>
 
-                    <div class="cf-field">
-                        {{ form_label(form.description, 'Description', {'label_attr': {'class': 'cf-label'}}) }}
-                        {{ form_widget(form.description, {'attr': {'class': 'cf-textarea', 'rows': '5', 'placeholder': 'Décrivez votre projet...'}}) }}
-                        <div class="cf-error">{{ form_errors(form.description) }}</div>
-                    </div>
+              <div class="cf-field">
+                {{ form_label(form.description, 'Description', {'label_attr': {'class': 'cf-label'}}) }}
+                {{ form_widget(form.description, {'attr': {'class': 'cf-textarea', 'rows': '5', 'placeholder': 'Describe your project in detail…'}}) }}
+                <div class="cf-error">{{ form_errors(form.description) }}</div>
+              </div>
 
-                    <div class="cf-field">
-                        {{ form_label(form.secteur, 'Secteur', {'label_attr': {'class': 'cf-label'}}) }}
-                        <div class="cf-select-wrap">
-                            {{ form_widget(form.secteur, {'attr': {'class': 'cf-select'}}) }}
-                            <svg class="cf-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                        </div>
-                    </div>
+              <div class="cf-field">
+                {{ form_label(form.secteur, 'Sector', {'label_attr': {'class': 'cf-label'}}) }}
+                <div class="cf-select-wrap">
+                  {{ form_widget(form.secteur, {'attr': {'class': 'cf-select'}}) }}
+                  <svg class="cf-select-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
                 </div>
-
-                {# ── Section 2 : Besoin de Financement ── #}
-                <div>
-                    <div class="cf-section-head">
-                        <div class="cf-section-num" style="background: linear-gradient(135deg, #22d3ee, #06b6d4);">2</div>
-                        <h5 class="cf-section-title">Besoin de Financement</h5>
-                    </div>
-                    <div class="cf-divider"></div>
-
-                    <div class="cf-field">
-                        {{ form_label(form.targetAmount, 'Montant souhaité (DT)', {'label_attr': {'class': 'cf-label'}}) }}
-                        <div class="cf-input-group">
-                            {{ form_widget(form.targetAmount, {'attr': {'class': 'cf-input'}}) }}
-                            <div class="cf-input-suffix">DT</div>
-                        </div>
-                        <div class="cf-error">{{ form_errors(form.targetAmount) }}</div>
-                    </div>
-
-                    <div class="cf-field cf-dates-grid">
-                        <div>
-                            {{ form_label(form.startDate, 'Date de début', {'label_attr': {'class': 'cf-label'}}) }}
-                            <div class="cf-input-icon-wrap">
-                                <svg class="cf-input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                                </svg>
-                                {{ form_widget(form.startDate, {'attr': {'class': 'cf-input'}}) }}
-                            </div>
-                            <div class="cf-error">{{ form_errors(form.startDate) }}</div>
-                        </div>
-                        <div>
-                            {{ form_label(form.endDate, 'Échéance', {'label_attr': {'class': 'cf-label'}}) }}
-                            <div class="cf-input-icon-wrap">
-                                <svg class="cf-input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                                </svg>
-                                {{ form_widget(form.endDate, {'attr': {'class': 'cf-input'}}) }}
-                            </div>
-                            <div class="cf-error">{{ form_errors(form.endDate) }}</div>
-                        </div>
-                    </div>
-
-                    <div class="cf-field">
-                        {{ form_label(form.imageUrl, 'Image du projet (URL)', {'label_attr': {'class': 'cf-label'}}) }}
-                        <div class="cf-input-icon-wrap">
-                            <svg class="cf-input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                            </svg>
-                            {{ form_widget(form.imageUrl, {'attr': {'class': 'cf-input', 'placeholder': 'https://...'}}) }}
-                        </div>
-                    </div>
-
-                    <div class="cf-info-box">
-                        <div class="cf-info-icon">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
-                        </div>
-                        <p class="cf-info-text">Le statut sera défini sur <strong>DRAFT</strong> par défaut jusqu'à validation.</p>
-                    </div>
-                </div>
+                <div class="cf-error">{{ form_errors(form.secteur) }}</div>
+              </div>
             </div>
 
-            {# Submit #}
-            <div class="cf-submit-wrap">
-                <div class="cf-divider-bottom"></div>
-                <button type="submit" class="cf-btn-submit">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-                        <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-                    </svg>
-                    Créer le projet et simuler le crédit
-                </button>
+            {# ── Section 2 : Funding Requirements ── #}
+            <div>
+              <div class="cf-section-head">
+                <div class="cf-section-num num-gold">2</div>
+                <h5 class="cf-section-title">Funding Requirements</h5>
+              </div>
+              <div class="cf-divider"></div>
+
+              <div class="cf-field">
+                {{ form_label(form.targetAmount, 'Requested Amount (DT)', {'label_attr': {'class': 'cf-label'}}) }}
+                <div class="cf-input-group">
+                  {{ form_widget(form.targetAmount, {'attr': {'class': 'cf-input', 'placeholder': '0'}}) }}
+                  <div class="cf-input-suffix">DT</div>
+                </div>
+                <div class="cf-error">{{ form_errors(form.targetAmount) }}</div>
+              </div>
+
+              <div class="cf-field cf-dates-grid">
+                <div>
+                  {{ form_label(form.startDate, 'Start Date', {'label_attr': {'class': 'cf-label'}}) }}
+                  <div class="cf-input-icon-wrap">
+                    <i class="far fa-calendar-days cf-input-icon" style="font-size:12px"></i>
+                    {{ form_widget(form.startDate, {'attr': {'class': 'cf-input'}}) }}
+                  </div>
+                  <div class="cf-error">{{ form_errors(form.startDate) }}</div>
+                </div>
+                <div>
+                  {{ form_label(form.endDate, 'End Date', {'label_attr': {'class': 'cf-label'}}) }}
+                  <div class="cf-input-icon-wrap">
+                    <i class="far fa-calendar-check cf-input-icon" style="font-size:12px; color: var(--red);"></i>
+                    {{ form_widget(form.endDate, {'attr': {'class': 'cf-input'}}) }}
+                  </div>
+                  <div class="cf-error">{{ form_errors(form.endDate) }}</div>
+                </div>
+              </div>
+
+              <div class="cf-field">
+                {{ form_label(form.imageUrl, 'Project Image (URL)', {'label_attr': {'class': 'cf-label'}}) }}
+                <div class="cf-input-icon-wrap">
+                  <i class="fas fa-image cf-input-icon" style="font-size:12px"></i>
+                  {{ form_widget(form.imageUrl, {'attr': {'class': 'cf-input', 'placeholder': 'https://…'}}) }}
+                </div>
+                <div class="cf-error">{{ form_errors(form.imageUrl) }}</div>
+              </div>
+
+              <div class="cf-info-box">
+                <span class="cf-info-icon"><i class="fas fa-lock"></i></span>
+                <p class="cf-info-text">
+                  The status will be set to <strong>DRAFT</strong> by default until validation by our team.
+                </p>
+              </div>
             </div>
 
-            {{ form_end(form) }}
+          </div>{# end cf-form-grid #}
+
+          {# ── SUBMIT ── #}
+          <div class="cf-submit-wrap">
+            <div class="cf-divider-bottom"></div>
+            <button type="submit" class="cf-btn-submit">
+              <i class="fas fa-rocket"></i>
+              Create Project &amp; Simulate Credit
+            </button>
+          </div>
+
+          {{ form_end(form) }}
+        </div>{# end cf-form-card-body #}
+      </div>{# end cf-form-card #}
+
+    </div>{# end cf-container #}
+  </main>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <a class="footer-logo" href="#">
+          <div class="logo-icon">C</div>
+          <div class="logo-text">Champions</div>
+        </a>
+        <p class="footer-tagline">Your all-in-one digital finance platform. Manage fiat, crypto, and trading assets with confidence.</p>
+        <div class="footer-socials">
+          <a href="#" class="social-btn"><i class="fab fa-x-twitter"></i></a>
+          <a href="#" class="social-btn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" class="social-btn"><i class="fab fa-telegram-plane"></i></a>
+          <a href="#" class="social-btn"><i class="fab fa-github"></i></a>
         </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Platform</div>
+        <ul class="footer-links">
+          <li><a href="{{ path('app_wallet_index') }}"><i class="fas fa-wallet" style="width:14px;margin-right:7px;opacity:.5"></i>My Wallets</a></li>
+          <li><a href="{{ path('app_trading_dashboard') }}"><i class="fas fa-chart-line" style="width:14px;margin-right:7px;opacity:.5"></i>Trades</a></li>
+          <li><a href="{{ path('app_marketplace_index') }}"><i class="fas fa-shopping-cart" style="width:14px;margin-right:7px;opacity:.5"></i>Marketplace</a></li>
+          <li><a href="{{ path('app_formations_index') }}"><i class="fas fa-book-open" style="width:14px;margin-right:7px;opacity:.5"></i>Formations</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Projects</div>
+        <ul class="footer-links">
+          <li><a href="{{ path('app_projet_new') }}"><i class="fas fa-plus-circle" style="width:14px;margin-right:7px;opacity:.5"></i>New Project</a></li>
+          <li><a href="{{ path('app_projet_index') }}"><i class="fas fa-rocket" style="width:14px;margin-right:7px;opacity:.5"></i>My Projects</a></li>
+          <li><a href="/front/credit-gestion/liste"><i class="fas fa-dollar-sign" style="width:14px;margin-right:7px;opacity:.5"></i>My Credits</a></li>
+          <li><a href="{{ path('app_front_negociation_received') }}"><i class="fas fa-handshake" style="width:14px;margin-right:7px;opacity:.5"></i>Negotiations</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Account</div>
+        <ul class="footer-links">
+          <li><a href="{{ path('app_credit_investor_index') }}"><i class="fas fa-exchange-alt" style="width:14px;margin-right:7px;opacity:.5"></i>Investor View</a></li>
+          <li><a href="#"><i class="fas fa-shield-alt" style="width:14px;margin-right:7px;opacity:.5"></i>Security</a></li>
+          <li><a href="#"><i class="fas fa-cog" style="width:14px;margin-right:7px;opacity:.5"></i>Settings</a></li>
+          <li><a href="#" style="color:var(--red)"><i class="fas fa-sign-out-alt" style="width:14px;margin-right:7px;opacity:.5"></i>Sign Out</a></li>
+        </ul>
+      </div>
     </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© {{ "now"|date("Y") }} Champions Group. All rights reserved.</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="footer-badge"><span class="dot"></span> All systems operational</span>
+        <span class="footer-copy" style="font-size:11px">v2.4.1</span>
+      </div>
+    </div>
+  </footer>
 
 </div>
-
 {% endblock %}

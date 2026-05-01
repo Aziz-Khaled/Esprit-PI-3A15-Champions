@@ -3,12 +3,134 @@
 {% block title %}Nouvelle Demande de Crédit{% endblock %}
 
 {% block body %}
+<style id="champions-global-css">
+  :root {
+    --bg-base:      #080d14;
+    --bg-card:      #0e1623;
+    --bg-card2:     #111b2b;
+    --border:       #1a2a40;
+    --border-glow:  rgba(0,229,255,.15);
+    --accent:       #00e5ff;
+    --accent2:      #00b4cc;
+    --accent-glow:  rgba(0,229,255,.18);
+    --gold:         #f0b429;
+    --text-1:       #f0f4ff;
+    --text-2:       #f0f4ff;
+    --text-3:       #f0f4ff;
+    --font-head:    'Syne', sans-serif;
+    --font-body:    'Space Grotesk', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+    --radius:       16px;
+    --navbar-h:     64px;
+    --primary-gradient: linear-gradient(135deg, var(--accent) 0%, #0099cc 100%);
+  }
+
+  body { font-family: var(--font-body) !important; background: var(--bg-base) !important; color: var(--text-1) !important; margin: 0; min-height: 100vh; overflow-x: hidden; }
+
+  /* ── BACKGROUND EFFECTS ── */
+  .bg-grid { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px); background-size: 52px 52px; animation: gridDrift 25s linear infinite; }
+  @keyframes gridDrift { 0% { background-position: 0 0; } 100% { background-position: 52px 52px; } }
+  .bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .bg-orb-1 { width: 600px; height: 600px; top: -200px; left: -150px; background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%); }
+  .bg-orb-2 { width: 440px; height: 440px; bottom: -160px; right: -100px; background: radial-gradient(circle, rgba(240,180,41,.07) 0%, transparent 70%); }
+
+  .app-shell { display: flex; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── TOPNAV ── */
+  .topnav { position: sticky; top: 0; z-index: 200; height: var(--navbar-h); background: rgba(8,13,20,.97); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); display: flex; align-items: center; padding: 0 32px; flex-shrink: 0; }
+  .topnav::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent); opacity: 0.25; }
+  .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; margin-right: 36px; }
+  .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #1de9b6, #00b4cc); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #080d14; font-family: var(--font-head); box-shadow: 0 0 16px rgba(0,229,255,.3); }
+  .logo-text { font-family: var(--font-head); font-size: 18px; font-weight: 700; background: linear-gradient(90deg, var(--text-1), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .topnav-links { display: flex; align-items: center; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+  .topnav-links::-webkit-scrollbar { display: none; }
+  .nav-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 10px; text-decoration: none; color: var(--text-1); font-size: 14px; font-weight: 500; transition: all .2s ease; background: none; border: none; cursor: pointer; text-align: left; flex-shrink: 0; font-family: var(--font-body); }
+  .nav-btn:hover { background: rgba(255,255,255,.05); color: var(--text-1); }
+  .nav-btn.active { color: var(--accent); background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.15); }
+  .topnav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 16px; }
+  .user-card { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px; background: rgba(255,255,255,.03); border: 1px solid var(--border); transition: border-color .2s; }
+  .user-avatar { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, rgba(0,229,255,.2), rgba(0,180,204,.2)); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--accent); }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+
+  /* OVERRIDES TO ASSIMILATE OLD UI */
+  .cf-form-card, .form-card, .analytics-card, .card {
+    background: var(--bg-card) !important; border: 1px solid var(--border) !important; border-radius: var(--radius) !important; color: var(--text-1) !important;
+  }
+  .cf-form-card-header, .form-card-header, .analytics-card-header, .card-header {
+    background: rgba(0,229,255,.05) !important; border-bottom: 1px solid var(--border) !important; border-radius: var(--radius) var(--radius) 0 0 !important; color: var(--text-1) !important;
+  }
+  .cf-page-title, .cf-form-card-title, .form-card-title, h1, h2, h3, h4, h5, h6 { color: var(--text-1) !important; font-family: var(--font-head); }
+  .cf-page-subtitle, .cf-form-card-sub, p.text-muted, .text-muted { color: var(--text-3) !important; }
+  .field-label, .cf-label, .section-title, .cf-section-title { color: var(--accent) !important; }
+  .cf-section-num { background: linear-gradient(135deg, var(--accent), #0099cc) !important; color: #080d14 !important; }
+
+  /* inputs */
+  .cf-input, .cf-textarea, .cf-select, .form-input, .form-textarea, .form-select-custom, .form-control, .form-select {
+    background: rgba(0,0,0,.25) !important; border: 1px solid rgba(90,112,144,.3) !important; color: var(--text-1) !important; border-radius: 12px !important;
+  }
+  .cf-input:focus, .cf-textarea:focus, .cf-select:focus, .form-input:focus, .form-textarea:focus, .form-select-custom:focus, .form-control:focus {
+    border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(0,229,255,.1) !important;
+  }
+  .cf-input-suffix { background: rgba(0,229,255,.1) !important; border: 1px solid rgba(0,229,255,.3) !important; color: var(--accent) !important; }
+  .cf-input::placeholder, .form-input::placeholder { color: rgba(255,255,255,0.2) !important; }
+
+  /* buttons */
+  .cf-btn-submit, .btn-submit, .btn-submit-full, .btn-primary {
+    background: var(--primary-gradient) !important; border: none !important; color: #080d14 !important; border-radius: 14px !important; font-family: var(--font-head) !important; text-transform: uppercase; font-weight: 700 !important;
+  }
+  .cf-btn-submit:hover, .btn-submit:hover, .btn-submit-full:hover {
+    box-shadow: 0 12px 28px rgba(0,229,255,.3) !important; transform: translateY(-2px) !important;
+  }
+  .btn-cancel, .btn-secondary, .btn-outline-custom { background: transparent !important; color: var(--text-2) !important; border: 1px solid var(--border) !important; }
+  .btn-outline-custom:hover { background: rgba(0,229,255,.06) !important; color: var(--accent) !important; border-color: var(--accent) !important; }
+
+  /* tables */
+  .table-custom thead tr th, .table thead tr th { background: var(--bg-card2) !important; color: var(--accent) !important; border-bottom: 1px solid var(--border) !important; }
+  .table-custom tbody tr, .table tbody tr { border-bottom: 1px solid var(--border) !important; }
+  .table-custom tbody tr:hover, .table tbody tr:hover { background: rgba(0,229,255,.025) !important; }
+  .table-custom tbody td, .table tbody td { color: var(--text-1) !important; }
+
+  /* general structure alignment mapping */
+  .sidebar, .cf-nav { display: none !important; }
+  .main-content { margin-left: 0 !important; width: 100% !important; flex: 1; padding: 40px; }
+  .cf-container { max-width: 1200px; margin: 0 auto; width: 100%; padding: 40px 24px; flex: 1; }
+ 
+  .site-footer { background: rgba(8,13,20,.98); border-top: 1px solid var(--border); padding: 40px 48px; display: flex; color: var(--text-3); font-size: 13px; margin-top: auto; }
+</style>
+
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<div class="app-shell">
+    <nav class="topnav">
+    <a class="topnav-logo" href="#">
+      <div class="logo-icon">C</div>
+      <div class="logo-text">Champions</div>
+    </a>
+    <div class="topnav-links">
+      <a href="{{ path('app_projet_index') }}" class="nav-btn active"><i class="fas fa-box"></i> <span>Mes Projets</span></a>
+      <a href="{{ path('app_credit_index')|default('#') }}" class="nav-btn"><i class="fas fa-hand-holding-usd"></i> <span>Mes Crédits</span></a>
+      <a href="{{ path('app_front_negociation_received') }}" class="nav-btn"><i class="fas fa-inbox"></i> <span>Offres Reçues</span></a>
+    </div>
+    <div class="topnav-right">
+      <a href="{{ path('app_credit_investor_index') }}" class="nav-btn danger" style="border:1px solid rgba(255,100,100,0.3);"><i class="fas fa-exchange-alt"></i> <span>Vue Investisseur</span></a>
+      <div class="user-card">
+        <div class="user-avatar"><i class="fas fa-user-tie"></i></div>
+        <div class="user-name">Emprunteur</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Content Wrapper -->
+  <div style="flex: 1; display: flex; flex-direction: column;">
+
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     :root { --violet: #8353E2; --violet-light: #a77af5; --violet-glow: rgba(131,83,226,0.35); }
 
-    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); min-height: 100vh; }
+   
 
     /* ── NAV ── */
     .cf-nav { background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
@@ -48,7 +170,7 @@
     .cf-form-card-icon { width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, var(--violet), var(--violet-light)); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(131,83,226,0.45); flex-shrink: 0; }
     .cf-form-card-title { font-weight: 700; color: #fff; font-size: 1rem; margin: 0; }
     .cf-form-card-sub   { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin: 2px 0 0; }
-    .cf-form-card-body  { padding: 32px; }
+    .cf-form-card-
 
     /* ── FIELDS ── */
     .cf-field { margin-bottom: 20px; }
@@ -108,23 +230,7 @@
 </style>
 
 {# ── NAV ── #}
-<nav class="cf-nav">
-    <div class="cf-nav-brand">
-        <div class="cf-nav-logo">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-            </svg>
-        </div>
-        <span class="cf-nav-title">ChampionsFinance</span>
-    </div>
-    <div class="cf-nav-links">
-        <a href="#">Tableau de bord</a>
-        <a href="{{ path('app_credit_index') }}" class="active">Mes Demandes</a>
-        <a href="#">Simulation</a>
-        <a href="#">Support</a>
-    </div>
-    <div class="cf-avatar"> {{ app.user ? app.user.prenom|first ~ app.user.nom|first : 'JD' }}</div>
-</nav>
+
 
 <div class="cf-container">
 
@@ -288,4 +394,10 @@
 
 </div>
 
+
+  </div>
+  <footer class="site-footer">
+    © {{ "now"|date("Y") }} Champions Group. All rights reserved.
+  </footer>
+</div>
 {% endblock %}
