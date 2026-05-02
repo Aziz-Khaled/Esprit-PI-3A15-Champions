@@ -268,8 +268,11 @@ private function sendDetailedWhatsApp(Transaction $t): void
         $type = strtoupper($t->getType());
         $amount = number_format($t->getMontant(), 2, '.', ' ');
         $currency = $t->getCurrency() ? $t->getCurrency()->getNom() : 'DT';
-        $date = $t->getDateTransaction()->format('d/m/Y H:i');
-       
+
+        // ✅ FIX: null-safe check on getDateTransaction()
+        $dateTransaction = $t->getDateTransaction();
+        $date = $dateTransaction ? $dateTransaction->format('d/m/Y H:i') : date('d/m/Y H:i');
+
         $source = "N/A";
         if ($t->getWalletSource()) {
             $source = "💳 RIB: " . $t->getWalletSource()->getRib();
