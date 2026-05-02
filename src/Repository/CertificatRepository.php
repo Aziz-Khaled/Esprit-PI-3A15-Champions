@@ -16,6 +16,10 @@ class CertificatRepository extends ServiceEntityRepository
         parent::__construct($registry, Certificat::class);
     }
 
+    /**
+ * @return Certificat[]
+ */
+
     public function findForAdminList(?string $search, ?string $sort): array
     {
         $qb = $this->createQueryBuilder('c')

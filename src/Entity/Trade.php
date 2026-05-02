@@ -71,7 +71,12 @@ class Trade
     public function setStatus(string $status): self { $this->status = $status; return $this; }
 
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-
+    
+public function setCreatedAt(\DateTimeInterface $createdAt): self
+{
+    $this->createdAt = $createdAt;
+    return $this;
+}
     public function getExecutedAt(): ?\DateTimeInterface { return $this->executedAt; }
     public function setExecutedAt(?\DateTimeInterface $executedAt): self { $this->executedAt = $executedAt; return $this; }
 }

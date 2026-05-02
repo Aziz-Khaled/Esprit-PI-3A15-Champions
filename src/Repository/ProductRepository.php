@@ -28,13 +28,13 @@ class ProductRepository extends ServiceEntityRepository
     /**
      * Exact same logic as searchAndSort but returns the Query object for pagination.
      */
-    public function searchAndSortQuery(?string $keyword = null, string $sortBy = 'name', string $sortDir = 'ASC')
+   public function searchAndSortQuery(?string $keyword = null, string $sortBy = 'name', string $sortDir = 'ASC'): \Doctrine\ORM\Query
     {
         $qb = $this->createQueryBuilder('p');
 
         if ($keyword && trim($keyword) !== '') {
             $qb->andWhere('p.name LIKE :kw OR p.description LIKE :kw OR p.brand LIKE :kw OR p.category LIKE :kw')
-               ->setParameter('kw', '%' . trim($keyword) . '%');
+            ->setParameter('kw', '%' . trim($keyword) . '%');
         }
 
         $allowedSortFields = ['name', 'price', 'stock', 'category', 'createdAt', 'brand', 'avgRating'];
@@ -48,11 +48,13 @@ class ProductRepository extends ServiceEntityRepository
         return $qb->getQuery();
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function searchAndSort(?string $keyword = null, string $sortBy = 'name', string $sortDir = 'ASC'): array
     {
         return $this->searchAndSortQuery($keyword, $sortBy, $sortDir)->getResult();
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function getCategoryDistribution(): array
     {
         return $this->createQueryBuilder('p')
@@ -72,6 +74,7 @@ class ProductRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function getTopRatedProducts(int $limit = 5): array
     {
         $conn = $this->getEntityManager()->getConnection();
@@ -85,6 +88,7 @@ class ProductRepository extends ServiceEntityRepository
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function getLowStockProducts(int $threshold = 10): array
     {
         $conn = $this->getEntityManager()->getConnection();
@@ -98,6 +102,7 @@ class ProductRepository extends ServiceEntityRepository
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 
+    /** @return array<string, mixed> */
     public function getStockStatusBreakdown(): array
     {
         $conn = $this->getEntityManager()->getConnection();

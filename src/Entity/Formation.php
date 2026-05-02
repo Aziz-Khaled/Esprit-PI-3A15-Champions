@@ -88,7 +88,7 @@ class Formation
     #[Assert\Callback]
     public function validateDateRange(ExecutionContextInterface $context): void
     {
-        if ($this->dateDebut && $this->dateFin && $this->dateFin <= $this->dateDebut) {
+        if ($this->dateFin <= $this->dateDebut) {
             $context->buildViolation('La date de fin doit être postérieure à la date de début.')
                 ->atPath('dateFin')
                 ->addViolation();

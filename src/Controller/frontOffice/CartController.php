@@ -122,7 +122,7 @@ class CartController extends AbstractController
         foreach ($panier as $id => $qty) {
             $product = $productRepository->find($id);
             if ($product) {
-                $total += ($product->getDiscountPrice() ?: $product->getPrice()) * $qty;
+                $total += (float)($product->getDiscountPrice() ?: $product->getPrice()) * $qty;
             }
         }
         return $total;
@@ -177,17 +177,17 @@ class CartController extends AbstractController
                     $orderItem->setQuantity($quantity);
                     $orderItem->setUnitPrice($price);
                     $orderItem->setSubTotal($subtotal);
-                    $orderItem->setDiscountApplied(0);
+                    $orderItem->setDiscountApplied('0');
                     $orderItem->setUnit_price($price);
                     $orderItem->setSub_total($subtotal);
-                    $orderItem->setDiscount_applied(0);
+                    $orderItem->setDiscount_applied('0');
 
                     $product->setStock($product->getStock() - $quantity);
                     $em->persist($orderItem);
                 }
             }
 
-            $order->setTotalAmount($totalAmount);
+            $order->setTotalAmount((string) $totalAmount);
             $em->persist($order);
             $em->flush();
 

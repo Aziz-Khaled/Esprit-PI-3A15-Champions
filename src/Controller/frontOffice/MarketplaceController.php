@@ -144,10 +144,10 @@ class MarketplaceController extends AbstractController
         $orderItem->setQuantity(1);
         $orderItem->setUnit_price($product->getPrice());
         $orderItem->setSub_total($product->getPrice());
-        $orderItem->setDiscount_applied(0);
+        $orderItem->setDiscount_applied('0');
         $orderItem->setUnitPrice($product->getPrice()); // Sync both camelCase and snake_case for entity compatibility
         $orderItem->setSubTotal($product->getPrice());
-        $orderItem->setDiscountApplied(0);
+        $orderItem->setDiscountApplied('0');
 
         // Update Stock
         $product->setStock($product->getStock() - 1);
@@ -162,7 +162,7 @@ class MarketplaceController extends AbstractController
             $emailService->sendOrderConfirmation($order, 'thassanjebri99@gmail.com');
            
             // Also send to the user's email if it exists
-            if ($user && $user->getEmail()) {
+            if ($user->getEmail()) {
                 $emailService->sendOrderConfirmation($order, $user->getEmail());
             }
         } catch (\Exception $e) {

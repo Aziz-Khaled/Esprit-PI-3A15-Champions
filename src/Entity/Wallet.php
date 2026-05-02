@@ -136,4 +136,10 @@ class Wallet
         }
         return $this;
     }
+
+
+public function setDateCreation(\DateTime $d): static { $this->dateCreation = $d; return $this; }
+
+
+public function setDateDerniereModification(\DateTime $d): static { $this->dateDerniereModification = $d; return $this; }
 }

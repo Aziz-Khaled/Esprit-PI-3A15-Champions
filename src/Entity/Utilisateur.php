@@ -188,6 +188,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function getWallets(): Collection { return $this->wallets; }
 
     public function getUserIdentifier(): string { return $this->email; }
+    public function setDateCreation(\DateTime $dateCreation): static
+{
+    $this->dateCreation = $dateCreation;
+    return $this;
+}
 
     public function getRoles(): array
     {

@@ -907,15 +907,15 @@ public function getHistory(): JsonResponse
         }
         
         return [
-            'id'         => $trade->getId(),
-            'symbol'     => $symbol,
-            'trade_type' => $trade->getTradeType(),
-            'order_mode' => $trade->getOrderMode(),
-            'price'      => (float) $trade->getPrice(),
-            'quantity'   => (float) $trade->getQuantity(),
-            'status'     => $trade->getStatus(),
-            'date'       => $trade->getCreatedAt() ? $trade->getCreatedAt()->format('Y-m-d H:i:s') : '-',
-        ];
+    'id'         => $trade->getId(),
+    'symbol'     => $symbol,
+    'trade_type' => $trade->getTradeType(),
+    'order_mode' => $trade->getOrderMode(),
+    'price'      => (float) $trade->getPrice(),
+    'quantity'   => (float) $trade->getQuantity(),
+    'status'     => $trade->getStatus(),
+    'date'       => $trade->getCreatedAt()->format('Y-m-d H:i:s'),
+];
     }, $trades);
     
     return new JsonResponse($data);

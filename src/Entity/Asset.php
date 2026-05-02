@@ -101,4 +101,16 @@ class Asset
 
     public function getUtilisateur(): ?Utilisateur { return $this->utilisateur; }
     public function setUtilisateur(?Utilisateur $utilisateur): static { $this->utilisateur = $utilisateur; return $this; }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+{
+    $this->createdAt = $createdAt;
+    return $this;
+}
+
+public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
+{
+    $this->updatedAt = $updatedAt;
+    return $this;
+}
 }

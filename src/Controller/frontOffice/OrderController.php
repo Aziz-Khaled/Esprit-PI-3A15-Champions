@@ -78,7 +78,7 @@ class OrderController extends AbstractController
 
         // Generate Transaction (SCRUM-39)
         $transaction = new Transaction();
-        $transaction->setMontant($order->getTotalAmount());
+        $transaction->setMontant((float) $order->getTotalAmount());
         $transaction->setType('PURCHASE');
         $transaction->setStatut('COMPLETED');
         $transaction->setDateTransaction(new \DateTime());

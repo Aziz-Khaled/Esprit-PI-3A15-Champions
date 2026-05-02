@@ -24,6 +24,7 @@ class OrderRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function getMonthlyRevenue(): array
     {
         // Simple monthly aggregation
@@ -37,6 +38,8 @@ class OrderRepository extends ServiceEntityRepository
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 
+
+    /** @return array<int, array<string, mixed>> */
     public function getShippingAddressStats(): array
     {
         $conn = $this->getEntityManager()->getConnection();
@@ -50,6 +53,8 @@ class OrderRepository extends ServiceEntityRepository
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 
+
+    /** @return array<int, array<string, mixed>> */
     public function getOrderStatusDistribution(): array
     {
         $conn = $this->getEntityManager()->getConnection();
@@ -57,6 +62,7 @@ class OrderRepository extends ServiceEntityRepository
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function getPaymentMethodDistribution(): array
     {
         $conn = $this->getEntityManager()->getConnection();
@@ -71,6 +77,7 @@ class OrderRepository extends ServiceEntityRepository
         return round((float)$result, 4);
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function getWeeklyOrderTrend(): array
     {
         $conn = $this->getEntityManager()->getConnection();
@@ -84,6 +91,7 @@ class OrderRepository extends ServiceEntityRepository
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function getTopOrderedProducts(int $limit = 5): array
     {
         $conn = $this->getEntityManager()->getConnection();

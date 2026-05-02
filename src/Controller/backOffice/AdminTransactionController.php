@@ -33,7 +33,7 @@ class AdminTransactionController extends AbstractController
             $transactions = $repo->findBy([], ['dateTransaction' => 'DESC']);
         }
 
-        foreach ($transactions as $t) {
+      /* foreach ($transactions as $t) {
             $aiResult = $fraudService->verifyTransaction($t->getIdTransaction());
             
             $t->aiPrediction = [
@@ -41,7 +41,17 @@ class AdminTransactionController extends AbstractController
                 'score'    => $aiResult['percentage'] ?? 0,
                 'error'    => $aiResult['error'] ?? null
             ];
-        }
+        }*/
+
+            $aiPredictions = [];
+foreach ($transactions as $t) {
+    $aiResult = $fraudService->verifyTransaction($t->getIdTransaction());
+    $aiPredictions[$t->getIdTransaction()] = [
+        'is_fraud' => $aiResult['fraud_alert'] ?? false,
+        'score'    => $aiResult['percentage'] ?? 0,
+        'error'    => $aiResult['error'] ?? null
+    ];
+}
 
         $notifications = $notifRepo->findBy(['is_read' => [false, null]], ['created_at' => 'DESC']);
         $count = count($notifications);

@@ -103,7 +103,7 @@ final class FormationAdminController extends AbstractController
             return $this->json(['error' => 'Le titre est requis pour générer une description.'], 400);
         }
 
-        $rawKey = $_ENV['GEMINI_API_KEY'] ?? $_SERVER['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?? '';
+        $rawKey = $_ENV['GEMINI_API_KEY'] ?? $_SERVER['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY');
         $apiKey = is_array($rawKey) ? (string) end($rawKey) : (string) $rawKey;
         $apiKey = trim(str_replace(['"', "'"], '', $apiKey));
         

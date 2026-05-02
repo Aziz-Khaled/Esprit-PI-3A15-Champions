@@ -50,9 +50,15 @@ class CreditCard
     #[ORM\JoinColumn(name: "id_user", referencedColumnName: "id_user", nullable: false)]
     private ?Utilisateur $utilisateur = null;
 
+    /**
+ * @var Collection<int, Transaction>
+ */
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'creditCard')]
     private Collection $transactions;
 
+    /**
+ * @var Collection<int, Blockchain>
+ */
     #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'creditCard')]
     private Collection $blockchains;
 

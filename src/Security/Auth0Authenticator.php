@@ -108,7 +108,7 @@ public function onAuthenticationSuccess(Request $request, TokenInterface $token,
             'prenom'    => $user->getPrenom(),
             'nom'       => $user->getNom(),
             'userImage' => $user->getUserImage(),
-            'telephone' => $user->getTelephone() ?? '',
+            'telephone' => $user->getTelephone(),
         ]);
         return new RedirectResponse($this->router->generate('app_google_kyc'));
     }

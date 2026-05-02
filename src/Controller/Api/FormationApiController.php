@@ -52,9 +52,12 @@ class FormationApiController extends AbstractController
             // Check for validation errors
             $errors = $validator->validate($formation);
             if (count($errors) > 0) {
-                $errorsString = (string) $errors;
-                return new JsonResponse(['error' => $errorsString], Response::HTTP_BAD_REQUEST);
-            }
+    $errorMessages = [];
+    foreach ($errors as $error) {
+        $errorMessages[] = $error->getPropertyPath() . ': ' . $error->getMessage();
+    }
+    return new JsonResponse(['error' => $errorMessages], Response::HTTP_BAD_REQUEST);
+}
 
             $entityManager->persist($formation);
             $entityManager->flush();
@@ -82,9 +85,12 @@ class FormationApiController extends AbstractController
             // Check for validation errors
             $errors = $validator->validate($formation);
             if (count($errors) > 0) {
-                $errorsString = (string) $errors;
-                return new JsonResponse(['error' => $errorsString], Response::HTTP_BAD_REQUEST);
-            }
+    $errorMessages = [];
+    foreach ($errors as $error) {
+        $errorMessages[] = $error->getPropertyPath() . ': ' . $error->getMessage();
+    }
+    return new JsonResponse(['error' => $errorMessages], Response::HTTP_BAD_REQUEST);
+}
 
             $entityManager->flush();
 

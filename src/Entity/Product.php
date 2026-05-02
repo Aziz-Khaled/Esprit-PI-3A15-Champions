@@ -122,6 +122,18 @@ class Product
 
     public function getUpdatedAt(): ?\DateTimeInterface { return $this->updatedAt; }
 
+    public function setCreatedAt(\DateTime $createdAt): static
+{
+    $this->createdAt = $createdAt;
+    return $this;
+}
+
+public function setUpdatedAt(\DateTime $updatedAt): static
+{
+    $this->updatedAt = $updatedAt;
+    return $this;
+}
+
     /** @return Collection<int, OrderItem> */
     public function getOrderItems(): Collection { return $this->orderItems; }
 

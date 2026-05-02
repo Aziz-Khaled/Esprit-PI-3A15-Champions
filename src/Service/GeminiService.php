@@ -8,8 +8,8 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class GeminiService
 {
-    private $httpClient;
-    private $apiKey;
+     private HttpClientInterface $httpClient;
+    private string $apiKey;
 
     public function __construct(
         HttpClientInterface $httpClient,

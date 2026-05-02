@@ -200,7 +200,7 @@ public function enroll(
             'titre'       => $formation->getTitre(),
             'dateDebut'   => $formation->getDateDebut()->format('Ymd'),
             'dateFin'     => $formation->getDateFin()->format('Ymd'),
-            'description' => substr($formation->getDescription() ?? '', 0, 150),
+            'description' => substr($formation->getDescription(), 0, 150),
         ]);
 
     } catch (\Exception $e) {
@@ -220,7 +220,9 @@ public function enroll(
             return $this->json(['error' => 'Message vide'], 400);
         }
 
-        $rawKey = $_ENV['GEMINI_API_KEY'] ?? $_SERVER['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?? '';
+        
+
+        $rawKey = $_ENV['GEMINI_API_KEY'] ?? $_SERVER['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ;
         $apiKey = is_array($rawKey) ? (string) end($rawKey) : (string) $rawKey;
         $apiKey = trim(str_replace(['"', "'"], '', $apiKey));
 
@@ -301,14 +303,12 @@ public function enroll(
         }
 
         // Sort by date_emission descending if possible
-        usort($certificats, function($a, $b) {
-            $dateA = method_exists($a, 'getDateEmission') ? $a->getDateEmission() : null;
-            $dateB = method_exists($b, 'getDateEmission') ? $b->getDateEmission() : null;
-            if ($dateA == $dateB) return 0;
-            if (!$dateA) return 1;
-            if (!$dateB) return -1;
-            return $dateA > $dateB ? -1 : 1;
-        });
+        usort($certificats, function(\App\Entity\Certificat $a, \App\Entity\Certificat $b) {
+    $dateA = $a->getDateEmission();
+    $dateB = $b->getDateEmission();
+    if ($dateA == $dateB) return 0;
+    return $dateA > $dateB ? -1 : 1;
+});
 
         return $this->render('formation/mes_certificats.html.twig', [
             'certificats' => $certificats,
