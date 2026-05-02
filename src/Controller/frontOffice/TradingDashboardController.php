@@ -487,12 +487,12 @@ private string $grokApiKey = '';
             
             $trade = new Trade();
             $trade->setUserId($userId);
-            $trade->setAssetId($asset->getId());
+            $trade->setAsset($asset);
             $trade->setQuantity($quantity);
             $trade->setTradeType($tradeType);
             $trade->setOrderMode('LIMIT');
             $trade->setStatus('PENDING');
-            $trade->setPrice($targetPrice);
+            $trade->setPrice((string) $targetPrice); // ✅ cast float → string
             $trade->setCreatedAt(new \DateTime());
             $this->em->persist($trade);
             $this->em->flush();
@@ -538,12 +538,12 @@ private string $grokApiKey = '';
         
         $trade = new Trade();
         $trade->setUserId($userId);
-        $trade->setAssetId($asset->getId());
+        $trade->setAsset($asset);
         $trade->setQuantity($quantity);
         $trade->setTradeType($tradeType);
         $trade->setOrderMode('MARKET');
         $trade->setStatus('COMPLETED');
-        $trade->setPrice( $currentPrice);
+        $trade->setPrice((string) $currentPrice); // ✅ cast float → string
         $trade->setCreatedAt(new \DateTime());
         $this->em->persist($trade);
         $this->em->flush();
@@ -682,7 +682,6 @@ public function getBotPendingOrders(): JsonResponse
                 'quantity'     => (float) $order->getQuantity(),
                 'target_price' => (float) $order->getPrice(),
                 'created_at'   => $order->getCreatedAt()->format('Y-m-d H:i:s'),
-                // ✅ SUPPRIMÉ: 'wallet_id' => $order->getWalletId(),
             ];
         }
     }

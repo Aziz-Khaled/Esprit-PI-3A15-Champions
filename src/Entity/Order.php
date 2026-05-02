@@ -39,7 +39,7 @@ class Order
     private string $phoneNumber = '';
 
     /** @var Collection<int, OrderItem> */
-    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order', cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $orderItems;
 
     public function __construct()

@@ -1,11 +1,11 @@
-{# Authentication UI — NexVault Fintech App #}
+{# Authentication UI — Champions Fintech App #}
 {# Screens: Login | Sign Up Step 1 (Profile) | Sign Up Step 2 (KYC) | Pending Review #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>{{ page_title | default('NexVault — Authentication') }}</title>
+<title>{{ page_title | default('Champions — Authentication') }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <style>
@@ -510,7 +510,7 @@
 
     <div class="logo">
       <div class="logo-mark">N</div>
-      <div class="logo-text">{{ app_name | default('NexVault') }}</div>
+      <div class="logo-text">{{ app_name | default('Champions') }}</div>
     </div>
 
     <!-- ─── SCREEN 1 : LOGIN ─── -->
@@ -579,7 +579,7 @@
       <div class="divider">or</div>
       <button class="btn-secondary" onclick="goto('s-signup1')">Create an Account</button>
       <div class="auth-link" style="margin-top:16px">
-        New to {{ app_name | default('NexVault') }}? <a onclick="goto('s-signup1')">Register free</a>
+        New to {{ app_name | default('Champions') }}? <a onclick="goto('s-signup1')">Register free</a>
       </div>
     </div>
 

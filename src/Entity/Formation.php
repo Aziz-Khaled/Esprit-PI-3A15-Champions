@@ -13,7 +13,7 @@ class Formation
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'idFormation', type: 'integer')]
+    #[ORM\Column(name: 'id_formation', type: 'integer')]
     private ?int $idFormation = null;
 
     #[ORM\Column(type: 'string', nullable: false)]
@@ -26,20 +26,20 @@ class Formation
     #[ORM\Column(type: 'string', nullable: true)]
     private ?string $domaine = null;
 
-    #[ORM\Column(name: 'dateDebut', type: 'date', nullable: false)]
+    #[ORM\Column(name: 'date_debut', type: 'date', nullable: false)]
     #[Assert\NotBlank(message: 'La date de début est requise.')]
     private \DateTimeInterface $dateDebut;
 
-    #[ORM\Column(name: 'dateFin', type: 'date', nullable: false)]
+    #[ORM\Column(name: 'date_fin', type: 'date', nullable: false)]
     #[Assert\NotBlank(message: 'La date de fin est requise.')]
     private \DateTimeInterface $dateFin;
 
-    #[ORM\Column(type: 'float', nullable: false)]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: false)]
     #[Assert\NotBlank(message: 'Le prix est requis.')]
-    #[Assert\Positive(message: 'Le prix doit être un nombre positif.')]
-    private float $prix = 0.0;
+    #[Assert\Positive(message: 'Le prix doit être positif.')]
+    private string $prix = '0.00';
 
-    #[ORM\Column(name: 'capaciteMax', type: 'integer', nullable: false)]
+    #[ORM\Column(name: 'capacite_max', type: 'integer', nullable: false)]
     #[Assert\NotBlank(message: 'La capacité maximale est requise.')]
     private int $capaciteMax = 0;
 
@@ -56,7 +56,10 @@ class Formation
         $this->dateFin = new \DateTime();
     }
 
-    public function getIdFormation(): ?int { return $this->idFormation; }
+    public function getIdFormation(): ?int
+    {
+        return $this->idFormation;
+    }
 
     public function getTitre(): string { return $this->titre; }
     public function setTitre(string $titre): self { $this->titre = $titre; return $this; }
@@ -73,8 +76,8 @@ class Formation
     public function getDateFin(): \DateTimeInterface { return $this->dateFin; }
     public function setDateFin(\DateTimeInterface $dateFin): self { $this->dateFin = $dateFin; return $this; }
 
-    public function getPrix(): float { return $this->prix; }
-    public function setPrix(float $prix): self { $this->prix = $prix; return $this; }
+    public function getPrix(): string { return $this->prix; }
+    public function setPrix(string $prix): self { $this->prix = $prix; return $this; }
 
     public function getCapaciteMax(): int { return $this->capaciteMax; }
     public function setCapaciteMax(int $capaciteMax): self { $this->capaciteMax = $capaciteMax; return $this; }
@@ -89,7 +92,7 @@ class Formation
     public function validateDateRange(ExecutionContextInterface $context): void
     {
         if ($this->dateFin <= $this->dateDebut) {
-            $context->buildViolation('La date de fin doit être postérieure à la date de début.')
+            $context->buildViolation('La date de fin doit être après la date de début.')
                 ->atPath('dateFin')
                 ->addViolation();
         }

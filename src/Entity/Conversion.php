@@ -23,11 +23,11 @@ class Conversion
     private string $amount_to = '0';
 
     #[ORM\ManyToOne(targetEntity: Currency::class, inversedBy: 'conversionsFrom')]
-    #[ORM\JoinColumn(name: 'currency_from', referencedColumnName: 'id_currency')]
+    #[ORM\JoinColumn(name: 'currency_from_id', referencedColumnName: 'id_currency')]
     private ?Currency $currencyFrom = null;
 
     #[ORM\ManyToOne(targetEntity: Currency::class, inversedBy: 'conversionsTo')]
-    #[ORM\JoinColumn(name: 'currency_to', referencedColumnName: 'id_currency')]
+    #[ORM\JoinColumn(name: 'currency_to_id', referencedColumnName: 'id_currency')]
     private ?Currency $currencyTo = null;
 
     #[ORM\Column(type: 'decimal', precision: 18, scale: 8, nullable: false)]

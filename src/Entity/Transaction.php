@@ -17,15 +17,15 @@ class Transaction
     private ?int $idTransaction = null;
 
     #[ORM\ManyToOne(targetEntity: Wallet::class, inversedBy: 'transactionsSource')]
-    #[ORM\JoinColumn(name: 'id_wallet_source', referencedColumnName: 'id_wallet', nullable: true)]
+    #[ORM\JoinColumn(name: 'wallet_source_id', referencedColumnName: 'id_wallet', nullable: true)]
     private ?Wallet $walletSource = null;
 
     #[ORM\ManyToOne(targetEntity: Wallet::class, inversedBy: 'transactionsDestination')]
-    #[ORM\JoinColumn(name: 'id_wallet_destination', referencedColumnName: 'id_wallet', nullable: true)]
+    #[ORM\JoinColumn(name: 'wallet_destination_id', referencedColumnName: 'id_wallet', nullable: true)]
     private ?Wallet $walletDestination = null;
 
     #[ORM\ManyToOne(targetEntity: CreditCard::class, inversedBy: 'transactions')]
-    #[ORM\JoinColumn(name: 'id_card', referencedColumnName: 'id_card', nullable: true)]
+    #[ORM\JoinColumn(name: 'card_id', referencedColumnName: 'id_card', nullable: true)]
     private ?CreditCard $creditCard = null;
 
     #[ORM\Column(type: 'float', nullable: false)]
@@ -41,11 +41,11 @@ class Transaction
     private ?\DateTimeInterface $dateTransaction = null;
 
     #[ORM\ManyToOne(targetEntity: Currency::class, inversedBy: 'transactions')]
-    #[ORM\JoinColumn(name: 'id_currency', referencedColumnName: 'id_currency')]
+    #[ORM\JoinColumn(name: 'currency_id', referencedColumnName: 'id_currency')]
     private ?Currency $currency = null;
 
     #[ORM\ManyToOne(targetEntity: Conversion::class, inversedBy: 'transactions')]
-    #[ORM\JoinColumn(name: 'id_conversion', referencedColumnName: 'id_conversion', nullable: true)]
+    #[ORM\JoinColumn(name: 'conversion_id', referencedColumnName: 'id_conversion', nullable: true)]
     private ?Conversion $conversion = null;
 
     /** @var Collection<int, Blockchain> */

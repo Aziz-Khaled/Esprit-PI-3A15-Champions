@@ -13,15 +13,16 @@ class Certificat
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: "idCertificat", type: "integer")]
+    #[ORM\Column(name: 'id_certificat', type: 'integer')]
     private ?int $idCertificat = null;
 
     #[ORM\ManyToOne(targetEntity: Participation::class, inversedBy: 'certificats')]
-    #[ORM\JoinColumn(name: 'idParticipation', referencedColumnName: 'idParticipation', nullable: false)]
+    // Correction : referencedColumnName doit être 'id_participation' pour correspondre à l'entité Participation
+    #[ORM\JoinColumn(name: 'participation_id', referencedColumnName: 'id_participation', nullable: false)]
     #[Assert\NotNull(message: "La participation est obligatoire.")]
     private ?Participation $participation = null;
 
-    #[ORM\Column(name: "dateEmission", type: 'date', nullable: false)]
+    #[ORM\Column(name: 'date_emission', type: 'date', nullable: false)]
     #[Assert\NotBlank(message: "La date d'émission est requise.")]
     #[Assert\LessThanOrEqual("today", message: "La date d'émission ne peut pas être une date future.")]
     private \DateTimeInterface $dateEmission;
@@ -30,7 +31,7 @@ class Certificat
     #[Assert\Length(max: 255, maxMessage: "La mention ne peut pas dépasser 255 caractères.")]
     private ?string $mention = null;
 
-    #[ORM\Column(name: "urlFichier", type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(name: 'url_fichier', type: 'string', length: 255, nullable: true)]
     private ?string $urlFichier = null;
 
     public function __construct()

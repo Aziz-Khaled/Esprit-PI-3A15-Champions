@@ -15,7 +15,7 @@ class Blockchain
     private ?int $id_block = null;
 
     #[ORM\ManyToOne(targetEntity: Transaction::class, inversedBy: 'blockchains')]
-    #[ORM\JoinColumn(name: 'id_transaction', referencedColumnName: 'id_transaction')]
+    #[ORM\JoinColumn(name: 'id_transaction_id', referencedColumnName: 'id_transaction')]
     private ?Transaction $transaction = null;
 
     #[ORM\Column(type: 'integer', nullable: false)]
@@ -28,11 +28,11 @@ class Blockchain
     private string $current_hash = '';
 
     #[ORM\ManyToOne(targetEntity: Wallet::class, inversedBy: 'blockchainSources')]
-    #[ORM\JoinColumn(name: 'wallet_source', referencedColumnName: 'id_wallet', nullable: true)]
+    #[ORM\JoinColumn(name: 'wallet_source_id', referencedColumnName: 'id_wallet', nullable: true)]
     private ?Wallet $walletSource = null;
 
     #[ORM\ManyToOne(targetEntity: Wallet::class, inversedBy: 'blockchainDestinations')]
-    #[ORM\JoinColumn(name: 'wallet_destination', referencedColumnName: 'id_wallet', nullable: true)]
+    #[ORM\JoinColumn(name: 'wallet_destination_id', referencedColumnName: 'id_wallet', nullable: true)]
     private ?Wallet $walletDestination = null;
 
     #[ORM\Column(type: 'float', nullable: false)]
@@ -42,7 +42,7 @@ class Blockchain
     private string $type = '';
 
     #[ORM\ManyToOne(targetEntity: CreditCard::class, inversedBy: 'blockchains')]
-    #[ORM\JoinColumn(name: 'id_card', referencedColumnName: 'id_card', nullable: true)]
+    #[ORM\JoinColumn(name: 'card_id', referencedColumnName: 'id_card', nullable: true)]
     private ?CreditCard $creditCard = null;
 
     public function getId_block(): ?int { return $this->id_block; }

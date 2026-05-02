@@ -27,12 +27,12 @@ class OrderItem
     private string $discount_applied = '0';
 
     #[ORM\ManyToOne(targetEntity: Product::class, inversedBy: 'orderItems')]
-    #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id')]
-    private ?Product $product = null;
+    #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    private Product $product;
 
     #[ORM\ManyToOne(targetEntity: Order::class, inversedBy: 'orderItems')]
-    #[ORM\JoinColumn(name: 'order_id', referencedColumnName: 'id')]
-    private ?Order $order = null;
+    #[ORM\JoinColumn(name: 'order_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    private Order $order;
 
     public function getId(): ?int { return $this->id; }
 
@@ -54,9 +54,9 @@ class OrderItem
     public function getDiscountApplied(): string { return $this->discount_applied; }
     public function setDiscountApplied(string $discount_applied): static { $this->discount_applied = $discount_applied; return $this; }
 
-    public function getProduct(): ?Product { return $this->product; }
-    public function setProduct(?Product $product): self { $this->product = $product; return $this; }
+    public function getProduct(): Product { return $this->product; }
+    public function setProduct(Product $product): self { $this->product = $product; return $this; }
 
-    public function getOrder(): ?Order { return $this->order; }
-    public function setOrder(?Order $order): self { $this->order = $order; return $this; }
+    public function getOrder(): Order { return $this->order; }
+    public function setOrder(Order $order): self { $this->order = $order; return $this; }
 }

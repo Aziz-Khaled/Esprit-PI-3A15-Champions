@@ -81,7 +81,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $orders;
 
     /** @var Collection<int, Participation> */
-    #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'utilisateur', cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'utilisateur', cascade: ['persist'])]
     private Collection $participations;
 
     /** @var Collection<int, Product> */
@@ -89,7 +89,12 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $products;
 
     /** @var Collection<int, Projet> */
-    #[ORM\OneToMany(targetEntity: Projet::class, mappedBy: 'utilisateur')]
+    #[ORM\OneToMany(
+    targetEntity: Projet::class,
+    mappedBy: 'utilisateur',
+    cascade: ['persist'],
+    orphanRemoval: true
+    )]
     private Collection $projets;
 
     /** @var Collection<int, Wallet> */
@@ -188,11 +193,12 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function getWallets(): Collection { return $this->wallets; }
 
     public function getUserIdentifier(): string { return $this->email; }
+
     public function setDateCreation(\DateTime $dateCreation): static
-{
-    $this->dateCreation = $dateCreation;
-    return $this;
-}
+    {
+        $this->dateCreation = $dateCreation;
+        return $this;
+    }
 
     public function getRoles(): array
     {

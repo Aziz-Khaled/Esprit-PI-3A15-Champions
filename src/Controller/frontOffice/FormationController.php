@@ -171,7 +171,7 @@ public function enroll(
                         
                         <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;'>
                             <p style='margin: 5px 0;'><strong>Program:</strong> " . $formation->getTitre() . "</p>
-                            <p style='margin: 5px 0;'><strong>Amount Paid:</strong> " . number_format($formation->getPrix(), 2) . " TND</p>
+                            <p style='margin: 5px 0;'><strong>Amount Paid:</strong> " . number_format((float) $formation->getPrix(), 2) . " TND</p>
                             <p style='margin: 5px 0;'><strong>Transaction ID:</strong> Verified via Blockchain</p>
                             <p style='margin: 5px 0;'><strong>Date:</strong> " . (new \DateTime())->format('M d, Y - H:i') . "</p>
                         </div>

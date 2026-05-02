@@ -18,7 +18,7 @@ class Credit
     private ?int $id_credit = null;
 
     #[ORM\ManyToOne(targetEntity: Projet::class, inversedBy: 'credits')]
-    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'id_projet', nullable: false)]
+    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'id_projet', nullable: false, onDelete: 'CASCADE')]
     #[Assert\NotNull(message: "Le projet est obligatoire")]
     private ?Projet $projet = null;
 
@@ -66,8 +66,13 @@ class Credit
     private ?\DateTimeInterface $date_contrat = null;
 
     /** @var Collection<int, Negociation> */
-    #[ORM\OneToMany(targetEntity: Negociation::class, mappedBy: 'credit', cascade: ['persist', 'remove'])]
-    private Collection $negociations;
+   #[ORM\OneToMany(
+    targetEntity: Negociation::class,
+    mappedBy: 'credit',
+    cascade: ['persist'],
+    orphanRemoval: true
+)]
+private Collection $negociations;
 
     public function __construct()
     {

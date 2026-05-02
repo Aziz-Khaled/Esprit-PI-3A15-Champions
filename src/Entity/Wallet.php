@@ -18,7 +18,7 @@ class Wallet
     private ?int $idWallet = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'wallets')]
-    #[ORM\JoinColumn(name: 'id_user', referencedColumnName: 'id_user', nullable: false)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id_user', nullable: false)]
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\Column(type: 'string', length: 8, nullable: false)]
@@ -56,7 +56,7 @@ class Wallet
     private Collection $transactionsDestination;
 
     /** @var Collection<int, WalletCurrency> */
-    #[ORM\OneToMany(targetEntity: WalletCurrency::class, mappedBy: 'wallet', cascade: ['remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: WalletCurrency::class, mappedBy: 'wallet', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $walletCurrencys;
 
     public function __construct()
@@ -128,18 +128,12 @@ class Wallet
     }
 
     public function removeWalletCurrency(WalletCurrency $walletCurrency): self
-    {
-        if ($this->walletCurrencys->removeElement($walletCurrency)) {
-            if ($walletCurrency->getWallet() === $this) {
-                $walletCurrency->setWallet(null);
-            }
-        }
-        return $this;
-    }
+{
+    $this->walletCurrencys->removeElement($walletCurrency);
+    return $this;
+}
 
+    public function setDateCreation(\DateTime $d): static { $this->dateCreation = $d; return $this; }
 
-public function setDateCreation(\DateTime $d): static { $this->dateCreation = $d; return $this; }
-
-
-public function setDateDerniereModification(\DateTime $d): static { $this->dateDerniereModification = $d; return $this; }
+    public function setDateDerniereModification(\DateTime $d): static { $this->dateDerniereModification = $d; return $this; }
 }

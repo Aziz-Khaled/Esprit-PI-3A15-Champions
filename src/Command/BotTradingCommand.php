@@ -63,7 +63,7 @@ class BotTradingCommand extends Command
         $output->writeln('');
 
         $cycle = 0;
-        
+
         /** @phpstan-ignore-next-line */
         while (true) {
             $cycle++;
@@ -96,7 +96,6 @@ class BotTradingCommand extends Command
 
         $output->writeln(sprintf('  <info>%d ordre(s) PENDING a surveiller...</info>', count($pendingTrades)));
 
-        // Grouper par symbole pour limiter les appels API
         /** @var array<string, list<Trade>> $tradesBySymbol */
         $tradesBySymbol = [];
         foreach ($pendingTrades as $trade) {
@@ -133,7 +132,7 @@ class BotTradingCommand extends Command
                 $this->evaluateTrade($trade, $symbol, $marketPrice, $output);
             }
 
-            sleep(1); // limite rate CoinGecko gratuit
+            sleep(1);
         }
     }
 
@@ -191,18 +190,15 @@ class BotTradingCommand extends Command
                 $this->em->flush();
                 return;
             }
-            
             $wallet->setSolde((string) ($solde - $total));
         } elseif ($tradeType === 'SELL') {
-           $wallet->setSolde((string) ($solde + $total));
+            $wallet->setSolde((string) ($solde + $total));
         } else {
             return;
         }
 
-        // PENDING -> COMPLETED
         $trade->setStatus('COMPLETED');
-        $trade->setPrice($marketPrice);
-
+        $trade->setPrice((string) $marketPrice);
         $trade->setExecutedAt(new \DateTime());
 
         $this->em->persist($wallet);
@@ -222,28 +218,22 @@ class BotTradingCommand extends Command
 
     private function getTradeSymbol(Trade $trade): ?string
     {
-        // Cas 1 : relation Asset
-        if (method_exists($trade, 'getAsset') && $trade->getAsset()) {
-            return strtoupper($trade->getAsset()->getSymbol());
+        $asset = $trade->getAsset();
+        $symbol = $asset->getSymbol();
+
+        if ($symbol !== '') {
+            return strtoupper($symbol);
         }
 
-        // Cas 2 : champ symbol direct sur le trade
-        if (method_exists($trade, 'getSymbol') && $trade->getSymbol()) {
-            return strtoupper(str_replace('USDT', '', $trade->getSymbol()));
-        }
-
-        // Cas 3 : via assetId en DB
-        if ($trade->getAssetId()) {
-            try {
-                $row = $this->em->getConnection()->fetchAssociative(
-                    'SELECT symbol FROM asset WHERE id = :id',
-                    ['id' => $trade->getAssetId()]
-                );
-                if ($row) {
-                    return strtoupper($row['symbol']);
-                }
-            } catch (\Exception) {}
-        }
+        try {
+            $row = $this->em->getConnection()->fetchAssociative(
+                'SELECT symbol FROM asset WHERE id = :id',
+                ['id' => $asset->getId()]
+            );
+            if ($row) {
+                return strtoupper($row['symbol']);
+            }
+        } catch (\Exception) {}
 
         return null;
     }

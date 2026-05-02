@@ -44,9 +44,9 @@ class Notification
     }
 
     #[ORM\Column(type: 'string', nullable: false)]
-    private ?string $type_notification = null;
+    private string $type_notification = '';
 
-    public function getType_notification(): ?string
+    public function getType_notification(): string
     {
         return $this->type_notification;
     }
@@ -72,9 +72,9 @@ class Notification
     }
 
     #[ORM\Column(type: 'datetime', nullable: false)]
-    private ?\DateTimeInterface $created_at = null;
+    private \DateTimeInterface $created_at;
 
-    public function getCreated_at(): ?\DateTimeInterface
+    public function getCreated_at(): \DateTimeInterface
     {
         return $this->created_at;
     }
@@ -116,7 +116,7 @@ class Notification
         return $this;
     }
 
-    public function getTypeNotification(): ?string
+    public function getTypeNotification(): string
     {
         return $this->type_notification;
     }
@@ -128,7 +128,7 @@ class Notification
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->created_at;
     }
@@ -151,5 +151,4 @@ class Notification
 
         return $this;
     }
-
 }

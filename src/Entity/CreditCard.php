@@ -47,7 +47,7 @@ class CreditCard
     private string $statut = 'ACTIVE';
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'creditCards')]
-    #[ORM\JoinColumn(name: "id_user", referencedColumnName: "id_user", nullable: false)]
+    #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id_user", nullable: false)]
     private ?Utilisateur $utilisateur = null;
 
     /**

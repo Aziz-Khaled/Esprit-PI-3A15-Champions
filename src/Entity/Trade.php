@@ -18,8 +18,9 @@ class Trade
     #[ORM\Column(name: 'user_id', type: 'integer', nullable: true)]
     private ?int $userId = null;
 
-    #[ORM\Column(name: 'asset_id', type: 'integer', nullable: false)]
-    private int $assetId = 0;
+    #[ORM\ManyToOne(targetEntity: Asset::class)]
+    #[ORM\JoinColumn(name: 'asset_id', referencedColumnName: 'id', nullable: false)]
+    private Asset $asset;
 
     #[ORM\Column(name: 'trade_type', type: 'string', nullable: false)]
     private string $tradeType = '';
@@ -27,8 +28,8 @@ class Trade
     #[ORM\Column(name: 'order_mode', type: 'string', nullable: false)]
     private string $orderMode = '';
 
-    #[ORM\Column(type: 'float', nullable: true)]
-    private ?float $price = null;
+    #[ORM\Column(type: 'decimal', precision: 18, scale: 2, nullable: true)]
+    private ?string $price = null;
 
     #[ORM\Column(type: 'float', nullable: false)]
     private float $quantity = 0.0;
@@ -52,8 +53,11 @@ class Trade
     public function getUserId(): ?int { return $this->userId; }
     public function setUserId(?int $userId): self { $this->userId = $userId; return $this; }
 
-    public function getAssetId(): int { return $this->assetId; }
-    public function setAssetId(int $assetId): self { $this->assetId = $assetId; return $this; }
+    public function getAsset(): Asset { return $this->asset; }
+    public function setAsset(Asset $asset): self { $this->asset = $asset; return $this; }
+
+    public function getAssetId(): ?int { return $this->asset->getId(); }
+    public function setAssetId(Asset $asset): self { $this->asset = $asset; return $this; }
 
     public function getTradeType(): string { return $this->tradeType; }
     public function setTradeType(string $tradeType): self { $this->tradeType = $tradeType; return $this; }
@@ -61,8 +65,8 @@ class Trade
     public function getOrderMode(): string { return $this->orderMode; }
     public function setOrderMode(string $orderMode): self { $this->orderMode = $orderMode; return $this; }
 
-    public function getPrice(): ?float { return $this->price; }
-    public function setPrice(?float $price): self { $this->price = $price; return $this; }
+    public function getPrice(): ?string { return $this->price; }
+    public function setPrice(?string $price): self { $this->price = $price; return $this; }
 
     public function getQuantity(): float { return $this->quantity; }
     public function setQuantity(float $quantity): self { $this->quantity = $quantity; return $this; }
@@ -71,12 +75,8 @@ class Trade
     public function setStatus(string $status): self { $this->status = $status; return $this; }
 
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    
-public function setCreatedAt(\DateTimeInterface $createdAt): self
-{
-    $this->createdAt = $createdAt;
-    return $this;
-}
+    public function setCreatedAt(\DateTimeInterface $createdAt): self { $this->createdAt = $createdAt; return $this; }
+
     public function getExecutedAt(): ?\DateTimeInterface { return $this->executedAt; }
     public function setExecutedAt(?\DateTimeInterface $executedAt): self { $this->executedAt = $executedAt; return $this; }
 }

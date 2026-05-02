@@ -15,11 +15,11 @@ class WalletCurrency
     private ?int $idWalletCurrency = null;
 
     #[ORM\ManyToOne(targetEntity: Wallet::class, inversedBy: 'walletCurrencys')]
-    #[ORM\JoinColumn(name: 'id_wallet', referencedColumnName: 'id_wallet', nullable: false)]
-    private ?Wallet $wallet = null;
+    #[ORM\JoinColumn(name: 'id_wallet_id', referencedColumnName: 'id_wallet', nullable: false, onDelete: 'CASCADE')]
+    private Wallet $wallet;
 
     #[ORM\ManyToOne(targetEntity: Currency::class, inversedBy: 'walletCurrencys')]
-    #[ORM\JoinColumn(name: 'id_currency', referencedColumnName: 'id_currency', nullable: false)]
+    #[ORM\JoinColumn(name: 'id_currency_id', referencedColumnName: 'id_currency', nullable: false)]
     private ?Currency $currency = null;
 
     #[ORM\Column(type: 'float', options: ['default' => 0])]
@@ -30,8 +30,8 @@ class WalletCurrency
 
     public function getIdWalletCurrency(): ?int { return $this->idWalletCurrency; }
 
-    public function getWallet(): ?Wallet { return $this->wallet; }
-    public function setWallet(?Wallet $wallet): static { $this->wallet = $wallet; return $this; }
+    public function getWallet(): Wallet { return $this->wallet; }
+    public function setWallet(Wallet $wallet): static { $this->wallet = $wallet; return $this; }
 
     public function getCurrency(): ?Currency { return $this->currency; }
     public function setCurrency(?Currency $currency): static

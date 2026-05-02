@@ -68,7 +68,7 @@ class Product
     private ?\DateTimeInterface $updatedAt = null;
 
     /** @var Collection<int, OrderItem> */
-    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'product', cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'product', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $orderItems;
 
     public function __construct()
@@ -123,16 +123,16 @@ class Product
     public function getUpdatedAt(): ?\DateTimeInterface { return $this->updatedAt; }
 
     public function setCreatedAt(\DateTime $createdAt): static
-{
-    $this->createdAt = $createdAt;
-    return $this;
-}
+    {
+        $this->createdAt = $createdAt;
+        return $this;
+    }
 
-public function setUpdatedAt(\DateTime $updatedAt): static
-{
-    $this->updatedAt = $updatedAt;
-    return $this;
-}
+    public function setUpdatedAt(\DateTime $updatedAt): static
+    {
+        $this->updatedAt = $updatedAt;
+        return $this;
+    }
 
     /** @return Collection<int, OrderItem> */
     public function getOrderItems(): Collection { return $this->orderItems; }

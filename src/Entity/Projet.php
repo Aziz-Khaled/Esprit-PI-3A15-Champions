@@ -19,7 +19,7 @@ class Projet
     private ?int $idProjet = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'projets')]
-    #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id_user', nullable: false, onDelete: "CASCADE")]
+    #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id_user', nullable: false, onDelete: 'CASCADE')]
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -34,9 +34,9 @@ class Projet
     #[ORM\Column(type: 'string', length: 20)]
     private string $status = 'DRAFT';
 
-    #[ORM\Column(name: 'target_amount', type: 'float', nullable: true)]
+    #[ORM\Column(name: 'target_amount', type: 'decimal', precision: 18, scale: 2, nullable: true)]
     #[Assert\Positive(message: "Le montant cible doit être un chiffre positif")]
-    private ?float $targetAmount = null;
+    private ?string $targetAmount = null;
 
     #[ORM\Column(name: 'start_date', type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $startDate = null;
@@ -52,7 +52,12 @@ class Projet
     private ?string $secteur = 'Autre';
 
     /** @var Collection<int, Credit> */
-    #[ORM\OneToMany(targetEntity: Credit::class, mappedBy: 'projet', cascade: ['remove'])]
+    #[ORM\OneToMany(
+        targetEntity: Credit::class,
+        mappedBy: 'projet',
+        cascade: ['persist'],
+        orphanRemoval: true
+    )]
     private Collection $credits;
 
     public function __construct()
@@ -75,8 +80,8 @@ class Projet
     public function getStatus(): string { return $this->status; }
     public function setStatus(string $status): self { $this->status = $status; return $this; }
 
-    public function getTargetAmount(): ?float { return $this->targetAmount; }
-    public function setTargetAmount(?float $targetAmount): self { $this->targetAmount = $targetAmount; return $this; }
+    public function getTargetAmount(): ?string { return $this->targetAmount; }
+    public function setTargetAmount(?string $targetAmount): self { $this->targetAmount = $targetAmount; return $this; }
 
     public function getStartDate(): ?\DateTimeInterface { return $this->startDate; }
     public function setStartDate(?\DateTimeInterface $startDate): self { $this->startDate = $startDate; return $this; }

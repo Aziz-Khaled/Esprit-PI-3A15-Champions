@@ -29,7 +29,7 @@ class Asset
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 20)]
-    private ?string $symbol = null;
+    private string $symbol = '';
 
     #[ORM\Column(type: 'string', length: 100)]
     private string $name = '';
@@ -69,10 +69,10 @@ class Asset
 
     public function getId(): ?int { return $this->id; }
 
-    public function getSymbol(): ?string { return $this->symbol; }
-    public function setSymbol(?string $symbol): static
+    public function getSymbol(): string { return $this->symbol; }
+    public function setSymbol(string $symbol): static
     {
-        $this->symbol = $symbol ? strtoupper($symbol) : null;
+        $this->symbol = strtoupper($symbol);
         return $this;
     }
 
@@ -102,15 +102,7 @@ class Asset
     public function getUtilisateur(): ?Utilisateur { return $this->utilisateur; }
     public function setUtilisateur(?Utilisateur $utilisateur): static { $this->utilisateur = $utilisateur; return $this; }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
-{
-    $this->createdAt = $createdAt;
-    return $this;
-}
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static { $this->createdAt = $createdAt; return $this; }
 
-public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
-{
-    $this->updatedAt = $updatedAt;
-    return $this;
-}
+    public function setUpdatedAt(\DateTimeImmutable $updatedAt): static { $this->updatedAt = $updatedAt; return $this; }
 }
