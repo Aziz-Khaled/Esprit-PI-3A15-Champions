@@ -38,7 +38,6 @@ class OrderRepository extends ServiceEntityRepository
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 
-
     /** @return array<int, array<string, mixed>> */
     public function getShippingAddressStats(): array
     {
@@ -52,7 +51,6 @@ class OrderRepository extends ServiceEntityRepository
         ';
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
-
 
     /** @return array<int, array<string, mixed>> */
     public function getOrderStatusDistribution(): array
