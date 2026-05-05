@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if mode == 'form' %}
+            {{ trade.id is defined and trade.id ? 'Edit Trade #' ~ trade.id : 'New Trade' }}
+        {% elseif mode == 'show' %}
+            Trade #{{ trade.id }} Details
+        {% else %}
+            Trade Management
+        {% endif %}
+    </title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --bg-light: #f3f4f6;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --primary: #6366f1;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-light); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar { width: 260px; background: white; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; padding: 30px 20px; flex-shrink: 0; }
+        .sidebar h2 { font-size: 1.1rem; margin-bottom: 40px; color: var(--primary); text-align: center; }
+        .nav-btn { display: flex; align-items: center; padding: 12px 15px; margin-bottom: 8px; text-decoration: none; color: var(--text-main); border-radius: 12px; transition: all 0.3s; font-weight: 500; font-size: 0.9rem; }
+        .nav-btn i { margin-right: 12px; width: 18px; }
+        .nav-btn:hover, .nav-btn.active { background: var(--primary-gradient); color: white; box-shadow: 0 4px 15px rgba(99,102,241,0.2); }
+
+        /* MAIN */
+        .main-content { flex: 1; padding: 40px; background: var(--bg-light); }
+
+        /* ALERTS */
+        .alert { padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; }
+        .alert-success { background: #dcfce7; color: #166534; }
+        .alert-warning  { background: #fef9c3; color: #854d0e; }
+        .alert-danger   { background: #fee2e2; color: #991b1b; }
+        .alert button { background: none; border: none; cursor: pointer; font-size: 1rem; color: inherit; }
+
+        /* HEADER */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .page-header h1 { font-size: 1.6rem; font-weight: 600; }
+        .page-header p { color: var(--text-muted); font-size: 0.88rem; margin-top: 4px; }
+        .back-link { color: var(--primary); text-decoration: none; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .back-link:hover { text-decoration: underline; }
+
+        /* BUTTONS */
+        .btn-primary { background: var(--primary-gradient); color: white; padding: 10px 22px; border-radius: 12px; border: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 0.88rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: opacity 0.2s; }
+        .btn-primary:hover { opacity: 0.88; color: white; }
+        .btn-secondary { background: white; color: var(--text-muted); padding: 10px 22px; border-radius: 12px; border: 1px solid #e5e7eb; font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 0.88rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-icon { width: 34px; height: 34px; border-radius: 10px; border: none; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; text-decoration: none; }
+        .btn-edit   { background: #ede9fe; color: #6366f1; } .btn-edit:hover   { background: #6366f1; color: white; }
+        .btn-show   { background: #dbeafe; color: #1d4ed8; } .btn-show:hover   { background: #1d4ed8; color: white; }
+        .btn-delete { background: #fee2e2; color: #ef4444; } .btn-delete:hover { background: #ef4444; color: white; }
+
+        /* TABLE */
+        .table-card { background: white; border-radius: 20px; overflow: hidden; border: 1px solid #f1f5f9; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .trade-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .trade-table thead tr { background: #f8fafc; }
+        .trade-table th { padding: 14px 18px; text-align: left; font-weight: 600; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #f1f5f9; }
+        .trade-table td { padding: 14px 18px; border-bottom: 1px solid #f8fafc; color: var(--text-main); vertical-align: middle; }
+        .trade-table tr:last-child td { border-bottom: none; }
+        .trade-table tr:hover td { background: #fafbff; }
+
+        /* BADGES */
+        .badge { padding: 3px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; display: inline-block; }
+        .badge-buy      { background: #dbeafe; color: #1d4ed8; }
+        .badge-sell     { background: #fce7f3; color: #be185d; }
+        .badge-market   { background: #f3f4f6; color: #374151; }
+        .badge-limit    { background: #ede9fe; color: #5b21b6; }
+        .badge-pending  { background: #fef9c3; color: #854d0e; }
+        .badge-executed { background: #dcfce7; color: #166534; }
+        .badge-cancelled{ background: #fee2e2; color: #991b1b; }
+        .price-cell { font-weight: 600; color: #059669; }
+        .empty-state { text-align: center; padding: 60px; color: #9ca3af; }
+        .empty-state i { font-size: 2.5rem; margin-bottom: 16px; display: block; }
+
+        /* STATS */
+        .stats-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .stat-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 14px; }
+        .stat-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+        .stat-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+        .stat-value { font-size: 1.4rem; font-weight: 600; }
+
+        /* FORM */
+        .form-card { background: white; border-radius: 20px; padding: 36px; border: 1px solid #f1f5f9; box-shadow: 0 2px 12px rgba(0,0,0,0.04); max-width: 800px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; font-size: 0.82rem; margin-bottom: 6px; color: #374151; text-transform: uppercase; letter-spacing: .04em; }
+        .form-control { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 0.9rem; font-family: 'Poppins', sans-serif; outline: none; background: white; transition: border-color 0.2s, box-shadow 0.2s; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+        .field-hint { font-size: 0.73rem; color: #9ca3af; margin-top: 4px; }
+        .form-error, ul.form-error { color: #ef4444; font-size: 0.75rem; margin-top: 4px; list-style: none; padding: 0; }
+        .form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px; padding-top: 22px; border-top: 1px solid #f1f5f9; }
+
+        /* SHOW */
+        .show-card { background: white; border-radius: 20px; padding: 36px; border: 1px solid #f1f5f9; max-width: 700px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .show-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+        .show-field label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); display: block; margin-bottom: 4px; }
+        .show-field span { font-size: 0.95rem; font-weight: 500; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #eee; }
+            .form-grid, .show-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+{# ── SIDEBAR — Front Office only ── #}
+<aside class="sidebar">
+    <h2>Trading Panel</h2>
+    <a href="{{ path('app_frontoffice_trade_index') }}" class="nav-btn {{ mode is defined ? 'active' : '' }}">
+        <i class="fas fa-chart-line"></i> Trading
+    </a>
+    <a href="#" class="nav-btn">
+        <i class="fas fa-wallet"></i> Portfolio
+    </a>
+    <a href="#" class="nav-btn">
+        <i class="fas fa-history"></i> History
+    </a>
+    <a href="#" class="nav-btn">
+        <i class="fas fa-cog"></i> Settings
+    </a>
+</aside>
+
+<main class="main-content">
+
+    {# Flash messages #}
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ type }}">
+                {{ message }}
+                <button onclick="this.parentElement.remove()">✕</button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# ── LIST ── #}
+    {% if mode == 'index' %}
+
+        <div class="page-header">
+            <div>
+                <h1>Trade Management</h1>
+                <p>History of buy and sell orders.</p>
+            </div>
+            <a href="{{ path('app_frontoffice_trade_new') }}" class="btn-primary">
+                <i class="fas fa-plus"></i> New Trade
+            </a>
+        </div>
+
+        {% set total     = trades|length %}
+        {% set pending   = trades|filter(t => t.status == 'PENDING')|length %}
+        {% set executed  = trades|filter(t => t.status == 'EXECUTED')|length %}
+        {% set cancelled = trades|filter(t => t.status == 'CANCELLED')|length %}
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#ede9fe;color:#6366f1;"><i class="fas fa-exchange-alt"></i></div>
+                <div><div class="stat-label" style="color:#6366f1;">Total</div><div class="stat-value">{{ total }}</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#fef9c3;color:#b45309;"><i class="fas fa-clock"></i></div>
+                <div><div class="stat-label" style="color:#b45309;">Pending</div><div class="stat-value">{{ pending }}</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#dcfce7;color:#166534;"><i class="fas fa-check-circle"></i></div>
+                <div><div class="stat-label" style="color:#166534;">Executed</div><div class="stat-value">{{ executed }}</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#fee2e2;color:#991b1b;"><i class="fas fa-times-circle"></i></div>
+                <div><div class="stat-label" style="color:#991b1b;">Cancelled</div><div class="stat-value">{{ cancelled }}</div></div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <table class="trade-table">
+                <thead>
+                    <tr>
+                        <th>#</th><th>Asset</th><th>Type</th><th>Mode</th>
+                        <th>Quantity</th><th>Price</th><th>Status</th>
+                        <th>Created At</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for trade in trades %}
+                    <tr>
+                        <td style="color:#9ca3af;font-size:0.8rem;">#{{ trade.id }}</td>
+                        <td>
+                            {% if assets[trade.assetId] is defined %}
+                                <span style="background:#ede9fe;color:#5b21b6;font-weight:700;padding:3px 10px;border-radius:6px;font-size:0.78rem;">
+                                    {{ assets[trade.assetId].symbol }}
+                                </span>
+                                <span style="font-size:0.82rem;color:#6b7280;margin-left:6px;">{{ assets[trade.assetId].name }}</span>
+                            {% else %}
+                                <span style="color:#9ca3af;">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if trade.tradeType == 'BUY' %}
+                                <span class="badge badge-buy"><i class="fas fa-arrow-up"></i> BUY</span>
+                            {% else %}
+                                <span class="badge badge-sell"><i class="fas fa-arrow-down"></i> SELL</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if trade.orderMode == 'MARKET' %}
+                                <span class="badge badge-market">Market</span>
+                            {% else %}
+                                <span class="badge badge-limit">Limit</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight:600;">{{ trade.quantity }}</td>
+                        <td class="price-cell">
+                            {% if trade.price %}
+                                ${{ trade.price|number_format(2, '.', ',') }}
+                            {% else %}
+                                <span style="color:#9ca3af;font-style:italic;font-size:0.82rem;">Market</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if trade.status == 'PENDING' %}
+                                <span class="badge badge-pending">Pending</span>
+                            {% elseif trade.status == 'EXECUTED' %}
+                                <span class="badge badge-executed">Executed</span>
+                            {% else %}
+                                <span class="badge badge-cancelled">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td style="color:#6b7280;font-size:0.8rem;">
+                            {{ trade.createdAt ? trade.createdAt|date('m/d/Y H:i') : '-' }}
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:6px;">
+                                <a href="{{ path('app_frontoffice_trade_show', {id: trade.id}) }}" class="btn-icon btn-show" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ path('app_frontoffice_trade_edit', {id: trade.id}) }}" class="btn-icon btn-edit" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="post" action="{{ path('app_frontoffice_trade_delete', {id: trade.id}) }}"
+                                      onsubmit="return confirm('Delete this trade?');" style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ trade.id) }}">
+                                    <button type="submit" class="btn-icon btn-delete" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <i class="fas fa-chart-line"></i>
+                            <p>No trades found. <a href="{{ path('app_frontoffice_trade_new') }}" style="color:#6366f1;">Create the first one</a>.</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    {# ── FORM (new + edit) ── #}
+    {% elseif mode == 'form' %}
+
+        <a href="{{ path('app_frontoffice_trade_index') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to list
+        </a>
+        <div class="page-header" style="margin-top:12px;">
+            <div>
+                <h1>{{ trade.id is defined and trade.id ? 'Edit Trade #' ~ trade.id : 'New Trade' }}</h1>
+                <p>{{ trade.id is defined and trade.id ? 'Update the order details.' : 'Place a new buy or sell order.' }}</p>
+            </div>
+        </div>
+
+        <div class="form-card">
+            {{ form_start(form, {attr: {novalidate: 'novalidate', id: 'trade-form'}}) }}
+                <div class="form-grid">
+                    <div class="form-group">
+                        {{ form_label(form.assetId) }}
+                        {{ form_widget(form.assetId, {attr: {class: 'form-control'}}) }}
+                        {{ form_errors(form.assetId) }}
+                    </div>
+                    <div class="form-group">
+                        {{ form_label(form.tradeType) }}
+                        {{ form_widget(form.tradeType, {attr: {class: 'form-control', id: 'trade-type'}}) }}
+                        {{ form_errors(form.tradeType) }}
+                    </div>
+                    <div class="form-group">
+                        {{ form_label(form.orderMode) }}
+                        {{ form_widget(form.orderMode, {attr: {class: 'form-control', id: 'order-mode'}}) }}
+                        {{ form_errors(form.orderMode) }}
+                    </div>
+                    <div class="form-group" id="price-group">
+                        {{ form_label(form.price) }}
+                        {{ form_widget(form.price, {attr: {class: 'form-control', placeholder: 'e.g. 45000.50'}}) }}
+                        {{ form_errors(form.price) }}
+                        <small class="field-hint">Required only for Limit orders.</small>
+                    </div>
+                    <div class="form-group">
+                        {{ form_label(form.quantity) }}
+                        {{ form_widget(form.quantity, {attr: {class: 'form-control', placeholder: 'e.g. 0.5'}}) }}
+                        {{ form_errors(form.quantity) }}
+                        <small class="field-hint">Number of units to trade.</small>
+                    </div>
+                    <div class="form-group">
+                        {{ form_label(form.status) }}
+                        {{ form_widget(form.status, {attr: {class: 'form-control'}}) }}
+                        {{ form_errors(form.status) }}
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <a href="{{ path('app_frontoffice_trade_index') }}" class="btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        {{ trade.id is defined and trade.id ? 'Update Trade' : 'Save Trade' }}
+                    </button>
+                </div>
+            {{ form_end(form) }}
+        </div>
+
+    {# ── SHOW ── #}
+    {% elseif mode == 'show' %}
+
+        <a href="{{ path('app_frontoffice_trade_index') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to list
+        </a>
+        <div class="page-header" style="margin-top:12px;">
+            <h1>Trade #{{ trade.id }} Details</h1>
+            <a href="{{ path('app_frontoffice_trade_edit', {id: trade.id}) }}" class="btn-primary">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+        </div>
+
+        <div class="show-card">
+            <div class="show-grid">
+                <div class="show-field">
+                    <label>Asset</label>
+                    <span>
+                        {% if asset %}
+                            <span style="background:#ede9fe;color:#5b21b6;font-weight:700;padding:3px 10px;border-radius:6px;font-size:0.82rem;">{{ asset.symbol }}</span>
+                            {{ asset.name }}
+                        {% else %}—{% endif %}
+                    </span>
+                </div>
+                <div class="show-field">
+                    <label>Order Type</label>
+                    <span>
+                        {% if trade.tradeType == 'BUY' %}
+                            <span class="badge badge-buy"><i class="fas fa-arrow-up"></i> BUY</span>
+                        {% else %}
+                            <span class="badge badge-sell"><i class="fas fa-arrow-down"></i> SELL</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="show-field">
+                    <label>Order Mode</label>
+                    <span>
+                        {% if trade.orderMode == 'MARKET' %}
+                            <span class="badge badge-market">Market</span>
+                        {% else %}
+                            <span class="badge badge-limit">Limit</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="show-field">
+                    <label>Status</label>
+                    <span>
+                        {% if trade.status == 'PENDING' %}
+                            <span class="badge badge-pending">Pending</span>
+                        {% elseif trade.status == 'EXECUTED' %}
+                            <span class="badge badge-executed">Executed</span>
+                        {% else %}
+                            <span class="badge badge-cancelled">Cancelled</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="show-field">
+                    <label>Quantity</label>
+                    <span style="font-size:1.1rem;font-weight:600;">{{ trade.quantity }}</span>
+                </div>
+                <div class="show-field">
+                    <label>Limit Price</label>
+                    <span class="price-cell" style="font-size:1.1rem;">
+                        {% if trade.price %}${{ trade.price|number_format(2, '.', ',') }}{% else %}<em style="color:#9ca3af;">Market</em>{% endif %}
+                    </span>
+                </div>
+                <div class="show-field">
+                    <label>Created At</label>
+                    <span>{{ trade.createdAt ? trade.createdAt|date('m/d/Y H:i') : '—' }}</span>
+                </div>
+                <div class="show-field">
+                    <label>Executed At</label>
+                    <span>{{ trade.executedAt ? trade.executedAt|date('m/d/Y H:i') : '—' }}</span>
+                </div>
+            </div>
+        </div>
+
+    {% endif %}
+
+</main>
+
+<script>
+    const orderMode  = document.getElementById('order-mode');
+    const priceGroup = document.getElementById('price-group');
+    function togglePrice() {
+        if (!orderMode || !priceGroup) return;
+        priceGroup.style.opacity       = orderMode.value === 'MARKET' ? '0.4' : '1';
+        priceGroup.style.pointerEvents = orderMode.value === 'MARKET' ? 'none' : 'auto';
+    }
+    if (orderMode) { orderMode.addEventListener('change', togglePrice); togglePrice(); }
+</script>
+
+</body>
+</html>

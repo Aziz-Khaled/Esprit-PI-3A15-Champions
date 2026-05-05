@@ -18,3 +18,26 @@
 
 /assets/vendor/
 ###< symfony/asset-mapper ###
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+
+/public/uploads/users/selfies/*
+/public/uploads/users/ids/*
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###
+
+=======
+>>>>>>> origin/module-marketplace
+=======
+
+/public/uploads/users/selfies/*
+/public/uploads/users/ids/*
+/tessdata/*
+>>>>>>> origin/module-gestion-utilisateur
+
+###> phpstan/phpstan ###
+phpstan.neon
+###< phpstan/phpstan ###

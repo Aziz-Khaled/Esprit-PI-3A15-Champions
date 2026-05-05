@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1e293b; }
+        h1 { font-size: 18px; margin: 0 0 8px 0; }
+        .muted { color: #64748b; font-size: 10px; }
+        .box { border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin: 12px 0; background: #f8fafc; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th, td { border-bottom: 1px solid #e2e8f0; padding: 6px 4px; text-align: left; }
+        th { font-size: 9px; text-transform: uppercase; color: #64748b; }
+        .right { text-align: right; }
+        .total { font-size: 14px; font-weight: bold; color: #2563eb; text-align: right; margin-top: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Reçu #ORD-{{ order.id }}</h1>
+    <p class="muted">{{ order.orderDate|date('d/m/Y H:i') }} — Paiement : {{ order.paymentMethod|default('BTC') }}</p>
+    <div class="box">
+        <strong>Livraison</strong><br>
+        {{ order.shippingAddress|e }}<br>
+        <span class="muted">Tél. {{ order.phoneNumber|e }}</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Article</th>
+                <th class="right">Qté</th>
+                <th class="right">Prix unit.</th>
+                <th class="right">Sous-total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.orderItems %}
+                <tr>
+                    <td>{{ item.product ? item.product.name|e : 'Produit' }}</td>
+                    <td class="right">{{ item.quantity }}</td>
+                    <td class="right">{{ item.unitPrice }} BTC</td>
+                    <td class="right">{{ item.subTotal }} BTC</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="total">Total : {{ order.totalAmount }} BTC</div>
+</body>
+</html>

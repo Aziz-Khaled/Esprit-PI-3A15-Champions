@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vérification de Certificat{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .verify-box {
+        max-width: 600px;
+        margin: 50px auto;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .verify-icon {
+        font-size: 60px;
+        color: #00e5ff;
+        margin-bottom: 20px;
+    }
+    .verify-title {
+        font-family: var(--font-head);
+        font-size: 28px;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+    .verify-info {
+        font-size: 16px;
+        color: var(--text-2);
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    .cert-details {
+        background: rgba(255,255,255,0.05);
+        padding: 20px;
+        border-radius: 10px;
+        text-align: left;
+    }
+    .cert-details p {
+        margin: 10px 0;
+        color: var(--text-1);
+    }
+    .cert-details strong {
+        color: var(--gold);
+        display: inline-block;
+        width: 150px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="verify-box">
+        <div class="verify-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h1 class="verify-title">Certificat Authentique</h1>
+        <p class="verify-info">
+            Ce document est un certificat officiel émis par Champions. Il atteste de la réussite de la formation suivante.
+        </p>
+        
+        <div class="cert-details">
+            {% set user = certificat.participation.utilisateur %}
+            {% set userName = (user.nom is defined and user.nom) ? user.prenom ~ ' ' ~ user.nom : user.email %}
+            
+            <p><strong>Titulaire :</strong> {{ userName }}</p>
+            <p><strong>Formation :</strong> {{ certificat.participation.formation.titre }}</p>
+            <p><strong>Date d'émission :</strong> {{ certificat.dateEmission|date('d/m/Y') }}</p>
+            {% if certificat.mention %}
+            <p><strong>Mention :</strong> {{ certificat.mention }}</p>
+            {% endif %}
+            <p><strong>Numéro de série :</strong> #CHAMP-{{ certificat.idCertificat }}-{{ certificat.dateEmission|date('Y') }}</p>
+        </div>
+        
+        <div class="mt-4" style="margin-top: 30px;">
+            <a href="{{ path('app_formations_index') }}" class="btn btn-outline-info" style="display: inline-block; padding: 10px 20px; border-radius: 8px; border: 1px solid var(--accent); color: var(--accent); text-decoration: none;">Retour à l'accueil</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

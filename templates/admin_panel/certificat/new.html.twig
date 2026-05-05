@@ -1,0 +1,87 @@
+{% extends 'admin_panel/base.html.twig' %}
+
+{% block title %}Nouveau certificat{% endblock %}
+
+{% block admin_body %}
+<style>
+    /* Configuration des nuances de violet */
+    :root {
+        --primary-purple: #8e44ad;
+        --light-purple: #f4f0fa;
+        --deep-purple: #6c3483;
+        --soft-shadow: rgba(142, 68, 173, 0.12);
+    }
+
+    .page-header {
+        border-left: 4px solid var(--primary-purple);
+        padding-left: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        color: var(--deep-purple);
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+        color: #887fa3;
+        font-size: 0.95rem;
+    }
+
+    .custom-card {
+        border: none;
+        border-radius: 16px;
+        background-color: #ffffff;
+        box-shadow: 0 10px 30px var(--soft-shadow);
+        overflow: hidden;
+    }
+
+    .card-accent-line {
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-purple), #bb8fce);
+        width: 100%;
+    }
+
+    .form-container {
+        padding: 2.5rem;
+    }
+
+    /* Style global pour les labels du formulaire Symfony */
+    label {
+        color: var(--deep-purple) !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Style des inputs pour une cohérence parfaite */
+    input, select, textarea {
+        border: 1.5px solid var(--light-purple) !important;
+        border-radius: 10px !important;
+        padding: 0.75rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+    input:focus {
+        border-color: var(--primary-purple) !important;
+        box-shadow: 0 0 0 4px rgba(142, 68, 173, 0.15) !important;
+        outline: none !important;
+    }
+</style>
+
+<div class="mb-4 page-header">
+    <h1 class="h3 mb-1 page-title">Nouveau certificat</h1>
+    <p class="subtitle">Créez un certificat pour une participation avec une finition professionnelle.</p>
+</div>
+
+<div class="card custom-card">
+    <div class="card-accent-line"></div>
+    <div class="card-body form-container">
+        {{ form_start(form) }}
+            {% include 'admin_panel/certificat/_form.html.twig' with { 
+                button_label: 'Créer le certificat' 
+            } %}
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

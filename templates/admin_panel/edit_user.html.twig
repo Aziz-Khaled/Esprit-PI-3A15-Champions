@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Edit User — Admin</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+    <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+<body id="page-top">
+<div id="wrapper">
+
+    {# ── SIDEBAR ── #}
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ path('app_admin_panel') }}">
+            <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-laugh-wink"></i></div>
+            <div class="sidebar-brand-text mx-3">SB Admin <sup>2</sup></div>
+        </a>
+        <hr class="sidebar-divider my-0">
+        <li class="nav-item">
+            <a class="nav-link" href="{{ path('app_admin_panel') }}">
+                <i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span>
+            </a>
+        </li>
+        <hr class="sidebar-divider">
+        <div class="sidebar-heading">User Management</div>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ path('app_admin_pending_users') }}">
+                <i class="fas fa-fw fa-user-clock"></i><span>Pending Approvals</span>
+            </a>
+        </li>
+        <li class="nav-item active">
+            <a class="nav-link" href="{{ path('app_admin_users_list') }}">
+                <i class="fas fa-fw fa-users"></i><span>All Users</span>
+            </a>
+        </li>
+        <hr class="sidebar-divider d-none d-md-block">
+        <div class="text-center d-none d-md-inline">
+            <button class="rounded-circle border-0" id="sidebarToggle"></button>
+        </div>
+    </ul>
+
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+
+            {# ── TOPBAR ── #}
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <ul class="navbar-nav ml-auto">
+                    <div class="topbar-divider d-none d-sm-block"></div>
+                    <li class="nav-item dropdown no-arrow">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                            <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                                {{ app.user.prenom }} {{ app.user.nom }}
+                            </span>
+                            <img class="img-profile rounded-circle"
+                                src="/uploads/users/selfies/{{ app.user.userImage }}"
+                                style="width:32px;height:32px;object-fit:cover;">
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="{{ path('app_logout') }}">
+                                <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>Logout
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="container-fluid">
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="fas fa-user-edit mr-2 text-primary"></i>
+                        Edit — {{ user.prenom }} {{ user.nom }}
+                    </h1>
+                    <a href="{{ path('app_admin_users_list') }}" class="btn btn-sm btn-secondary shadow-sm">
+                        <i class="fas fa-arrow-left mr-1"></i> Back to Users
+                    </a>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-7">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex align-items-center">
+                                <img src="/uploads/users/selfies/{{ user.userImage }}"
+                                     style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-right:12px;">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    {{ user.email }}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+
+                                {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        {{ form_label(form.prenom, null, {'label_attr': {'class': 'font-weight-bold small text-uppercase text-gray-600'}}) }}
+                                        {{ form_widget(form.prenom, {'attr': {'class': 'form-control'}}) }}
+                                        {{ form_errors(form.prenom) }}
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        {{ form_label(form.nom, null, {'label_attr': {'class': 'font-weight-bold small text-uppercase text-gray-600'}}) }}
+                                        {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
+                                        {{ form_errors(form.nom) }}
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    {{ form_label(form.email, null, {'label_attr': {'class': 'font-weight-bold small text-uppercase text-gray-600'}}) }}
+                                    {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                                    {{ form_errors(form.email) }}
+                                </div>
+
+                                <div class="form-group">
+                                    {{ form_label(form.telephone, null, {'label_attr': {'class': 'font-weight-bold small text-uppercase text-gray-600'}}) }}
+                                    {{ form_widget(form.telephone, {'attr': {'class': 'form-control'}}) }}
+                                    {{ form_errors(form.telephone) }}
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        {{ form_label(form.role, null, {'label_attr': {'class': 'font-weight-bold small text-uppercase text-gray-600'}}) }}
+                                        {{ form_widget(form.role, {'attr': {'class': 'form-control'}}) }}
+                                        {{ form_errors(form.role) }}
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        {{ form_label(form.statut, null, {'label_attr': {'class': 'font-weight-bold small text-uppercase text-gray-600'}}) }}
+                                        {{ form_widget(form.statut, {'attr': {'class': 'form-control'}}) }}
+                                        {{ form_errors(form.statut) }}
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between mt-3">
+                                    <a href="{{ path('app_admin_users_list') }}" class="btn btn-secondary">
+                                        <i class="fas fa-times mr-1"></i> Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save mr-1"></i> Save Changes
+                                    </button>
+                                </div>
+
+                                {{ form_end(form) }}
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="sticky-footer bg-white">
+            <div class="container my-auto">
+                <div class="copyright text-center my-auto">
+                    <span>Copyright &copy; NexVault {{ "now"|date("Y") }}</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="/js/sb-admin-2.min.js"></script>
+</body>
+</html>

@@ -17,22 +17,22 @@ class Transaction
     private ?int $idTransaction = null;
 
     #[ORM\ManyToOne(targetEntity: Wallet::class, inversedBy: 'transactionsSource')]
-    #[ORM\JoinColumn(name: 'id_wallet_source', referencedColumnName: 'id_wallet', nullable: true)]
+    #[ORM\JoinColumn(name: 'wallet_source_id', referencedColumnName: 'id_wallet', nullable: true)]
     private ?Wallet $walletSource = null;
 
     #[ORM\ManyToOne(targetEntity: Wallet::class, inversedBy: 'transactionsDestination')]
-    #[ORM\JoinColumn(name: 'id_wallet_destination', referencedColumnName: 'id_wallet', nullable: true)]
+    #[ORM\JoinColumn(name: 'wallet_destination_id', referencedColumnName: 'id_wallet', nullable: true)]
     private ?Wallet $walletDestination = null;
 
     #[ORM\ManyToOne(targetEntity: CreditCard::class, inversedBy: 'transactions')]
-    #[ORM\JoinColumn(name: 'id_card', referencedColumnName: 'id_card', nullable: true)]
+    #[ORM\JoinColumn(name: 'card_id', referencedColumnName: 'id_card', nullable: true)]
     private ?CreditCard $creditCard = null;
 
     #[ORM\Column(type: 'float', nullable: false)]
-    private ?float $montant = null;
+    private float $montant = 0.0;
 
     #[ORM\Column(type: 'string', nullable: false)]
-    private ?string $type = null;
+    private string $type = '';
 
     #[ORM\Column(type: 'string', nullable: true)]
     private ?string $statut = null;
@@ -41,13 +41,14 @@ class Transaction
     private ?\DateTimeInterface $dateTransaction = null;
 
     #[ORM\ManyToOne(targetEntity: Currency::class, inversedBy: 'transactions')]
-    #[ORM\JoinColumn(name: 'id_currency', referencedColumnName: 'id_currency')]
+    #[ORM\JoinColumn(name: 'currency_id', referencedColumnName: 'id_currency')]
     private ?Currency $currency = null;
 
     #[ORM\ManyToOne(targetEntity: Conversion::class, inversedBy: 'transactions')]
-    #[ORM\JoinColumn(name: 'id_conversion', referencedColumnName: 'id_conversion', nullable: true)]
+    #[ORM\JoinColumn(name: 'conversion_id', referencedColumnName: 'id_conversion', nullable: true)]
     private ?Conversion $conversion = null;
 
+    /** @var Collection<int, Blockchain> */
     #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'transaction')]
     private Collection $blockchains;
 
@@ -63,9 +64,9 @@ class Transaction
     public function setWalletDestination(?Wallet $walletDestination): self { $this->walletDestination = $walletDestination; return $this; }
     public function getCreditCard(): ?CreditCard { return $this->creditCard; }
     public function setCreditCard(?CreditCard $creditCard): self { $this->creditCard = $creditCard; return $this; }
-    public function getMontant(): ?float { return $this->montant; }
+    public function getMontant(): float { return $this->montant; }
     public function setMontant(float $montant): self { $this->montant = $montant; return $this; }
-    public function getType(): ?string { return $this->type; }
+    public function getType(): string { return $this->type; }
     public function setType(string $type): self { $this->type = $type; return $this; }
     public function getStatut(): ?string { return $this->statut; }
     public function setStatut(?string $statut): self { $this->statut = $statut; return $this; }
@@ -75,5 +76,7 @@ class Transaction
     public function setCurrency(?Currency $currency): self { $this->currency = $currency; return $this; }
     public function getConversion(): ?Conversion { return $this->conversion; }
     public function setConversion(?Conversion $conversion): self { $this->conversion = $conversion; return $this; }
+
+    /** @return Collection<int, Blockchain> */
     public function getBlockchains(): Collection { return $this->blockchains; }
 }

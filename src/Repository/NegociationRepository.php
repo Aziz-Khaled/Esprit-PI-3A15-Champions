@@ -15,29 +15,20 @@ class NegociationRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Negociation::class);
     }
+    /**
+ * @param \App\Entity\Utilisateur $user
+ * @return Negociation[]
+ */
 
-//    /**
-//     * @return Negociation[] Returns an array of Negociation objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('n')
-//            ->andWhere('n.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('n.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Negociation
-//    {
-//        return $this->createQueryBuilder('n')
-//            ->andWhere('n.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function findByEmprunteur(\App\Entity\Utilisateur $user) : array
+    {
+        return $this->createQueryBuilder('n')
+            ->join('n.credit', 'c')
+            ->join('c.projet', 'p')
+            ->where('p.utilisateur = :user')
+            ->setParameter('user', $user)
+            ->orderBy('n.id_negociation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

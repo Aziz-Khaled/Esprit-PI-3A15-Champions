@@ -1,0 +1,343 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Signature Certifiée | Champions Fintech{% endblock %}
+
+{% block body %}
+<style id="champions-global-css">
+  :root {
+    --bg-base:      #080d14;
+    --bg-card:      #0e1623;
+    --bg-card2:     #111b2b;
+    --border:       #1a2a40;
+    --border-glow:  rgba(0,229,255,.15);
+    --accent:       #00e5ff;
+    --accent2:      #00b4cc;
+    --accent-glow:  rgba(0,229,255,.18);
+    --gold:         #f0b429;
+    --text-1:       #f0f4ff;
+    --text-2:       #f0f4ff;
+    --text-3:       #f0f4ff;
+    --font-head:    'Syne', sans-serif;
+    --font-body:    'Space Grotesk', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+    --radius:       16px;
+    --navbar-h:     64px;
+    --primary-gradient: linear-gradient(135deg, var(--accent) 0%, #0099cc 100%);
+  }
+
+  body { font-family: var(--font-body) !important; background: var(--bg-base) !important; color: var(--text-1) !important; margin: 0; min-height: 100vh; overflow-x: hidden; }
+
+  /* ── BACKGROUND EFFECTS ── */
+  .bg-grid { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px); background-size: 52px 52px; animation: gridDrift 25s linear infinite; }
+  @keyframes gridDrift { 0% { background-position: 0 0; } 100% { background-position: 52px 52px; } }
+  .bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .bg-orb-1 { width: 600px; height: 600px; top: -200px; left: -150px; background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%); }
+  .bg-orb-2 { width: 440px; height: 440px; bottom: -160px; right: -100px; background: radial-gradient(circle, rgba(240,180,41,.07) 0%, transparent 70%); }
+
+  .app-shell { display: flex; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── TOPNAV ── */
+  .topnav { position: sticky; top: 0; z-index: 200; height: var(--navbar-h); background: rgba(8,13,20,.97); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); display: flex; align-items: center; padding: 0 32px; flex-shrink: 0; }
+  .topnav::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent); opacity: 0.25; }
+  .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; margin-right: 36px; }
+  .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #1de9b6, #00b4cc); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #080d14; font-family: var(--font-head); box-shadow: 0 0 16px rgba(0,229,255,.3); }
+  .logo-text { font-family: var(--font-head); font-size: 18px; font-weight: 700; background: linear-gradient(90deg, var(--text-1), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .topnav-links { display: flex; align-items: center; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+  .topnav-links::-webkit-scrollbar { display: none; }
+  .nav-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 10px; text-decoration: none; color: var(--text-1); font-size: 14px; font-weight: 500; transition: all .2s ease; background: none; border: none; cursor: pointer; text-align: left; flex-shrink: 0; font-family: var(--font-body); }
+  .nav-btn:hover { background: rgba(255,255,255,.05); color: var(--text-1); }
+  .nav-btn.active { color: var(--accent); background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.15); }
+  .topnav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 16px; }
+  .user-card { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px; background: rgba(255,255,255,.03); border: 1px solid var(--border); transition: border-color .2s; }
+  .user-avatar { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, rgba(0,229,255,.2), rgba(0,180,204,.2)); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--accent); }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+
+  /* OVERRIDES TO ASSIMILATE OLD UI */
+  .cf-form-card, .form-card, .analytics-card, .card {
+    background: var(--bg-card) !important; border: 1px solid var(--border) !important; border-radius: var(--radius) !important; color: var(--text-1) !important;
+  }
+  .cf-form-card-header, .form-card-header, .analytics-card-header, .card-header {
+    background: rgba(0,229,255,.05) !important; border-bottom: 1px solid var(--border) !important; border-radius: var(--radius) var(--radius) 0 0 !important; color: var(--text-1) !important;
+  }
+  .cf-page-title, .cf-form-card-title, .form-card-title, h1, h2, h3, h4, h5, h6 { color: var(--text-1) !important; font-family: var(--font-head); }
+  .cf-page-subtitle, .cf-form-card-sub, p.text-muted, .text-muted { color: var(--text-3) !important; }
+  .field-label, .cf-label, .section-title, .cf-section-title { color: var(--accent) !important; }
+  .cf-section-num { background: linear-gradient(135deg, var(--accent), #0099cc) !important; color: #080d14 !important; }
+
+  /* inputs */
+  .cf-input, .cf-textarea, .cf-select, .form-input, .form-textarea, .form-select-custom, .form-control, .form-select {
+    background: rgba(0,0,0,.25) !important; border: 1px solid rgba(90,112,144,.3) !important; color: var(--text-1) !important; border-radius: 12px !important;
+  }
+  .cf-input:focus, .cf-textarea:focus, .cf-select:focus, .form-input:focus, .form-textarea:focus, .form-select-custom:focus, .form-control:focus {
+    border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(0,229,255,.1) !important;
+  }
+  .cf-input-suffix { background: rgba(0,229,255,.1) !important; border: 1px solid rgba(0,229,255,.3) !important; color: var(--accent) !important; }
+  .cf-input::placeholder, .form-input::placeholder { color: rgba(255,255,255,0.2) !important; }
+
+  /* buttons */
+  .cf-btn-submit, .btn-submit, .btn-submit-full, .btn-primary {
+    background: var(--primary-gradient) !important; border: none !important; color: #080d14 !important; border-radius: 14px !important; font-family: var(--font-head) !important; text-transform: uppercase; font-weight: 700 !important;
+  }
+  .cf-btn-submit:hover, .btn-submit:hover, .btn-submit-full:hover {
+    box-shadow: 0 12px 28px rgba(0,229,255,.3) !important; transform: translateY(-2px) !important;
+  }
+  .btn-cancel, .btn-secondary, .btn-outline-custom { background: transparent !important; color: var(--text-2) !important; border: 1px solid var(--border) !important; }
+  .btn-outline-custom:hover { background: rgba(0,229,255,.06) !important; color: var(--accent) !important; border-color: var(--accent) !important; }
+
+  /* tables */
+  .table-custom thead tr th, .table thead tr th { background: var(--bg-card2) !important; color: var(--accent) !important; border-bottom: 1px solid var(--border) !important; }
+  .table-custom tbody tr, .table tbody tr { border-bottom: 1px solid var(--border) !important; }
+  .table-custom tbody tr:hover, .table tbody tr:hover { background: rgba(0,229,255,.025) !important; }
+  .table-custom tbody td, .table tbody td { color: var(--text-1) !important; }
+
+  /* general structure alignment mapping */
+  .sidebar, .cf-nav { display: none !important; }
+  .main-content { margin-left: 0 !important; width: 100% !important; flex: 1; padding: 40px; }
+  .cf-container { max-width: 1200px; margin: 0 auto; width: 100%; padding: 40px 24px; flex: 1; }
+ 
+  .site-footer { background: rgba(8,13,20,.98); border-top: 1px solid var(--border); padding: 40px 48px; display: flex; color: var(--text-3); font-size: 13px; margin-top: auto; }
+</style>
+
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<div class="app-shell">
+    <nav class="topnav">
+    <a class="topnav-logo" href="#">
+      <div class="logo-icon">C</div>
+      <div class="logo-text">Champions</div>
+    </a>
+    <div class="topnav-links">
+      <a href="{{ path('app_credit_investor_index') }}" class="nav-btn active"><i class="fas fa-chart-pie"></i> <span>Marketplace Investissements</span></a>
+      <a href="#" class="nav-btn"><i class="fas fa-paper-plane"></i> <span>Mes Propositions</span></a>
+    </div>
+    <div class="topnav-right">
+      <a href="{{ path('app_projet_index') }}" class="nav-btn danger" style="border:1px solid rgba(255,100,100,0.3);"><i class="fas fa-exchange-alt"></i> <span>Vue Emprunteur</span></a>
+      <div class="user-card">
+        <div class="user-avatar" style="background:#00e676;color:#000;"><i class="fas fa-wallet"></i></div>
+        <div class="user-name">Investisseur</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Content Wrapper -->
+  <div style="flex: 1; display: flex; flex-direction: column;">
+
+<div class="container-fluid py-5 bg-premium">
+    <div class="container">
+        {# Barre de progression interactive #}
+        <div class="row mb-5 justify-content-center">
+            <div class="col-md-8 text-center">
+                <div class="stepper-wrapper">
+                    <div class="stepper-item completed">
+                        <div class="step-counter"><i class="fas fa-check"></i></div>
+                        <div class="step-name text-muted">Négociation</div>
+                    </div>
+                    <div class="stepper-item active">
+                        <div class="step-counter shadow-pulse">2</div>
+                        <div class="step-name fw-bold">Certification</div>
+                    </div>
+                    <div class="stepper-item">
+                        <div class="step-counter">3</div>
+                        <div class="step-name text-muted">Finalisation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {# Colonne Gauche : Détails techniques #}
+            <div class="col-lg-4">
+                <div class="glass-card p-4 h-100">
+                    <h5 class="text-uppercase small fw-bold text-primary mb-4">Récapitulatif financier</h5>
+                   
+                    <div class="info-item mb-3">
+                        <label class="d-block text-muted small">Capital engagé</label>
+                        <span class="h4 fw-bold text-dark">{{ negociation.montant|number_format(2, ',', ' ') }} <small>DT</small></span>
+                    </div>
+
+                    <div class="info-item mb-4">
+                        <label class="d-block text-muted small">Taux d'intérêt annuel</label>
+                        <span class="h5 fw-bold text-success">{{ negociation.tauxPropose }} %</span>
+                    </div>
+
+                    <hr class="my-4 opacity-10">
+
+                    <h5 class="text-uppercase small fw-bold text-primary mb-3">Audit de sécurité</h5>
+                    <div class="security-box p-3 rounded bg-white-50">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-microchip me-2 text-info"></i>
+                            <span class="small fw-bold">Algorithme : HMAC-SHA256</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-lock me-2 text-warning"></i>
+                            <span class="small fw-bold">Protocole : SSL/JWT TLS 1.3</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="text-muted small">Empreinte du certificat (Hash)</label>
+                        <code class="d-block text-truncate p-2 bg-dark text-warning rounded mt-1 small">
+                            {{ fingerprint|default('NON_GENERE') }}
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            {# Colonne Droite : Le Contrat #}
+            <div class="col-lg-8">
+                <div class="main-contract-card shadow-lg">
+                    <div class="contract-header d-flex justify-content-between align-items-center p-4 text-white">
+                        <div>
+                            <h3 class="mb-0">Contrat de Prêt Numérique</h3>
+                            <span class="opacity-75 small">Document certifié conforme par Champions Fintech</span>
+                        </div>
+                        <i class="fas fa-file-invoice-dollar fa-3x opacity-25"></i>
+                    </div>
+
+                    <div class="contract-viewport p-5" id="contractContent">
+                        {% if contrat is defined and contrat is not null %}
+                            <div class="contract-text shadow-inner">
+                                {{ contrat|raw }}
+                            </div>
+
+                            <form action="{{ path('app_front_negociation_confirm_send', {'id': negociation.id_negociation}) }}" method="POST" class="mt-5 text-center">
+                                <input type="hidden" name="contrat_content" value="{{ contrat|e('html_attr') }}">
+                               
+                                <div class="certification-area p-4 rounded mb-4">
+                                    <div class="form-check d-inline-block text-start">
+                                        <input class="form-check-input" type="checkbox" id="confirmTerms" required>
+                                        <label class="form-check-label small" for="confirmTerms">
+                                            Je certifie avoir pris connaissance des clauses financières et j'appose ma signature électronique irrévocable.
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-center gap-3">
+                                    <a href="{{ path('app_front_negociation_received') }}" class="btn btn-light btn-lg px-4 border">
+                                        Abandonner
+                                    </a>
+                                    <button type="submit" class="btn btn-primary-gradient btn-lg px-5 shadow">
+                                        <i class="fas fa-pen-nib me-2"></i> Signer & Envoyer
+                                    </button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <div class="success-checkmark mb-4">
+                                    <div class="check-icon">
+                                        <span class="icon-line line-tip"></span>
+                                        <span class="icon-line line-long"></span>
+                                        <div class="icon-circle"></div>
+                                        <div class="icon-fix"></div>
+                                    </div>
+                                </div>
+                                <h3 class="fw-bold text-success">Document Scellé avec Succès</h3>
+                                <p class="text-muted">L'original a été archivé et transmis par email.</p>
+                                <div class="mt-4">
+                                    <button class="btn btn-outline-dark me-2" onclick="window.print()">
+                                        <i class="fas fa-print"></i> PDF Certifié
+                                    </button>
+                                    <a href="{{ path('app_front_negociation_received') }}" class="btn btn-primary">Retour au Dashboard</a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* DESIGN SYSTEM FINTECH */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #003da5 100%);
+        --glass-bg: rgba(255, 255, 255, 0.7);
+    }
+
+    .bg-premium { background-color: #f4f7fa; min-height: 100vh; }
+
+    /* Glassmorphism */
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+    }
+
+    .main-contract-card {
+        background: #fff;
+        border-radius: 24px;
+        overflow: hidden;
+        border: none;
+    }
+
+    .contract-header { background: var(--primary-gradient); }
+
+    .contract-text {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: #444;
+        background: #fdfdfd;
+        padding: 40px;
+        border-radius: 12px;
+        border: 1px solid #eee;
+        white-space: pre-wrap;
+    }
+
+    /* Stepper */
+    .stepper-wrapper { display: flex; justify-content: space-between; position: relative; }
+    .stepper-item { position: relative; display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .stepper-item::before { position: absolute; content: ""; border-bottom: 2px solid #ddd; width: 100%; top: 20px; left: -50%; z-index: 1; }
+    .stepper-item:first-child::before { content: none; }
+    .step-counter { position: relative; z-index: 2; display: flex; justify-content: center; align-items: center; width: 40px; height: 40px; border-radius: 50%; background: #ccc; margin-bottom: 6px; color: white; }
+    .stepper-item.active .step-counter { background-color: #0d6efd; }
+    .stepper-item.completed .step-counter { background-color: #198754; }
+
+    /* Animations & Buttons */
+    .btn-primary-gradient {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-primary-gradient:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(13, 110, 253, 0.3); color: white; }
+
+    .shadow-pulse {
+        animation: pulse-blue 2s infinite;
+    }
+
+    @keyframes pulse-blue {
+        0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(13, 110, 253, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+    }
+
+    .certification-area { background: #fff3cd; border: 1px dashed #ffc107; }
+
+    @media print {
+        .bg-premium, .stepper-wrapper, .glass-card, form, .btn, .contract-header i { display: none !important; }
+        .col-lg-8 { width: 100% !important; }
+        .contract-viewport { padding: 0 !important; }
+        .contract-text { border: none !important; box-shadow: none !important; font-size: 12pt; }
+    }
+</style>
+
+<script>
+    // Ajoute un effet interactif lors de la signature
+    document.querySelector('form')?.addEventListener('submit', function() {
+        const btn = this.querySelector('button[type="submit"]');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Signature en cours...';
+        btn.classList.add('disabled');
+    });
+</script>
+
+  </div>
+  <footer class="site-footer">
+    © {{ "now"|date("Y") }} Champions Group. All rights reserved.
+  </footer>
+</div>
+{% endblock %}

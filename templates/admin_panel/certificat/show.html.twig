@@ -1,0 +1,182 @@
+{% extends 'admin_panel/base.html.twig' %}
+
+{% block title %}Détails du certificat{% endblock %}
+
+{% block admin_body %}
+<style>
+    :root {
+        --primary-purple: #8e44ad;
+        --light-purple: #f4f0fa;
+        --deep-purple: #4a148c;
+        --soft-shadow: rgba(142, 68, 173, 0.12);
+    }
+
+    /* En-tête de page */
+    .page-header {
+        border-left: 4px solid var(--primary-purple);
+        padding-left: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        color: var(--deep-purple);
+        font-weight: 700;
+    }
+
+    /* Carte de détails */
+    .custom-card {
+        border: none;
+        border-radius: 16px;
+        background-color: #ffffff;
+        box-shadow: 0 10px 30px var(--soft-shadow);
+        overflow: hidden;
+    }
+
+    .card-accent-line {
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-purple), #bb8fce);
+    }
+
+    /* Style des lignes de données */
+    .info-row {
+        padding: 1.2rem 1.5rem;
+        border-bottom: 1px solid var(--light-purple);
+        transition: background 0.2s ease;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-row:hover {
+        background-color: #fcfaff;
+    }
+
+    .label-text {
+        color: #887fa3;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .value-text {
+        color: var(--deep-purple);
+        font-weight: 500;
+    }
+
+    /* Badge et liens */
+    .badge-purple {
+        background-color: var(--light-purple);
+        color: var(--primary-purple);
+        padding: 0.5em 1em;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .file-link {
+        color: var(--primary-purple);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .file-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Boutons */
+    .btn-action {
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-edit-purple {
+        background-color: var(--primary-purple);
+        color: white;
+        border: none;
+    }
+
+    .btn-edit-purple:hover {
+        background-color: var(--deep-purple);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(142, 68, 173, 0.3);
+    }
+
+    .btn-back {
+        background-color: white;
+        color: #7f8c8d;
+        border: 1.5px solid #dcdde1;
+    }
+
+    .btn-back:hover {
+        background-color: #f8f9fa;
+        color: #2c3e50;
+    }
+</style>
+
+<div class="mb-4 page-header">
+    <h1 class="h3 mb-1 page-title">Détails du certificat</h1>
+    <p class="text-muted">Consultation des informations complètes du certificat.</p>
+</div>
+
+<div class="card custom-card">
+    <div class="card-accent-line"></div>
+    <div class="card-body p-0">
+        <div class="container-fluid">
+            <div class="row info-row align-items-center">
+                <div class="col-sm-3 label-text">Identifiant</div>
+                <div class="col-sm-9 value-text">
+                    <span class="badge-purple">#{{ certificat.idCertificat }}</span>
+                </div>
+            </div>
+
+            <div class="row info-row align-items-center">
+                <div class="col-sm-3 label-text">Participation</div>
+                <div class="col-sm-9 value-text">
+                    {{ certificat.participation ? ('Réf. #' ~ certificat.participation.idParticipation) : 'Non spécifiée' }}
+                </div>
+            </div>
+
+            <div class="row info-row align-items-center">
+                <div class="col-sm-3 label-text">Date d'émission</div>
+                <div class="col-sm-9 value-text">
+                    <i class="far fa-calendar-alt me-2 text-muted"></i>
+                    {{ certificat.dateEmission ? certificat.dateEmission|date('d F Y') : '-' }}
+                </div>
+            </div>
+
+            <div class="row info-row align-items-center">
+                <div class="col-sm-3 label-text">Mention</div>
+                <div class="col-sm-9 value-text">
+                    <strong>{{ certificat.mention ?: 'Aucune mention' }}</strong>
+                </div>
+            </div>
+
+            <div class="row info-row align-items-center">
+                <div class="col-sm-3 label-text">Document URL</div>
+                <div class="col-sm-9">
+                    {% if certificat.urlFichier %}
+                        <a href="{{ certificat.urlFichier }}" target="_blank" class="file-link">
+                            <i class="fas fa-external-link-alt me-1"></i> Voir le fichier
+                        </a>
+                    {% else %}
+                        <span class="text-muted italic">Aucun fichier joint</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 d-flex gap-2">
+    <a href="{{ path('app_admin_certificat_index') }}" class="btn btn-action btn-back">
+        <i class="fas fa-chevron-left me-2"></i>Retour à la liste
+    </a>
+    <a href="{{ path('app_admin_certificat_edit', { id: certificat.idCertificat }) }}" class="btn btn-action btn-edit-purple">
+        <i class="fas fa-edit me-2"></i>Modifier les informations
+    </a>
+</div>
+{% endblock %}

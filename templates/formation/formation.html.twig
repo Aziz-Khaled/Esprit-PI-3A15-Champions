@@ -1,0 +1,1118 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Champions — Formations{% endblock %}
+
+{% block stylesheets %}
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:      #080d14;
+    --bg-card:      #0e1623;
+    --bg-card2:     #111b2b;
+    --border:       #1a2a40;
+    --border-glow:  rgba(0,229,255,.15);
+    --accent:       #00e5ff;
+    --accent2:      #00b4cc;
+    --accent-glow:  rgba(0,229,255,.18);
+    --gold:         #f0b429;
+    --gold-dim:     rgba(240,180,41,.10);
+    --green:        #00e676;
+    --green-dim:    rgba(0,230,118,.10);
+    --red:          #ff1744;
+    --red-dim:      rgba(255,23,68,.10);
+    --text-1:       #f0f4ff;
+    --text-2:       #b0bdd0;
+    --text-3:       #5a7090;
+    --font-head:    'Syne', sans-serif;
+    --font-body:    'Space Grotesk', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+    --radius:       16px;
+    --navbar-h:     64px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-base);
+    color: var(--text-1);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.2); border-radius: 3px; }
+
+  .bg-grid {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+    background-size: 52px 52px;
+    animation: gridDrift 25s linear infinite;
+  }
+  @keyframes gridDrift { 0% { background-position: 0 0; } 100% { background-position: 52px 52px; } }
+
+  .bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .bg-orb-1 {
+    width: 600px; height: 600px; top: -200px; left: -150px;
+    background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%);
+    animation: orbFloat 10s ease-in-out infinite alternate;
+  }
+  .bg-orb-2 {
+    width: 440px; height: 440px; bottom: -160px; right: -100px;
+    background: radial-gradient(circle, rgba(240,180,41,.07) 0%, transparent 70%);
+    animation: orbFloat 14s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes orbFloat { from { transform: translate(0,0) scale(1); } to { transform: translate(28px,18px) scale(1.06); } }
+
+  .app-shell { display: flex; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── NAVBAR ── */
+  .topnav {
+    position: sticky; top: 0; z-index: 200; height: var(--navbar-h);
+    background: rgba(8,13,20,.97); border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    display: flex; align-items: center; padding: 0 32px; gap: 0; overflow: hidden;
+  }
+  .topnav::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+    opacity: 0.25;
+  }
+  .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; margin-right: 36px; }
+  .logo-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, #1de9b6, #00b4cc);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: #080d14; font-family: var(--font-head);
+    box-shadow: 0 0 16px rgba(0,229,255,.3); flex-shrink: 0;
+  }
+  .logo-text {
+    font-family: var(--font-head); font-size: 18px; font-weight: 700;
+    background: linear-gradient(90deg, var(--text-1), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .topnav-links { display: flex; align-items: center; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+  .topnav-links::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 14px; border-radius: 10px; text-decoration: none; color: var(--text-1);
+    font-size: 14px; font-weight: 500; transition: all .2s ease; position: relative;
+    white-space: nowrap; background: none; border: none; cursor: pointer;
+    font-family: var(--font-body); text-align: left; flex-shrink: 0;
+  }
+  .nav-btn i { font-size: 13px; flex-shrink: 0; }
+  .nav-btn:hover { color: var(--text-1); background: rgba(255,255,255,.05); }
+  .nav-btn.active { color: var(--accent); background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.15); }
+  .nav-btn.active i { color: var(--accent); }
+  .nav-btn .nav-badge {
+    padding: 1px 7px; border-radius: 20px; background: rgba(0,229,255,.12); color: var(--accent);
+    font-size: 10.5px; font-weight: 700; font-family: var(--font-mono); flex-shrink: 0;
+  }
+  .nav-btn.danger { color: var(--red); }
+  .nav-btn.danger:hover { background: rgba(255,23,68,.08); color: var(--red); }
+  .topnav-sep { width: 1px; height: 24px; background: var(--border); margin: 0 8px; flex-shrink: 0; }
+  .topnav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 16px; }
+  .user-card {
+    display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px;
+    background: rgba(255,255,255,.03); border: 1px solid var(--border); cursor: pointer; transition: border-color .2s;
+  }
+  .user-card:hover { border-color: rgba(0,229,255,.2); }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, rgba(0,229,255,.2), rgba(0,180,204,.2));
+    border: 1px solid rgba(0,229,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--accent); flex-shrink: 0;
+  }
+  .user-info { line-height: 1.25; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+  .user-role { font-size: 10.5px; color: var(--text-3); font-family: var(--font-mono); }
+
+  /* ── TICKER ── */
+  .ticker-wrap { width: 100%; background: rgba(8,13,20,.95); border-top: 1px solid var(--border); height: 38px; overflow: hidden; flex-shrink: 0; }
+  .ticker-track { display: flex; align-items: center; height: 100%; white-space: nowrap; animation: tickerScroll 35s linear infinite; width: max-content; }
+  .ticker-item { display: inline-flex; align-items: center; gap: 6px; padding: 0 28px; font-size: 13px; font-family: var(--font-mono); color: var(--text-2); border-right: 1px solid var(--border); }
+  .ticker-item .sym { color: var(--accent); font-weight: 600; }
+  .ticker-item .up { color: var(--green); }
+  .ticker-item .dn { color: var(--red); }
+  @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* ── MAIN CONTENT ── */
+  .main-content { flex: 1; padding: 36px 48px 60px; display: flex; flex-direction: column; gap: 28px; }
+
+  /* ── PAGE HEADER ── */
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .page-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .page-title { font-family: var(--font-head); font-size: 32px; font-weight: 800; line-height: 1.1; letter-spacing: -.02em; margin-bottom: 6px; }
+  .page-sub { font-size: 15px; color: var(--text-2); }
+  .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  /* ── FLASH MESSAGES ── */
+  .flash-msg {
+    padding: 14px 18px; border-radius: 12px; font-size: 15px; font-weight: 500;
+    display: flex; align-items: center; gap: 10px; animation: fadeSlide .3s ease both;
+  }
+  @keyframes fadeSlide { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: translateY(0); } }
+  .flash-msg.success { background: rgba(0,230,118,.1); border: 1px solid rgba(0,230,118,.25); color: var(--green); }
+  .flash-msg.error   { background: rgba(255,23,68,.1);  border: 1px solid rgba(255,23,68,.25);  color: var(--red); }
+  .flash-close { margin-left: auto; cursor: pointer; opacity: .6; font-size: 16px; background: none; border: none; color: inherit; }
+
+  /* ── STATS ROW ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; position: relative; overflow: hidden; transition: border-color .25s, transform .2s; }
+  .stat-card:hover { border-color: rgba(0,229,255,.2); transform: translateY(-1px); }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: var(--radius) var(--radius) 0 0; }
+  .stat-card.cyan::before  { background: linear-gradient(90deg, var(--accent), transparent); }
+  .stat-card.gold::before  { background: linear-gradient(90deg, var(--gold), transparent); }
+  .stat-card.green::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .stat-card.red::before   { background: linear-gradient(90deg, var(--red), transparent); }
+  .stat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 14px; }
+  .stat-icon.cyan  { background: rgba(0,229,255,.1);  color: var(--accent); }
+  .stat-icon.gold  { background: rgba(240,180,41,.1); color: var(--gold); }
+  .stat-icon.green { background: rgba(0,230,118,.1);  color: var(--green); }
+  .stat-icon.red   { background: rgba(255,23,68,.1);  color: var(--red); }
+  .stat-label { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+  .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 700; color: var(--text-1); }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    position: relative;
+  }
+  .filter-bar::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+    opacity: 0.3;
+  }
+  .filter-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); white-space: nowrap; }
+  .f-input-search {
+    flex: 1; min-width: 200px; padding: 10px 15px;
+    background: rgba(0,0,0,.25); border: 1px solid rgba(90,112,144,.3);
+    border-radius: 10px; color: var(--text-1); font-size: 14px; font-family: var(--font-body);
+    outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  .f-input-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,.1); }
+  .f-select-filter {
+    padding: 10px 15px; background: rgba(0,0,0,.25); border: 1px solid rgba(90,112,144,.3);
+    border-radius: 10px; color: var(--text-1); font-size: 14px; font-family: var(--font-body);
+    outline: none; transition: border-color .2s; cursor: pointer; -webkit-appearance: none;
+  }
+  .f-select-filter:focus { border-color: var(--accent); }
+  .f-select-filter option { background: #111b2b; }
+  .btn-filter-apply {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; font-family: var(--font-body);
+    background: var(--accent); color: #080d14; border: none; cursor: pointer;
+    transition: opacity .2s, transform .15s; white-space: nowrap;
+  }
+  .btn-filter-apply:hover { opacity: .88; transform: translateY(-1px); }
+  .btn-filter-reset {
+    display: inline-flex; align-items: center; gap: 7px; padding: 10px 16px; border-radius: 10px;
+    font-size: 14px; font-weight: 500; font-family: var(--font-body);
+    background: transparent; color: var(--text-2); border: 1px solid var(--border);
+    cursor: pointer; transition: all .2s; text-decoration: none; white-space: nowrap;
+  }
+  .btn-filter-reset:hover { border-color: var(--red); color: var(--red); background: rgba(255,23,68,.06); }
+  .results-count { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); white-space: nowrap; margin-left: auto; }
+  .results-count strong { color: var(--accent); }
+
+  /* ── FORMATIONS GRID ── */
+  .formations-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+
+  /* ── FORMATION CARD ── */
+  .formation-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; transition: border-color .25s, transform .2s; display: flex; flex-direction: column;
+    position: relative;
+  }
+  .formation-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity .25s;
+  }
+  .formation-card:hover { border-color: rgba(0,229,255,.2); transform: translateY(-2px); }
+  .formation-card:hover::before { opacity: 1; }
+
+  .card-img-wrap {
+    width: 100%; height: 148px;
+    background: linear-gradient(135deg, #0a1628 0%, #0e1f38 50%, #091420 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; color: var(--accent); overflow: hidden; flex-shrink: 0; position: relative;
+  }
+  .card-img-wrap::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,229,255,.06) 0%, transparent 70%);
+  }
+  .card-img-wrap i { opacity: 0.4; position: relative; z-index: 1; }
+  .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; opacity: 1; }
+
+  .card-body { padding: 18px; flex: 1; display: flex; flex-direction: column; }
+
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .card-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--text-1); line-height: 1.3; }
+
+  .statut-badge { padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 700; font-family: var(--font-mono); letter-spacing: .06em; white-space: nowrap; flex-shrink: 0; }
+  .statut-OUVERTE  { background: rgba(0,230,118,.12); color: var(--green); border: 1px solid rgba(0,230,118,.2); }
+  .statut-COMPLETE { background: rgba(240,180,41,.12); color: var(--gold);  border: 1px solid rgba(240,180,41,.2); }
+  .statut-ANNULEE  { background: rgba(255,23,68,.12);  color: var(--red);   border: 1px solid rgba(255,23,68,.2); }
+
+  .card-domaine {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--accent); background: rgba(0,229,255,.08);
+    border: 1px solid rgba(0,229,255,.12); border-radius: 6px; padding: 3px 10px;
+    margin-bottom: 10px; width: fit-content; font-family: var(--font-mono);
+  }
+
+  .card-desc {
+    font-size: 13.5px; color: var(--text-2); line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; margin-bottom: 14px; flex: 1;
+  }
+
+  .card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+  .meta-item { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-3); }
+  .meta-item i { color: var(--accent); width: 13px; font-size: 11px; }
+
+  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 13px; border-top: 1px solid var(--border); }
+  .card-price { font-family: var(--font-head); font-size: 1.25rem; font-weight: 700; color: var(--text-1); }
+  .card-price small { font-size: 0.68rem; font-weight: 400; color: var(--text-3); font-family: var(--font-body); }
+
+  .btn-enroll-card {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 600;
+    font-family: var(--font-body); background: var(--accent); color: #080d14;
+    border: none; cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .btn-enroll-card:hover { opacity: .88; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,229,255,.25); }
+  .btn-enroll-card.disabled { background: rgba(255,255,255,.06); color: var(--text-3); cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    grid-column: 1/-1; text-align: center; padding: 80px 20px;
+    border: 1px dashed rgba(26,42,64,.8); border-radius: var(--radius);
+  }
+  .empty-state i { font-size: 3rem; color: var(--text-3); opacity: .3; margin-bottom: 14px; display: block; }
+  .empty-state p { color: var(--text-3); font-size: 15px; }
+
+  /* ── MODALS ── */
+  .modal-backdrop-custom {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(4,8,16,.85); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; animation: fadeIn .2s ease both;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-box {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 22px; width: 100%; max-width: 480px;
+    position: relative; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,.7);
+    animation: modalIn .3s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .modal-box::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+    opacity: 0.5;
+  }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 24px 28px 20px; border-bottom: 1px solid var(--border); }
+  .modal-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .modal-title-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .modal-close { width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,.05); border: 1px solid var(--border); color: var(--text-2); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+  .modal-close:hover { background: rgba(255,23,68,.1); border-color: rgba(255,23,68,.25); color: var(--red); }
+  .modal-body { padding: 24px 28px 28px; }
+
+  /* formation details in modal */
+  .modal-formation-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .detail-box { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 10px; padding: 13px; }
+  .detail-box .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-3); margin-bottom: 4px; font-weight: 700; }
+  .detail-box .val { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--text-1); }
+  .modal-desc-text { font-size: 14px; color: var(--text-2); line-height: 1.7; margin-bottom: 20px; }
+  .modal-price-row { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--border); margin-bottom: 20px; }
+  .modal-price-val { font-family: var(--font-head); font-size: 2rem; font-weight: 800; color: var(--accent); }
+  .modal-price-val small { font-size: 0.85rem; color: var(--text-3); font-family: var(--font-body); font-weight: 400; }
+
+  /* ── FORM ELEMENTS ── */
+  .field { margin-bottom: 18px; }
+  .f-label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 7px; }
+  .f-input, .f-select {
+    width: 100%; padding: 12px 15px; background: rgba(0,0,0,.25);
+    border: 1px solid rgba(90,112,144,.3); border-radius: 10px; color: var(--text-1);
+    font-size: 15px; font-family: var(--font-body); outline: none;
+    transition: border-color .2s, box-shadow .2s; -webkit-appearance: none;
+  }
+  .f-input:focus, .f-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,.1); }
+  .f-select option { background: #111b2b; }
+  .f-input[readonly] { opacity: .5; cursor: default; }
+
+  .balance-preview {
+    background: rgba(0,229,255,.05); border: 1px solid rgba(0,229,255,.15);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;
+    display: none;
+  }
+  .balance-preview.show { display: block; }
+  .balance-preview-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 5px; }
+  .balance-preview-value { font-family: var(--font-head); font-size: 22px; font-weight: 700; color: var(--accent); }
+  .balance-preview-currency { font-size: 13px; color: var(--text-3); font-family: var(--font-mono); }
+
+  .modal-btn-primary {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--accent) 0%, #0099cc 100%);
+    border: none; border-radius: 11px; color: #080d14;
+    font-family: var(--font-head); font-weight: 700; font-size: 15px;
+    letter-spacing: .04em; cursor: pointer; transition: transform .2s, box-shadow .2s;
+    box-shadow: 0 8px 24px rgba(0,229,255,.2); margin-top: 8px;
+  }
+  .modal-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(0,229,255,.3); }
+  .modal-btn-primary:disabled { background: rgba(255,255,255,.08); color: var(--text-3); cursor: not-allowed; transform: none; box-shadow: none; }
+  .modal-btn-secondary {
+    width: 100%; padding: 13px; margin-top: 8px; background: transparent;
+    border: 1px solid var(--border); border-radius: 11px; color: var(--text-2);
+    font-family: var(--font-body); font-weight: 600; font-size: 15px; cursor: pointer; transition: all .2s;
+  }
+  .modal-btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .warning-box {
+    background: rgba(240,180,41,.07); border: 1px solid rgba(240,180,41,.2);
+    border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--gold);
+    display: flex; align-items: flex-start; gap: 8px; margin-bottom: 16px;
+  }
+
+  /* ── FOOTER ── */
+  .site-footer { background: rgba(8,13,20,.98); border-top: 1px solid var(--border); position: relative; z-index: 10; flex-shrink: 0; }
+  .site-footer::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent); opacity: 0.35; }
+  .footer-inner { max-width: 1400px; margin: 0 auto; padding: 40px 48px 28px; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; }
+  .footer-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 14px; }
+  .footer-tagline { font-size: 13.5px; color: var(--text-3); line-height: 1.65; max-width: 260px; margin-bottom: 20px; }
+  .footer-socials { display: flex; gap: 10px; }
+  .social-btn { width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,.04); border: 1px solid var(--border); color: var(--text-3); font-size: 13px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all .2s; }
+  .social-btn:hover { color: var(--accent); border-color: rgba(0,229,255,.25); background: rgba(0,229,255,.07); }
+  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .footer-links li a { font-size: 14px; color: var(--text-3); text-decoration: none; transition: color .2s; }
+  .footer-links li a:hover { color: var(--text-1); }
+  .footer-bottom { border-top: 1px solid var(--border); padding: 18px 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; max-width: 1400px; margin: 0 auto; }
+  .footer-copy { font-size: 13px; color: var(--text-3); font-family: var(--font-mono); }
+  .footer-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.15); font-size: 11.5px; font-weight: 600; color: var(--accent); font-family: var(--font-mono); }
+  .footer-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1200px) { .stats-row { grid-template-columns: repeat(2, 1fr); } .footer-inner { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 900px) { .main-content { padding: 24px 20px 40px; } .topnav { padding: 0 16px; } .topnav-links .nav-btn span:not(.nav-badge) { display: none; } }
+  @media (max-width: 600px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+</style>
+{% endblock %}
+
+{% block body %}
+<script>
+    // Définition immédiate pour éviter le "is not a function"
+    window.openEnrollModal = function(id, price, title) {
+        console.log("Ouverture modal pour ID:", id);
+        
+        window.currentFormationPrice = parseFloat(price);
+        const modal = document.getElementById('enrollModal');
+        
+        if (!modal) {
+            console.error("Erreur: Le modal 'enrollModal' n'existe pas dans le DOM.");
+            return;
+        }
+
+        // Injection des valeurs
+        const idInput = document.getElementById('modal-formation-id');
+        const titleEl = document.getElementById('modal-formation-title');
+        const priceEl = document.getElementById('modal-formation-price');
+
+        if (idInput) idInput.value = id;
+        if (titleEl) titleEl.innerText = title;
+        if (priceEl) priceEl.innerText = window.currentFormationPrice.toLocaleString('fr-TN') + ' TND';
+
+        // Reset du formulaire
+        const walletSelect = document.getElementById('wallet-select');
+        if (walletSelect) walletSelect.value = "";
+        
+        document.getElementById('balance-preview').style.display = "none";
+        document.getElementById('insufficient-warning').style.display = "none";
+        
+        const btnPay = document.getElementById('btn-pay');
+        if (btnPay) {
+            btnPay.disabled = true;
+            btnPay.style.opacity = "0.5";
+        }
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeModal = function(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    };
+
+    window.updateBalance = function(select) {
+        const option = select.options[select.selectedIndex];
+        if (!option || !option.value) return;
+
+        const balance = parseFloat(option.getAttribute('data-balance'));
+        document.getElementById('balance-value').innerText = balance.toFixed(2);
+        document.getElementById('balance-preview').style.display = "block";
+
+        const canAfford = balance >= window.currentFormationPrice;
+        document.getElementById('insufficient-warning').style.display = canAfford ? "none" : "flex";
+        
+        const btnPay = document.getElementById('btn-pay');
+        if (btnPay) {
+            btnPay.disabled = !canAfford;
+            btnPay.style.opacity = canAfford ? "1" : "0.5";
+        }
+    };
+</script>
+
+
+
+
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<div class="app-shell">
+
+  <!-- ══ NAVBAR ══ -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="#">
+      <div class="logo-icon">C</div>
+      <div class="logo-text">Champions</div>
+    </a>
+    <div class="topnav-links">
+      <a href="#" class="nav-btn"><i class="fas fa-th-large"></i> <span>Dashboard</span></a>
+      <a href="{{ path('app_wallet_index') }}" class="nav-btn"><i class="fas fa-wallet"></i> <span>My Wallets</span></a>
+      <a href="{{ path('app_trading_dashboard') }}" class="nav-btn"><i class="fas fa-chart-line"></i> <span>Trades</span></a>
+      <a href="{{ path('app_marketplace_index') }}" class="nav-btn"><i class="fas fa-shopping-cart"></i> <span>Marketplace</span></a>
+      <a href="{{ path('app_credit_index') }}" class="nav-btn"><i class="fas fa-hand-holding-usd"></i> <span>Credit</span></a>
+      <a href="{{ path('app_projet_index') }}" class="nav-btn"><i class="fas fa-graduation-cap"></i> <span>Projects</span></a>
+      <div class="topnav-sep"></div>
+      <a href="{{ path('app_formations_index') }}" class="nav-btn active">
+        <i class="fas fa-book-open"></i> <span>Formations</span>
+        <span class="nav-badge">{{ formations|length }}</span>
+      </a>
+    </div>
+    <div class="topnav-right">
+      <a href="#" class="nav-btn danger" style="padding:8px 12px"><i class="fas fa-sign-out-alt"></i></a>
+      <div class="user-card">
+        <div class="user-avatar"><i class="fas fa-user"></i></div>
+        <div class="user-info">
+          <div class="user-name">My Account</div>
+          <div class="user-role">ACTIVE</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══ TICKER ══ -->
+  <div class="ticker-wrap">
+    <div class="ticker-track">
+      {% set ticks = [
+        {sym:'BTC/USD', price:'67,412.50', change:'+2.34%', up:true},
+        {sym:'ETH/USD', price:'3,521.80',  change:'+1.87%', up:true},
+        {sym:'SOL/USD', price:'152.45',    change:'-0.62%', up:false},
+        {sym:'BNB/USD', price:'578.20',    change:'+0.94%', up:true},
+        {sym:'XRP/USD', price:'0.6120',    change:'-1.10%', up:false},
+        {sym:'ADA/USD', price:'0.4530',    change:'+3.21%', up:true},
+        {sym:'DOGE/USD',price:'0.1620',    change:'+5.44%', up:true},
+        {sym:'AVAX/USD',price:'38.91',     change:'-2.15%', up:false},
+        {sym:'LINK/USD',price:'14.72',     change:'+1.23%', up:true},
+      ] %}
+      {% for t in ticks %}{% for i in 1..2 %}
+        <span class="ticker-item">
+          <span class="sym">{{ t.sym }}</span>
+          {{ t.price }}
+          <span class="{{ t.up ? 'up' : 'dn' }}">{{ t.change }}</span>
+        </span>
+      {% endfor %}{% endfor %}
+    </div>
+  </div>
+
+<main class="main-content">
+
+    {% for label, messages in app.flashes %}
+      {% for message in messages %}
+        <div class="flash-msg {{ (label == 'error' or label == 'danger') ? 'error' : 'success' }}" id="flash-msg-{{ loop.index }}">
+          <i class="fas {{ (label == 'error' or label == 'danger') ? 'fa-exclamation-circle' : 'fa-check-circle' }}"></i>
+          {{ message }}
+          <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+          {% if label == 'success' and app.session.get('last_enrolled_formation') %}
+            {% set calData = app.session.get('last_enrolled_formation') %}
+            {% do app.session.remove('last_enrolled_formation') %}
+            <a href="https://www.google.com/calendar/render?action=TEMPLATE&text={{ calData.titre|url_encode }}&dates={{ calData.dateDebut }}T080000Z%2F{{ calData.dateFin }}T170000Z&details={{ calData.description|url_encode }}&sf=true&output=xml"
+               target="_blank"
+               style="display:inline-flex;align-items:center;gap:6px;margin-left:12px;padding:5px 14px;border-radius:8px;background:rgba(66,133,244,.2);color:#fff;border:1px solid rgba(66,133,244,.4);text-decoration:none;font-size:13px;font-weight:600;">
+              <i class="fab fa-google" style="color:#4285f4;"></i> Ajouter à Google Calendar
+            </a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% endfor %}
+
+    <div class="page-header">
+      <div>
+        <div class="page-label">Learning Hub</div>
+        <div class="page-title">Formations</div>
+        <div class="page-sub">Browse and enroll in our available training programs.</div>
+      </div>
+      <div class="header-actions">
+        {% if app.user %}
+        <a href="{{ path('app_formations_mes_certificats') }}" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: var(--font-body); background: rgba(240,180,41,.1); color: var(--gold); border: 1px solid rgba(240,180,41,.25); text-decoration: none; transition: all .2s;" onmouseover="this.style.background='rgba(240,180,41,.2)'" onmouseout="this.style.background='rgba(240,180,41,.1)'">
+            <i class="fas fa-certificate"></i> Mes Certificats
+        </a>
+        <a href="{{ path('app_formations_mes_favoris') }}" id="btn-mes-favoris" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: var(--font-body); background: rgba(255,23,68,.1); color: #ff6b8a; border: 1px solid rgba(255,23,68,.25); text-decoration: none; transition: all .2s;" onmouseover="this.style.background='rgba(255,23,68,.2)'" onmouseout="this.style.background='rgba(255,23,68,.1)'">
+            <i class="fas fa-heart"></i> Mes Favoris <span id="fav-count-badge" style="background:#ff1744;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;">0</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card cyan">
+        <div class="stat-icon cyan"><i class="fas fa-book-open"></i></div>
+        <div class="stat-label">Total Formations</div>
+        <div class="stat-value">{{ formations|length }}</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon green"><i class="fas fa-door-open"></i></div>
+        <div class="stat-label">Open</div>
+        <div class="stat-value">{{ formations|filter(f => f.statut == 'OUVERTE')|length }}</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-icon gold"><i class="fas fa-users"></i></div>
+        <div class="stat-label">Fully Booked</div>
+        <div class="stat-value">{{ formations|filter(f => f.statut == 'COMPLETE')|length }}</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon red"><i class="fas fa-ban"></i></div>
+        <div class="stat-label">Cancelled</div>
+        <div class="stat-value">{{ formations|filter(f => f.statut == 'ANNULEE')|length }}</div>
+      </div>
+    </div>
+
+    <form method="GET" action="{{ path('app_formations_index') }}" class="filter-bar">
+      <span class="filter-label"><i class="fas fa-filter"></i> Filters</span>
+
+      <input
+        type="text"
+        name="search"
+        class="f-input-search"
+        placeholder="Search formations…"
+        value="{{ currentSearch ?? '' }}"
+        autocomplete="off"
+      >
+
+      <select name="domaine" class="f-select-filter">
+        <option value="">All domains</option>
+        {% for d in domaines %}
+          <option value="{{ d }}" {{ currentDomaine == d ? 'selected' : '' }}>{{ d }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="statut" class="f-select-filter">
+        <option value="">All statuses</option>
+        <option value="OUVERTE"  {{ currentStatut == 'OUVERTE'  ? 'selected' : '' }}>Open</option>
+        <option value="COMPLETE" {{ currentStatut == 'COMPLETE' ? 'selected' : '' }}>Full</option>
+        <option value="ANNULEE"  {{ currentStatut == 'ANNULEE'  ? 'selected' : '' }}>Cancelled</option>
+      </select>
+
+      <select name="sort" class="f-select-filter">
+        <option value="date_asc"  {{ currentSort == 'date_asc'  ? 'selected' : '' }}>Date ↑</option>
+        <option value="date_desc" {{ currentSort == 'date_desc' ? 'selected' : '' }}>Date ↓</option>
+        <option value="prix_asc"  {{ currentSort == 'prix_asc'  ? 'selected' : '' }}>Price ↑</option>
+        <option value="prix_desc" {{ currentSort == 'prix_desc' ? 'selected' : '' }}>Price ↓</option>
+      </select>
+
+      <button type="submit" class="btn-filter-apply">
+        <i class="fas fa-search"></i> Apply
+      </button>
+      <a href="{{ path('app_formations_index') }}" class="btn-filter-reset">
+        <i class="fas fa-times"></i> Reset
+      </a>
+
+      <span class="results-count"><strong>{{ formations|length }}</strong> result(s)</span>
+    </form>
+
+    <div class="formations-grid">
+    {% for f in formations %}
+    <div class="formation-card" id="card-formation-{{ f.idFormation }}">
+        <div class="card-img-wrap" style="position:relative;">
+            <i class="fas fa-graduation-cap"></i>
+            {# ❤️ Favourite Button #}
+            {% if app.user %}
+            <button
+                class="btn-favori"
+                id="fav-btn-{{ f.idFormation }}"
+                data-id="{{ f.idFormation }}"
+                onclick="toggleFavori({{ f.idFormation }})"
+                title="Ajouter aux favoris"
+                style="position:absolute;top:10px;right:12px;background:rgba(8,13,20,.7);border:1px solid rgba(255,23,68,.3);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;">
+                <i class="fas fa-heart" style="color:#ff6b8a;font-size:14px;"></i>
+            </button>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            <div class="card-top">
+                <div class="card-title">{{ f.titre }}</div>
+                <span class="statut-badge statut-{{ f.statut ?? 'OUVERTE' }}">
+                    {{ f.statut ?? 'OUVERTE' }}
+                </span>
+            </div>
+
+            {% if f.domaine %}
+                <div class="card-domaine">
+                    <i class="fas fa-tag" style="font-size:10px"></i>
+                    {{ f.domaine }}
+                </div>
+            {% endif %}
+
+            <div class="card-desc">
+                {{ f.description ?? 'No description available.' }}
+            </div>
+
+            <div class="card-meta">
+                <div class="meta-item"><i class="far fa-calendar-days"></i> {{ f.dateDebut|date('d/m/Y') }}</div>
+                <div class="meta-item"><i class="far fa-calendar-check"></i> {{ f.dateFin|date('d/m/Y') }}</div>
+                <div class="meta-item"><i class="fas fa-users"></i> {{ f.capaciteMax }} seats</div>
+            </div>
+
+            {# ⭐ Star Rating — visible pour les participants connectés #}
+            {% if app.user %}
+            <div class="card-rating" id="rating-{{ f.idFormation }}" style="display:flex;align-items:center;gap:6px;margin-top:10px;">
+                <span style="font-size:12px;color:var(--text-3);">Votre note :</span>
+                {% for star in 1..5 %}
+                <i class="fas fa-star rating-star"
+                   data-formation="{{ f.idFormation }}"
+                   data-star="{{ star }}"
+                   onclick="rateFormation({{ f.idFormation }}, {{ star }})"
+                   style="cursor:pointer;font-size:16px;color:var(--text-3);transition:color .15s;"
+                   onmouseover="hoverStars({{ f.idFormation }}, {{ star }})"
+                   onmouseout="resetStars({{ f.idFormation }})"
+                ></i>
+                {% endfor %}
+                <span id="rating-label-{{ f.idFormation }}" style="font-size:11px;color:var(--text-3);"></span>
+            </div>
+            {% endif %}
+
+<div class="card-footer">
+    <div class="card-price">
+        {{ f.prix|number_format(0, ',', ' ') }} <small>TND</small>
+    </div>
+    
+    {% if f.statut == 'OUVERTE' %}
+    <button
+        class="btn-enroll-card"
+        type="button"
+        onclick="window.openEnrollModal('{{ f.idFormation }}', '{{ f.prix|number_format(2, '.', '') }}', '{{ f.titre|e('js') }}', '{{ f.dateDebut|date('Ymd') }}', '{{ f.dateFin|date('Ymd') }}', '{{ f.description|default('')|slice(0,100)|e('js') }}')"
+        data-formation-id="{{ f.idFormation }}"
+        data-formation-titre="{{ f.titre|e('html_attr') }}"
+        data-date-debut="{{ f.dateDebut|date('Ymd') }}"
+        data-date-fin="{{ f.dateFin|date('Ymd') }}"
+    >
+        <i class="fas fa-paper-plane"></i> Enroll
+    </button>
+    {% else %}
+    <button class="btn-enroll-card disabled" disabled style="opacity: 0.5; cursor: not-allowed;">
+        <i class="fas fa-lock"></i> Closed
+    </button>
+    {% endif %}
+</div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-folder-open"></i>
+        <p>No formations found for your search criteria.</p>
+    </div>
+    {% endfor %}
+</div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <a class="footer-logo" href="#">
+          <div class="logo-icon">C</div>
+          <div class="logo-text">Champions</div>
+        </a>
+        <p class="footer-tagline">Your all-in-one digital finance platform. Manage fiat, crypto, and trading assets with confidence.</p>
+        <div class="footer-socials">
+          <a href="#" class="social-btn"><i class="fab fa-x-twitter"></i></a>
+          <a href="#" class="social-btn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" class="social-btn"><i class="fab fa-telegram-plane"></i></a>
+          <a href="#" class="social-btn"><i class="fab fa-github"></i></a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Platform</div>
+        <ul class="footer-links">
+          <li><a href="{{ path('app_wallet_index') }}"><i class="fas fa-wallet" style="width:14px;margin-right:7px;opacity:.5"></i>My Wallets</a></li>
+          <li><a href="{{ path('app_trading_dashboard') }}"><i class="fas fa-chart-line" style="width:14px;margin-right:7px;opacity:.5"></i>Trades</a></li>
+          <li><a href="{{ path('app_marketplace_index') }}"><i class="fas fa-shopping-cart" style="width:14px;margin-right:7px;opacity:.5"></i>Marketplace</a></li>
+          <li><a href="{{ path('app_formations_index') }}"><i class="fas fa-book-open" style="width:14px;margin-right:7px;opacity:.5"></i>Formations</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Learning</div>
+        <ul class="footer-links">
+          <li><a href="{{ path('app_formations_index') }}?statut=OUVERTE"><i class="fas fa-door-open" style="width:14px;margin-right:7px;opacity:.5"></i>Open Programs</a></li>
+          <li><a href="{{ path('app_formations_index') }}?sort=prix_asc"><i class="fas fa-tags" style="width:14px;margin-right:7px;opacity:.5"></i>By Price</a></li>
+          <li><a href="{{ path('app_formations_index') }}?sort=date_asc"><i class="fas fa-calendar" style="width:14px;margin-right:7px;opacity:.5"></i>Upcoming</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Account</div>
+        <ul class="footer-links">
+          <li><a href="#"><i class="fas fa-shield-alt" style="width:14px;margin-right:7px;opacity:.5"></i>Security</a></li>
+          <li><a href="#"><i class="fas fa-cog" style="width:14px;margin-right:7px;opacity:.5"></i>Settings</a></li>
+          <li><a href="#" style="color:var(--red)"><i class="fas fa-sign-out-alt" style="width:14px;margin-right:7px;opacity:.5"></i>Sign Out</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© {{ "now"|date("Y") }} Champions Group. All rights reserved.</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="footer-badge"><span class="dot"></span> All systems operational</span>
+        <span class="footer-copy" style="font-size:11px">v2.4.1</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+{# ════════════ ENROLL MODAL ════════════ #}
+<div id="enrollModal" class="modal-backdrop-custom" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;" onclick="window.closeModalBg(event,'enrollModal')">
+  <div class="modal-box" onclick="event.stopPropagation()" style="background: var(--bg-card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); width: 100%; max-width: 500px;">
+    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div class="modal-title" style="font-size: 1.2rem; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 10px;">
+          <i class="fas fa-paper-plane"></i> Enroll in Formation
+      </div>
+      <button class="modal-close" onclick="window.closeModal('enrollModal')" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div style="margin-bottom:18px">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-3); margin-bottom:5px">Formation</div>
+        <div id="modal-formation-title" style="font-size:17px; font-weight:700; color:var(--text-1)">—</div>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border); margin-bottom:20px">
+        <div>
+          <div style="font-size:11px; text-transform:uppercase; color:var(--text-3)">Total Cost</div>
+          <div id="modal-formation-price" style="font-size:1.8rem; font-weight:800; color:var(--accent)">—</div>
+        </div>
+      </div>
+
+      <form method="POST" action="{{ path('app_formation_enroll') }}" id="enrollForm">
+        <input type="hidden" name="formation_id" id="modal-formation-id">
+
+        <div class="field" style="margin-bottom: 15px;">
+          <label class="f-label" style="display: block; margin-bottom: 8px;">Select Your Fiat Wallet</label>
+          <select name="wallet_id" id="wallet-select" class="f-select" onchange="window.updateBalance(this)" required style="width: 100%; padding: 10px; background: var(--bg-base); border: 1px solid var(--border); color: white;">
+            <option value="">— Choose a wallet —</option>
+            {% for w in userWalletsData %}
+              <option value="{{ w.id }}" data-balance="{{ w.tndBalance }}">{{ w.rib }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div id="balance-preview" style="display:none; background:rgba(0,229,255,0.05); border:1px solid var(--accent-glow); border-radius:10px; padding:15px; margin-bottom:15px;">
+          <div style="font-size:11px; text-transform:uppercase; color:var(--text-3)">Available Balance</div>
+          <div style="font-size:20px; font-weight:700; color:var(--accent)"><span id="balance-value">0.00</span> TND</div>
+        </div>
+
+        <div id="insufficient-warning" style="display:none; background:rgba(255,23,68,0.1); border:1px solid var(--red); color:var(--red); padding:10px; border-radius:8px; margin-bottom:15px; align-items: center; gap: 8px;">
+          <i class="fas fa-exclamation-triangle"></i> Solde insuffisant.
+        </div>
+
+        <button type="submit" class="modal-btn-primary" id="btn-pay" disabled style="width: 100%; padding: 12px; background: var(--accent); color: black; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
+          Confirm & Pay
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# ════════════ AI CHAT WIDGET ════════════ #}
+<div id="ai-chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; font-family: var(--font-body);">
+  <!-- Chat Button -->
+  <button id="ai-chat-btn" style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #0099cc); border: none; color: #080d14; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,229,255,0.4); display: flex; align-items: center; justify-content: center; transition: transform 0.3s;">
+    <i class="fas fa-robot"></i>
+  </button>
+
+  <!-- Chat Window -->
+  <div id="ai-chat-window" style="display: none; position: absolute; bottom: 80px; right: 0; width: 350px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); flex-direction: column;">
+    <div style="background: rgba(8,13,20,0.9); padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+      <div style="font-family: var(--font-head); font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-robot" style="font-size: 1.2rem;"></i> Champions IA
+      </div>
+      <button id="ai-chat-close" style="background: none; border: none; color: var(--text-2); cursor: pointer; font-size: 20px;">&times;</button>
+    </div>
+    
+    <div id="ai-chat-messages" style="height: 320px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+      <div style="background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 14px 14px 14px 0; color: var(--text-1); font-size: 14px; max-width: 85%; line-height: 1.5;">
+        Bonjour ! Je suis l'assistant virtuel de Champions. Posez-moi vos questions sur nos formations !
+      </div>
+    </div>
+
+    <div style="padding: 15px; border-top: 1px solid var(--border); display: flex; gap: 10px; background: rgba(8,13,20,0.9);">
+      <input type="text" id="ai-chat-input" placeholder="Écrivez votre message..." style="flex: 1; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,229,255,0.2); border-radius: 10px; color: var(--text-1); outline: none; font-family: var(--font-body);">
+      <button id="ai-chat-send" style="background: var(--accent); color: #080d14; border: none; padding: 0 16px; border-radius: 10px; cursor: pointer; transition: opacity 0.2s;"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatBtn = document.getElementById('ai-chat-btn');
+    const chatWindow = document.getElementById('ai-chat-window');
+    const chatClose = document.getElementById('ai-chat-close');
+    const chatInput = document.getElementById('ai-chat-input');
+    const chatSend = document.getElementById('ai-chat-send');
+    const chatMessages = document.getElementById('ai-chat-messages');
+
+    chatBtn.addEventListener('click', () => {
+        chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+        if (chatWindow.style.display === 'flex') {
+            chatInput.focus();
+        }
+    });
+
+    chatClose.addEventListener('click', () => {
+        chatWindow.style.display = 'none';
+    });
+
+    function addMessage(text, isUser = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.style.padding = '12px 15px';
+        msgDiv.style.fontSize = '14px';
+        msgDiv.style.maxWidth = '85%';
+        msgDiv.style.lineHeight = '1.5';
+        
+        // Convert Markdown-style bold and newlines
+        let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        formattedText = formattedText.replace(/\n/g, '<br>');
+        msgDiv.innerHTML = formattedText;
+
+        if (isUser) {
+            msgDiv.style.alignSelf = 'flex-end';
+            msgDiv.style.background = 'rgba(0, 229, 255, 0.1)';
+            msgDiv.style.color = 'var(--text-1)';
+            msgDiv.style.borderRadius = '14px 14px 0 14px';
+            msgDiv.style.border = '1px solid rgba(0, 229, 255, 0.2)';
+        } else {
+            msgDiv.style.alignSelf = 'flex-start';
+            msgDiv.style.background = 'rgba(255, 255, 255, 0.05)';
+            msgDiv.style.color = 'var(--text-1)';
+            msgDiv.style.borderRadius = '14px 14px 14px 0';
+        }
+
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        addMessage(text, true);
+        chatInput.value = '';
+
+        // Add loading indicator
+        const loadingId = 'loading-' + Date.now();
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = loadingId;
+        loadingDiv.style.alignSelf = 'flex-start';
+        loadingDiv.style.color = 'var(--text-3)';
+        loadingDiv.style.fontSize = '12px';
+        loadingDiv.style.padding = '5px 10px';
+        loadingDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> IA écrit...';
+        chatMessages.appendChild(loadingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        fetch('{{ path("app_formations_ai_chat") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const loadingEl = document.getElementById(loadingId);
+            if(loadingEl) loadingEl.remove();
+            
+            if (data.error) {
+                addMessage('Erreur: ' + data.error);
+            } else if (data.reply) {
+                addMessage(data.reply);
+            }
+        })
+        .catch(err => {
+            const loadingEl = document.getElementById(loadingId);
+            if(loadingEl) loadingEl.remove();
+            addMessage('Désolé, une erreur réseau est survenue.');
+            console.error(err);
+        });
+    }
+
+    chatSend.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+});
+</script>
+
+{# ===== FAVOURITES (localStorage) ===== #}
+<script>
+const FAV_KEY = 'champions_formation_favoris';
+
+function getFavoris() {
+    return JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+}
+function saveFavoris(arr) {
+    localStorage.setItem(FAV_KEY, JSON.stringify(arr));
+}
+function toggleFavori(id) {
+    let favs = getFavoris();
+    const idx = favs.indexOf(id);
+    if (idx === -1) {
+        favs.push(id);
+    } else {
+        favs.splice(idx, 1);
+    }
+    saveFavoris(favs);
+    updateFavoriUI();
+}
+function updateFavoriUI() {
+    const favs = getFavoris();
+    // Update badge
+    const badge = document.getElementById('fav-count-badge');
+    if (badge) badge.textContent = favs.length;
+    // Update each heart button style
+    document.querySelectorAll('.btn-favori').forEach(btn => {
+        const id = parseInt(btn.dataset.id);
+        const isFav = favs.includes(id);
+        btn.style.background = isFav ? 'rgba(255,23,68,.35)' : 'rgba(8,13,20,.7)';
+        btn.style.borderColor = isFav ? '#ff1744' : 'rgba(255,23,68,.3)';
+        btn.querySelector('i').style.color = isFav ? '#ff1744' : '#ff6b8a';
+    });
+}
+// Init on page load
+document.addEventListener('DOMContentLoaded', updateFavoriUI);
+</script>
+
+{# ===== STAR RATING (AJAX -> Participation.note) ===== #}
+<script>
+const RATING_KEY = 'champions_formation_ratings';
+
+function getSavedRatings() {
+    return JSON.parse(localStorage.getItem(RATING_KEY) || '{}');
+}
+function hoverStars(formationId, upTo) {
+    document.querySelectorAll(`[data-formation="${formationId}"].rating-star`).forEach(star => {
+        star.style.color = parseInt(star.dataset.star) <= upTo ? 'var(--gold)' : 'var(--text-3)';
+    });
+}
+function resetStars(formationId) {
+    const saved = getSavedRatings()[formationId] || 0;
+    document.querySelectorAll(`[data-formation="${formationId}"].rating-star`).forEach(star => {
+        star.style.color = parseInt(star.dataset.star) <= saved ? 'var(--gold)' : 'var(--text-3)';
+    });
+}
+function rateFormation(formationId, note) {
+    const ratings = getSavedRatings();
+    ratings[formationId] = note;
+    localStorage.setItem(RATING_KEY, JSON.stringify(ratings));
+    resetStars(formationId);
+    const label = document.getElementById(`rating-label-${formationId}`);
+    if (label) label.textContent = `${note}/5 ✓`;
+
+    // Send AJAX to server to save note in Participation
+    fetch(`/formations/${formationId}/rate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ note: note })
+    }).catch(() => {});
+}
+// Init ratings on load
+document.addEventListener('DOMContentLoaded', () => {
+    const ratings = getSavedRatings();
+    Object.entries(ratings).forEach(([fId, note]) => {
+        resetStars(parseInt(fId));
+        const label = document.getElementById(`rating-label-${fId}`);
+        if (label) label.textContent = `${note}/5 ✓`;
+    });
+});
+</script>
+
+{# ===== GOOGLE CALENDAR (add to modal after enroll) ===== #}
+<script>
+function generateGCalLink(titre, dateDebut, dateFin, description) {
+    // dateDebut and dateFin should be in format YYYYMMDD
+    const startFormatted = dateDebut + 'T080000Z';
+    const endFormatted = dateFin + 'T170000Z';
+    const base = 'https://www.google.com/calendar/render?action=TEMPLATE';
+    const params = new URLSearchParams({
+        text: titre,
+        dates: startFormatted + '/' + endFormatted,
+        details: description || '',
+        sf: 'true',
+        output: 'xml'
+    });
+    return base + '&' + params.toString();
+}
+
+// Patch openEnrollModal to capture calendar data
+const _origOpenEnrollModal = window.openEnrollModal;
+window.openEnrollModal = function(id, price, titre, dateDebut, dateFin, description) {
+    // store for later use
+    window._lastEnrollData = { id, price, titre, dateDebut, dateFin, description };
+    // call original if it exists
+    if (typeof _origOpenEnrollModal === 'function') {
+        _origOpenEnrollModal(id, price, titre);
+    }
+};
+
+// After a success flash is detected, inject the Google Calendar button
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.flash-msg.success').forEach(flash => {
+        if (flash.textContent.includes('enrolled') || flash.textContent.includes('enrolled')) {
+            // Try to read last stored enroll data from sessionStorage
+            const stored = sessionStorage.getItem('last_enrolled_formation');
+            if (stored) {
+                const data = JSON.parse(stored);
+                const gcalUrl = generateGCalLink(data.titre, data.dateDebut, data.dateFin, data.description);
+                const btn = document.createElement('a');
+                btn.href = gcalUrl;
+                btn.target = '_blank';
+                btn.innerHTML = ' &nbsp;<i class="fab fa-google" style="color:#4285f4;"></i> <strong>Ajouter à Google Calendar</strong>';
+                btn.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:5px 14px;border-radius:8px;background:rgba(66,133,244,.15);color:#fff;border:1px solid rgba(66,133,244,.3);text-decoration:none;font-size:13px;vertical-align:middle;';
+                flash.appendChild(btn);
+                sessionStorage.removeItem('last_enrolled_formation');
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+

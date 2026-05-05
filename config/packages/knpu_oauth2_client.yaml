@@ -1,0 +1,11 @@
+knpu_oauth2_client:
+    clients:
+        auth0_google:
+            type: generic
+            provider_class: Riskio\OAuth2\Client\Provider\Auth0
+            provider_options:
+                account: '%env(AUTH0_DOMAIN)%'
+            client_id: '%env(AUTH0_CLIENT_ID)%'
+            client_secret: '%env(AUTH0_CLIENT_SECRET)%'
+            redirect_route: connect_auth0_check
+            redirect_params: {}

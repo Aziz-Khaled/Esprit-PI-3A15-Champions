@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Champions – The World's Most Trusted Crypto Exchange</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-base:      #080d14;
+      --bg-card:      #0e1623;
+      --bg-card2:     #111b2b;
+      --border:       #1a2a40;
+      --accent:       #00e5ff;
+      --accent2:      #00b4cc;
+      --accent-glow:  rgba(0,229,255,.18);
+      --green:        #00e676;
+      --red:          #ff1744;
+      --text-1:       #f0f4ff;
+      --text-2:       #7b8ea8;
+      --text-3:       #3d5068;
+      --font-head:    'Syne', sans-serif;
+      --font-body:    'Space Grotesk', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-1);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+    }
+
+    /* ── TICKER ── */
+    .ticker-wrap {
+      background: #060b11;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 8px 0;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .03em;
+    }
+    .ticker-track {
+      display: inline-flex;
+      animation: ticker 30s linear infinite;
+    }
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 28px;
+      color: var(--text-2);
+    }
+    .ticker-item span.sym { color: var(--text-1); }
+    .ticker-item span.up  { color: var(--green); }
+    .ticker-item span.dn  { color: var(--red); }
+    @keyframes ticker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px;
+      height: 64px;
+      background: rgba(8,13,20,.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--font-head); font-size: 20px; color: var(--text-1);
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: linear-gradient(135deg,#1de9b6,#00b4cc);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #080d14;
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 6px;
+      list-style: none;
+    }
+    .nav-links a {
+      padding: 6px 14px; border-radius: 8px;
+      color: var(--text-2); font-size: 14px; font-weight: 500;
+      text-decoration: none; transition: color .2s, background .2s;
+    }
+    .nav-links a:hover { color: var(--text-1); background: rgba(255,255,255,.05); }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-outline {
+      padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      border: 1px solid var(--border); color: var(--text-1); background: transparent;
+      cursor: pointer; transition: border-color .2s, background .2s; text-decoration: none;
+    }
+    .btn-outline:hover { border-color: var(--accent); background: rgba(0,229,255,.06); }
+    .btn-primary {
+      padding: 8px 22px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      background: var(--accent); color: #080d14; border: none;
+      cursor: pointer; transition: opacity .2s, transform .15s; text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      display: grid; grid-template-columns: 1fr 1fr;
+      align-items: center; gap: 48px;
+      padding: 100px 80px 100px;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 10% 50%, rgba(0,229,255,.07) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 90% 20%, rgba(0,180,204,.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 12px; border-radius: 100px;
+      border: 1px solid rgba(0,229,255,.25);
+      background: rgba(0,229,255,.06);
+      font-size: 12px; font-weight: 600; color: var(--accent);
+      margin-bottom: 20px; letter-spacing: .04em; text-transform: uppercase;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .4; transform: scale(1.4); }
+    }
+    .hero h1 {
+      font-family: var(--font-head);
+      font-size: clamp(36px,4.5vw,62px);
+      font-weight: 800; line-height: 1.08;
+      letter-spacing: -.02em;
+      margin-bottom: 20px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #00e5ff, #1de9b6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      color: var(--text-2); font-size: 17px; line-height: 1.7;
+      max-width: 480px; margin-bottom: 36px;
+    }
+    .hero-cta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .hero-cta .btn-primary { padding: 13px 30px; font-size: 15px; border-radius: 10px; }
+    .hero-cta .btn-outline  { padding: 13px 26px; font-size: 15px; border-radius: 10px; }
+    .hero-stats {
+      display: flex; gap: 36px; margin-top: 48px;
+    }
+    .stat-item { display: flex; flex-direction: column; gap: 4px; }
+    .stat-num {
+      font-family: var(--font-head); font-size: 26px; font-weight: 700;
+      color: var(--text-1);
+    }
+    .stat-label { font-size: 12px; color: var(--text-2); font-weight: 500; }
+
+    /* ── HERO CARD PANEL ── */
+    .hero-visual {
+      display: flex; flex-direction: column; gap: 16px;
+      align-items: flex-end;
+    }
+    .market-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 22px 24px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    }
+    .market-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .market-card-title { font-size: 13px; color: var(--text-2); font-weight: 600; letter-spacing:.04em; text-transform:uppercase; }
+    .market-card-link  { font-size: 12px; color: var(--accent); cursor: pointer; }
+    .market-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid rgba(26,42,64,.7);
+    }
+    .market-row:last-child { border-bottom: none; }
+    .market-left { display: flex; align-items: center; gap: 12px; }
+    .coin-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+    }
+    .coin-name { font-size: 14px; font-weight: 600; }
+    .coin-sym  { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+    .market-right { text-align: right; }
+    .coin-price  { font-size: 14px; font-weight: 600; }
+    .coin-change { font-size: 12px; font-weight: 600; margin-top: 1px; }
+    .coin-change.up  { color: var(--green); }
+    .coin-change.dn  { color: var(--red); }
+
+    .portfolio-card {
+      background: linear-gradient(135deg, #0a1929 0%, #0d2137 100%);
+      border: 1px solid rgba(0,229,255,.15);
+      border-radius: 18px; padding: 22px 24px;
+      width: 100%; max-width: 400px;
+      position: relative; overflow: hidden;
+    }
+    .portfolio-card::before {
+      content: '';
+      position: absolute; top: -30px; right: -30px;
+      width: 120px; height: 120px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,.12), transparent 70%);
+    }
+    .portfolio-label { font-size: 11px; color: var(--text-2); letter-spacing:.05em; text-transform:uppercase; margin-bottom: 6px; }
+    .portfolio-value { font-family: var(--font-head); font-size: 32px; font-weight: 800; color: var(--text-1); }
+    .portfolio-change { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; }
+    .portfolio-change span { font-size: 13px; font-weight: 600; color: var(--green); }
+    .portfolio-bar { margin-top: 18px; height: 5px; border-radius: 10px; background: rgba(255,255,255,.06); overflow: hidden; }
+    .portfolio-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #00e5ff, #1de9b6); width: 68%; }
+
+    /* ── FEATURES STRIP ── */
+    .features-strip {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1px; background: var(--border);
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .feature-item {
+      background: var(--bg-base);
+      padding: 36px 32px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: background .2s;
+    }
+    .feature-item:hover { background: var(--bg-card); }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: rgba(0,229,255,.08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-bottom: 6px;
+    }
+    .feature-title { font-size: 16px; font-weight: 700; }
+    .feature-desc  { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
+    /* ── SECTION TITLES ── */
+    .section { padding: 80px 80px; }
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: var(--font-head); font-size: clamp(28px,3vw,42px);
+      font-weight: 800; line-height: 1.1; letter-spacing: -.02em;
+      margin-bottom: 14px;
+    }
+    .section-sub {
+      font-size: 16px; color: var(--text-2); line-height: 1.7;
+      max-width: 520px;
+    }
+
+    /* ── MARKETS TABLE ── */
+    .markets-section { padding: 80px 80px; }
+    .markets-tabs {
+      display: flex; gap: 4px; margin-bottom: 28px;
+      border-bottom: 1px solid var(--border); padding-bottom: 0;
+    }
+    .tab {
+      padding: 10px 18px; font-size: 14px; font-weight: 600;
+      color: var(--text-2); cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; transition: color .2s, border-color .2s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .markets-table { width: 100%; border-collapse: collapse; }
+    .markets-table th {
+      text-align: left; padding: 12px 16px;
+      font-size: 11px; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--text-3);
+      border-bottom: 1px solid var(--border);
+    }
+    .markets-table th:not(:first-child) { text-align: right; }
+    .markets-table td {
+      padding: 16px 16px;
+      border-bottom: 1px solid rgba(26,42,64,.5);
+      font-size: 14px;
+    }
+    .markets-table td:not(:first-child) { text-align: right; }
+    .markets-table tr:hover td { background: var(--bg-card); }
+    .coin-td { display: flex; align-items: center; gap: 12px; }
+    .mini-icon { width: 28px; height: 28px; border-radius: 50%; display:flex;align-items:center;justify-content:center; font-size:11px; font-weight:700; }
+    .td-sym  { font-weight: 600; }
+    .td-name { font-size: 12px; color: var(--text-3); }
+    .change-badge {
+      display: inline-flex; align-items:center; gap:3px;
+      padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 12px;
+    }
+    .change-badge.up { background: rgba(0,230,118,.1); color: var(--green); }
+    .change-badge.dn { background: rgba(255,23,68,.1);  color: var(--red); }
+    .star { color: var(--text-3); font-size: 16px; cursor: pointer; }
+    .star:hover { color: #f9a825; }
+
+    /* ── GET STARTED CTA ── */
+    .cta-section {
+      margin: 0 80px 80px;
+      background: linear-gradient(135deg, #0a1929 0%, #0c2038 100%);
+      border: 1px solid rgba(0,229,255,.15);
+      border-radius: 24px;
+      padding: 72px 80px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 40px;
+      position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute; top: -80px; right: -80px;
+      width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,.08), transparent 65%);
+      pointer-events: none;
+    }
+    .cta-left { max-width: 560px; }
+    .cta-left h2 { font-family: var(--font-head); font-size: clamp(26px,3vw,40px); font-weight: 800; line-height: 1.1; margin-bottom: 16px; }
+    .cta-left p  { font-size: 16px; color: var(--text-2); line-height: 1.6; }
+    .cta-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .cta-actions .btn-primary { padding: 14px 34px; font-size: 15px; border-radius: 10px; }
+    .cta-actions .btn-outline  { padding: 14px 28px; font-size: 15px; border-radius: 10px; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #060b11;
+      border-top: 1px solid var(--border);
+      padding: 60px 80px 30px;
+    }
+    .footer-grid {
+      display: grid; grid-template-columns: 2fr repeat(4,1fr);
+      gap: 40px; margin-bottom: 50px;
+    }
+    .footer-brand p { color: var(--text-2); font-size: 13px; line-height: 1.7; margin-top: 14px; max-width: 220px; }
+    .footer-col h4 { font-size: 13px; font-weight: 700; margin-bottom: 16px; color: var(--text-1); letter-spacing:.03em; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col a  { font-size: 13px; color: var(--text-2); text-decoration: none; transition: color .2s; }
+    .footer-col a:hover { color: var(--accent); }
+    .footer-bottom {
+      padding-top: 24px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--text-3);
+    }
+    .footer-socials { display: flex; gap: 14px; }
+    .social-btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: rgba(255,255,255,.05); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; cursor: pointer; transition: background .2s, border-color .2s;
+      text-decoration: none; color: var(--text-2);
+    }
+    .social-btn:hover { background: rgba(0,229,255,.1); border-color: var(--accent); color: var(--accent); }
+
+    /* ── responsive ── */
+    @media (max-width: 1024px) {
+      .hero { grid-template-columns: 1fr; padding: 60px 40px; }
+      .hero-visual { align-items: center; }
+      .features-strip { grid-template-columns: repeat(2,1fr); }
+      .section, .markets-section { padding: 60px 40px; }
+      .cta-section { margin: 0 40px 60px; padding: 48px 40px; flex-direction: column; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
+      footer { padding: 40px 40px 24px; }
+    }
+    @media (max-width: 640px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .hero { padding: 48px 20px; }
+      .hero-stats { flex-wrap: wrap; gap: 20px; }
+      .features-strip { grid-template-columns: 1fr; }
+      .markets-section { padding: 48px 20px; }
+      .section { padding: 48px 20px; }
+      .cta-section { margin: 0 20px 48px; padding: 36px 24px; }
+      footer { padding: 36px 20px 20px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; gap: 16px; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+{# ── PRICE TICKER ── #}
+<div class="ticker-wrap">
+  <div class="ticker-track" id="ticker">
+    {% set coins = [
+      { sym: 'BTC/USD',  price: '67,412.50', change: '+2.34%', up: true },
+      { sym: 'ETH/USD',  price: '3,521.80',  change: '+1.87%', up: true },
+      { sym: 'SOL/USD',  price: '152.45',    change: '-0.62%', up: false },
+      { sym: 'BNB/USD',  price: '578.20',    change: '+0.94%', up: true },
+      { sym: 'XRP/USD',  price: '0.6120',    change: '-1.10%', up: false },
+      { sym: 'ADA/USD',  price: '0.4530',    change: '+3.21%', up: true },
+      { sym: 'DOGE/USD', price: '0.1620',    change: '+5.44%', up: true },
+      { sym: 'AVAX/USD', price: '38.91',     change: '-2.15%', up: false },
+      { sym: 'LINK/USD', price: '14.72',     change: '+1.23%', up: true },
+      { sym: 'MATIC/USD',price: '0.8840',    change: '-0.48%', up: false },
+    ] %}
+    {% for c in coins %}
+      <span class="ticker-item">
+        <span class="sym">{{ c.sym }}</span>
+        {{ c.price }}
+        <span class="{{ c.up ? 'up' : 'dn' }}">{{ c.change }}</span>
+      </span>
+    {% endfor %}
+    {# duplicate for seamless loop #}
+    {% for c in coins %}
+      <span class="ticker-item">
+        <span class="sym">{{ c.sym }}</span>
+        {{ c.price }}
+        <span class="{{ c.up ? 'up' : 'dn' }}">{{ c.change }}</span>
+      </span>
+    {% endfor %}
+  </div>
+</div>
+
+{# ── NAVIGATION ── #}
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="logo-icon">N</div>
+    Champions
+  </a>
+  <ul class="nav-links">
+    <li><a href="#">Markets</a></li>
+    <li><a href="#">Trade</a></li>
+    <li><a href="#">Futures</a></li>
+    <li><a href="#">Earn</a></li>
+    <li><a href="#">Learn</a></li>
+    <li><a href="#">Institutional</a></li>
+  </ul>
+  <div class="nav-actions">
+    <a class="btn-outline" href="{{ path('app_login') }}">Log In</a>
+    <a class="btn-primary" href="{{ path('app_register_step1') }}">Sign Up Free</a>
+  </div>
+</nav>
+
+{# ── HERO ── #}
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      Live Markets · 200+ Assets
+    </div>
+    <h1>
+      Trade Crypto<br/>
+      <em>Without Limits</em>
+    </h1>
+    <p>
+      Champions is the world's most secure crypto trading platform. Access spot, futures, and earn products with institutional-grade tools — built for everyone.
+    </p>
+    <div class="hero-cta">
+      <a class="btn-primary" href="{{ path('app_register_step1') }}">Get Started — It's Free</a>
+      <a class="btn-outline" href="#">Explore Markets →</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-num">$76B+</span>
+        <span class="stat-label">24h Trading Volume</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">185M+</span>
+        <span class="stat-label">Registered Users</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">350+</span>
+        <span class="stat-label">Cryptocurrencies</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    {# Portfolio snapshot card #}
+    <div class="portfolio-card">
+      <div class="portfolio-label">My Portfolio</div>
+      <div class="portfolio-value">$24,830.45</div>
+      <div class="portfolio-change">
+        <span>▲ +$1,243.20 (5.27%) today</span>
+      </div>
+      <div class="portfolio-bar"><div class="portfolio-bar-fill"></div></div>
+    </div>
+    {# Top movers card #}
+    <div class="market-card">
+      <div class="market-card-header">
+        <span class="market-card-title">Top Movers</span>
+        <span class="market-card-link">View all →</span>
+      </div>
+      {% set movers = [
+        { icon: '₿', bg: '#f7931a', name: 'Bitcoin',  sym: 'BTC', price: '$67,412', change: '+2.34%', up: true },
+        { icon: 'Ξ', bg: '#627eea', name: 'Ethereum', sym: 'ETH', price: '$3,521',  change: '+1.87%', up: true },
+        { icon: 'S', bg: '#9945ff', name: 'Solana',   sym: 'SOL', price: '$152.45', change: '-0.62%', up: false },
+        { icon: 'D', bg: '#c2a633', name: 'DOGE',     sym: 'DOGE',price: '$0.162',  change: '+5.44%', up: true },
+      ] %}
+      {% for m in movers %}
+      <div class="market-row">
+        <div class="market-left">
+          <div class="coin-icon" style="background:{{ m.bg }}1a; color:{{ m.bg }}">{{ m.icon }}</div>
+          <div>
+            <div class="coin-name">{{ m.name }}</div>
+            <div class="coin-sym">{{ m.sym }}</div>
+          </div>
+        </div>
+        <div class="market-right">
+          <div class="coin-price">{{ m.price }}</div>
+          <div class="coin-change {{ m.up ? 'up' : 'dn' }}">{{ m.change }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ── FEATURE STRIP ── #}
+<div class="features-strip">
+  {% set features = [
+    { icon: '🔒', title: 'Industry-Leading Security', desc: 'Cold storage, 2FA, and advanced DDoS protection keep your assets safe around the clock.' },
+    { icon: '⚡', title: 'Lightning-Fast Execution', desc: 'Sub-millisecond order matching engine handles up to 1.4 million transactions per second.' },
+    { icon: '💰', title: 'Earn & Yield Products', desc: 'Put your crypto to work with staking, savings, and auto-invest products with competitive APYs.' },
+    { icon: '🌍', title: 'Available Worldwide', desc: 'Trade from 180+ countries with 24/7 multilingual support and local payment methods.' },
+  ] %}
+  {% for f in features %}
+  <div class="feature-item">
+    <div class="feature-icon">{{ f.icon }}</div>
+    <div class="feature-title">{{ f.title }}</div>
+    <div class="feature-desc">{{ f.desc }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+{# ── MARKETS TABLE ── #}
+<section class="markets-section">
+  <div class="section-label">Live Markets</div>
+  <h2 class="section-title">Track the Markets</h2>
+  <div class="markets-tabs">
+    <div class="tab active">All</div>
+    <div class="tab">Spot</div>
+    <div class="tab">Futures</div>
+    <div class="tab">DeFi</div>
+    <div class="tab">New Listings</div>
+  </div>
+  <table class="markets-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Name</th>
+        <th>Last Price</th>
+        <th>24h Change</th>
+        <th>24h Volume</th>
+        <th>Market Cap</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% set markets = [
+        { icon:'₿', bg:'#f7931a', sym:'BTC',  name:'Bitcoin',   price:'$67,412.50', change:'+2.34%',  up:true,  vol:'$38.2B', cap:'$1.32T' },
+        { icon:'Ξ', bg:'#627eea', sym:'ETH',  name:'Ethereum',  price:'$3,521.80',  change:'+1.87%',  up:true,  vol:'$18.5B', cap:'$423B'  },
+        { icon:'S', bg:'#9945ff', sym:'SOL',  name:'Solana',    price:'$152.45',    change:'-0.62%',  up:false, vol:'$4.1B',  cap:'$66B'   },
+        { icon:'B', bg:'#f3ba2f', sym:'BNB',  name:'BNB',       price:'$578.20',    change:'+0.94%',  up:true,  vol:'$2.8B',  cap:'$84B'   },
+        { icon:'X', bg:'#00aae4', sym:'XRP',  name:'XRP',       price:'$0.6120',    change:'-1.10%',  up:false, vol:'$3.2B',  cap:'$33B'   },
+        { icon:'D', bg:'#c2a633', sym:'DOGE', name:'Dogecoin',  price:'$0.1620',    change:'+5.44%',  up:true,  vol:'$1.9B',  cap:'$23B'   },
+        { icon:'A', bg:'#0d1e2d', sym:'ADA',  name:'Cardano',   price:'$0.4530',    change:'+3.21%',  up:true,  vol:'$0.9B',  cap:'$16B'   },
+        { icon:'L', bg:'#2a5ada', sym:'LINK', name:'Chainlink', price:'$14.72',     change:'+1.23%',  up:true,  vol:'$0.7B',  cap:'$8.6B'  },
+      ] %}
+      {% for m in markets %}
+      <tr>
+        <td><span class="star">☆</span></td>
+        <td>
+          <div class="coin-td">
+            <div class="mini-icon" style="background:{{ m.bg }}22; color:{{ m.bg }}">{{ m.icon }}</div>
+            <div>
+              <div class="td-sym">{{ m.sym }}</div>
+              <div class="td-name">{{ m.name }}</div>
+            </div>
+          </div>
+        </td>
+        <td>{{ m.price }}</td>
+        <td><span class="change-badge {{ m.up ? 'up' : 'dn' }}">{{ m.up ? '▲' : '▼' }} {{ m.change }}</span></td>
+        <td>{{ m.vol }}</td>
+        <td>{{ m.cap }}</td>
+        <td><a class="btn-primary" href="{{ path('app_login') }}" style="padding:6px 16px;font-size:12px;border-radius:7px;">Trade</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{# ── CTA BANNER ── #}
+<div class="cta-section">
+  <div class="cta-left">
+    <h2>Start Trading in<br/><em style="font-style:normal;background:linear-gradient(135deg,#00e5ff,#1de9b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Under 60 Seconds</em></h2>
+    <p>Create your free Champions account, verify your identity, deposit funds, and begin trading hundreds of crypto assets with some of the lowest fees in the industry.</p>
+  </div>
+  <div class="cta-actions">
+    <a class="btn-primary" href="{{ path('app_register_step1') }}">Create Free Account</a>
+    <a class="btn-outline"  href="#">Download App</a>
+  </div>
+</div>
+
+{# ── FOOTER ── #}
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="nav-logo" style="display:inline-flex;">
+        <div class="logo-icon">N</div>
+        <span style="font-family:var(--font-head);font-size:18px;">Champions</span>
+      </div>
+      <p>The world's leading crypto exchange. Trusted by millions of traders in 180+ countries.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Products</h4>
+      <ul>
+        <li><a href="#">Spot Trading</a></li>
+        <li><a href="#">Futures</a></li>
+        <li><a href="#">Earn</a></li>
+        <li><a href="#">NFT</a></li>
+        <li><a href="#">Web3 Wallet</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Services</h4>
+      <ul>
+        <li><a href="#">Buy Crypto</a></li>
+        <li><a href="#">P2P Trading</a></li>
+        <li><a href="#">Convert</a></li>
+        <li><a href="#">Institutional</a></li>
+        <li><a href="#">API Access</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Learn</h4>
+      <ul>
+        <li><a href="#">What is Bitcoin?</a></li>
+        <li><a href="#">Crypto Glossary</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Research</a></li>
+        <li><a href="#">Academy</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Security</a></li>
+        <li><a href="#">Terms of Use</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Contact Us</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© {{ "now"|date("Y") }} Champions Inc. All rights reserved.</span>
+    <div class="footer-socials">
+      <a class="social-btn" href="#" title="Twitter">𝕏</a>
+      <a class="social-btn" href="#" title="Telegram">✈</a>
+      <a class="social-btn" href="#" title="Discord">◈</a>
+      <a class="social-btn" href="#" title="LinkedIn">in</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+  // Star toggle
+  document.querySelectorAll('.star').forEach(s => {
+    s.addEventListener('click', () => {
+      s.textContent = s.textContent === '☆' ? '★' : '☆';
+      s.style.color  = s.textContent === '★' ? '#f9a825' : 'var(--text-3)';
+    });
+  });
+</script>
+
+</body>
+</html>

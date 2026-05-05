@@ -1,0 +1,60 @@
+{% extends 'back_base.html.twig' %}
+
+{% block title %}Détails de la Participation{% endblock %}
+
+{% block body_back %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Détails de la Participation</h1>
+        <a href="{{ path('app_admin_participation_index') }}" class="btn btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50 mr-1"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Informations</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width: 30%">Participant</th>
+                                <td>{{ participation.utilisateur.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Formation</th>
+                                <td>{{ participation.formation.titre }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date d'inscription</th>
+                                <td>{{ participation.dateInscription ? participation.dateInscription|date('d/m/Y H:i') : 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Statut</th>
+                                <td>{{ participation.statut }}</td>
+                            </tr>
+                            <tr>
+                                <th>Présence</th>
+                                <td>{{ participation.presence ? 'Oui' : 'Non' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Note</th>
+                                <td>{{ participation.note ? participation.note ~ '/20' : 'Non noté' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="mt-4">
+                        <a href="{{ path('app_admin_participation_edit', {'id': participation.idParticipation}) }}" class="btn btn-warning">
+                            <i class="fas fa-pen mr-1"></i> Modifier
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

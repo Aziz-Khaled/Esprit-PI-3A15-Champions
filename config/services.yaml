@@ -1,18 +1,26 @@
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
 
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+
 parameters:
+    # --- Configuration Marketplace (Images) ---
+    products_images_directory: '%kernel.project_dir%/public/uploads/products'
+
+    # --- Ta Configuration IA / Fraud API ---
+    fraud_api_url: '%env(FRAUD_API_URL)%'
+
+    twilio_sid: '%env(TWILIO_SID)%'
+    twilio_token: '%env(TWILIO_TOKEN)%'
+    twilio_whatsapp_from: '+14155238886'
 
 services:
-    # default configuration for services in *this* file
     _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
+        autowire: true      
+        autoconfigure: true 
+        
+        # Centralisation des injections automatiques (Binds)
+        bind:
+            $fraudApiUrl: '%fraud_api_url%'
+            $apiKey: '%env(GROQ_API_KEY)%'
     App\:
         resource: '../src/'
         exclude:
@@ -20,5 +28,32 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    # --- SERVICES DU MODULE MARKETPLACE ---
+    App\Service\CloudinaryService:
+        arguments:
+            $cloudName:  '%env(CLOUDINARY_CLOUD_NAME)%'
+            $apiKey:     '%env(CLOUDINARY_API_KEY)%'
+            $apiSecret:  '%env(CLOUDINARY_API_SECRET)%'
+
+    # --- SERVICES DE LA BRANCHE DEV (FRAUDE, PAIEMENT, SECURITY) ---
+    App\Service\StripeService:
+        arguments:
+            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
+
+    App\Security\LoginSuccessHandler:
+        arguments:
+            $router: '@router'
+
+    # Service pour la partie Blockchain
+    App\Service\SmartContractGenerator:
+        autowire: true
+
+    # Configuration spécifique des contrôleurs pour le BackOffice
+    App\Controller\BackOffice\:
+        resource: '../src/Controller/backOffice/'
+        tags: ['controller.service_arguments']
+    App\Service\SmsVerificationService:
+        arguments:
+            $twilioSid:       '%env(TWILIO_SID)%'
+            $twilioToken:     '%env(TWILIO_TOKEN)%'
+            $twilioVerifySid: '%env(TWILIO_VERIFY_SID)%'

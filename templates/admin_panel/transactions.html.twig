@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SB Admin 2 - Transactions</title>
+
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body id="page-top">
+
+    <div id="wrapper">
+
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ path('app_admin_panel') }}">
+                <div class="sidebar-brand-text mx-3">NexVault Admin panel</div>
+            </a>
+
+            <hr class="sidebar-divider my-0">
+
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ path('app_admin_panel') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">User Management</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_pending_users') }}">
+                    <i class="fas fa-fw fa-user-clock"></i>
+                    <span>Pending Approvals</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_users_list') }}">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Users</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Trading</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_backoffice_asset_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Assets</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Interface</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_back_product_index') }}">
+                    <i class="fas fa-fw fa-box"></i>
+                    <span>Produits</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_back_order_index') }}">
+                    <i class="fas fa-fw fa-shopping-cart"></i>
+                    <span>Commandes</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Billing & AI</div>
+                
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_transactions') }}">
+                    <i class="fas fa-fw fa-exchange-alt"></i>
+                    <span>Transactions</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('admin_fraud_analyze') }}">
+                    <i class="fas fa-fw fa-robot"></i>
+                    <span>Fraud Analysis (AI)</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_currency_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Currencies</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Formations</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_formation_index') }}">
+                    <i class="fas fa-fw fa-graduation-cap"></i>
+                    <span>Formations</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_certificat_index') }}">
+                    <i class="fas fa-fw fa-certificate"></i>
+                    <span>Certificats</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_logout') }}">
+                    <i class="fas fa-fw fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <ul class="navbar-nav ml-auto">
+                        
+                        <li class="nav-item dropdown no-arrow mx-1">
+                            <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-bell fa-fw"></i>
+                                {% if unreadNotificationsCount > 0 %}
+                                    <span class="badge badge-danger badge-counter">
+                                        {{ unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                            
+                            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="alertsDropdown">
+                                <h6 class="dropdown-header">Security Alerts Center</h6>
+                                
+                                {% for n in notifications %}
+                                    <a class="dropdown-item d-flex align-items-center" href="#">
+                                        <div class="mr-3">
+                                            {% if n.typeNotification == 'DELETE_DETECTED' %}
+                                                <div class="icon-circle bg-danger"><i class="fas fa-trash text-white"></i></div>
+                                            {% elseif n.typeNotification == 'UPDATE_DETECTED' %}
+                                                <div class="icon-circle bg-warning"><i class="fas fa-exclamation-triangle text-white"></i></div>
+                                            {% else %}
+                                                <div class="icon-circle bg-primary"><i class="fas fa-shield-alt text-white"></i></div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="small text-gray-500">{{ n.getCreatedAt()|date('d M, H:i') }}</div>
+                                            <span class="font-weight-bold" style="white-space: pre-wrap;">{{ n.getMessage()|nl2br }}</span>
+                                        </div>
+                                    </a>
+                                {% else %}
+                                    <a class="dropdown-item text-center small text-gray-500" href="#">No new alerts</a>
+                                {% endfor %}
+                                
+                                <a class="dropdown-item text-center small text-gray-500" href="#">Show All Notifications</a>
+                            </div>
+                        </li>
+
+                        <div class="topbar-divider d-none d-sm-block"></div>
+
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                                    {% if app.user %}
+                                        {{ app.user.prenom }} {{ app.user.nom }}
+                                    {% else %}
+                                        Guest
+                                    {% endif %}
+                                </span>
+                                {% if app.user and app.user.userImage %}
+                                    <img class="img-profile rounded-circle" src="/uploads/users/selfies/{{ app.user.userImage }}" style="width:32px;height:32px;object-fit:cover;">
+                                {% else %}
+                                    <i class="fas fa-user-circle fa-2x text-gray-300"></i>
+                                {% endif %}
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="container-fluid">
+                    <h1 class="h3 mb-2 text-gray-800">Transactions</h1>
+                    <p class="mb-4">Full history of all system transactions with AI Fraud Monitoring.</p>
+
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Transactions Data Table</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <form id="filterForm" method="get" action="{{ path('app_admin_transactions') }}" class="form-inline bg-light p-3 rounded">
+                                        <div class="form-group mr-3">
+                                            <label for="user_name" class="mr-2">User Name:</label>
+                                            <input type="text" name="user_name" id="user_name" class="form-control" placeholder="Start typing name..." value="{{ app.request.query.get('user_name') }}" autocomplete="off">
+                                        </div>
+                                        <div class="form-group mr-3">
+                                            <label for="type" class="mr-2">Type:</label>
+                                            <select name="type" id="type" class="form-control">
+                                                <option value="">All Types</option>
+                                                <option value="TRANSFERT" {{ app.request.query.get('type') == 'TRANSFERT' ? 'selected' : '' }}>TRANSFERT</option>
+                                                <option value="RECHARGE" {{ app.request.query.get('type') == 'RECHARGE' ? 'selected' : '' }}>RECHARGE</option>
+                                                <option value="RETRAIT" {{ app.request.query.get('type') == 'RETRAIT' ? 'selected' : '' }}>RETRAIT</option>
+                                                <option value="ACHAT" {{ app.request.query.get('type') == 'ACHAT' ? 'selected' : '' }}>ACHAT</option>
+                                                <option value="VENTE" {{ app.request.query.get('type') == 'VENTE' ? 'selected' : '' }}>VENTE</option>
+                                                <option value="CONVERSION" {{ app.request.query.get('type') == 'CONVERSION' ? 'selected' : '' }}>CONVERSION</option>
+                                            </select>
+                                        </div>
+                                        <a href="{{ path('app_admin_transactions') }}" class="btn btn-secondary">Reset</a>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Sender (User)</th>
+                                            <th>Source (RIB / Card)</th>
+                                            <th>Destination RIB</th>
+                                            <th>Amount</th>
+                                            <th>Type</th>
+                                            <th>AI Status</th> 
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for t in transactions %}
+                                            <tr>
+                                                <td>
+                                                    {% if t.walletSource and t.walletSource.utilisateur %}
+                                                        {{ t.walletSource.utilisateur.prenom }} {{ t.walletSource.utilisateur.nom }}
+                                                    {% elseif t.creditCard and t.creditCard.utilisateur %}
+                                                        {{ t.creditCard.utilisateur.prenom }} {{ t.creditCard.utilisateur.nom }}
+                                                    {% else %}
+                                                        <span class="text-muted">Unknown</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if t.type|upper == 'RECHARGE' and t.creditCard %}
+                                                        <i class="fas fa-credit-card"></i> **** {{ t.creditCard.last4Digits }}
+                                                    {% else %}
+                                                        {{ t.walletSource ? t.walletSource.rib : 'N/A' }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ t.walletDestination ? t.walletDestination.rib : 'N/A' }}</td>
+                                                <td>
+                                                    <strong>{{ t.montant|number_format(2, '.', ',') }}</strong> 
+                                                    <small>{{ t.currency ? t.currency.code : '' }}</small>
+                                                </td>
+                                                <td>
+                                                    {% set badgeColor = 'secondary' %}
+                                                    {% if t.type|upper == 'RECHARGE' %}{% set badgeColor = 'success' %}
+                                                    {% elseif t.type|upper == 'TRANSFERT' %}{% set badgeColor = 'primary' %}
+                                                    {% elseif t.type|upper == 'RETRAIT' %}{% set badgeColor = 'danger' %}
+                                                    {% elseif t.type|upper == 'ACHAT' %}{% set badgeColor = 'info' %}
+                                                    {% elseif t.type|upper == 'VENTE' %}{% set badgeColor = 'dark' %}
+                                                    {% elseif t.type|upper == 'CONVERSION' %}{% set badgeColor = 'warning' %}{% endif %}
+                                                    <span class="badge badge-{{ badgeColor }} text-uppercase">{{ t.type }}</span>
+                                                </td>
+                                                <td>
+                                                    {% if t.aiPrediction is defined %}
+                                                        {% if t.aiPrediction.is_fraud %}
+                                                            <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> FRAUD ({{ t.aiPrediction.score }}%)</span>
+                                                        {% else %}
+                                                            <span class="badge badge-success"><i class="fas fa-check-circle"></i> Secure ({{ t.aiPrediction.score }}%)</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="text-muted small">N/A</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ t.dateTransaction ? t.dateTransaction|date('M d, Y H:i') : 'N/A' }}</td>
+                                            </tr>
+                                        {% else %}
+                                            <tr><td colspan="7" class="text-center">No transactions found.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; ChampionsPi {{ "now"|date("Y") }}</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="/js/sb-admin-2.min.js"></script>
+
+    <script>
+    $(document).ready(function() {
+        {% for message in app.flashes('fraud_report') %}
+            const fraudData = {{ message|raw }};
+            let reportHtml = '<div style="text-align:left;">';
+            
+            fraudData.forEach(item => {
+                reportHtml += `
+                    <div class="mb-3 p-2 border-bottom">
+                        <i class="fas fa-user text-primary"></i> <strong>${item.userName}</strong><br>
+                        <i class="fas fa-percentage text-danger"></i> Risque: <span class="badge badge-danger">${item.highestProbability}%</span><br>
+                        <i class="fas fa-info-circle text-warning"></i> <strong>Motif:</strong> <span class="text-muted">${item.reason}</span>
+                    </div>`;
+            });
+            reportHtml += '</div>';
+
+            Swal.fire({
+                title: 'AI Fraud Analysis Report',
+                icon: 'warning',
+                html: reportHtml,
+                confirmButtonText: 'Understood',
+                confirmButtonColor: '#4e73df',
+                width: '600px'
+            });
+        {% endfor %}
+
+        function filterTransactions() {
+            const userName = $('#user_name').val();
+            const type = $('#type').val();
+            const url = "{{ path('app_admin_transactions') }}";
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: { user_name: userName, type: type },
+                success: function(response) {
+                    const newTableBody = $(response).find('#dataTable tbody').html();
+                    $('#dataTable tbody').html(newTableBody);
+                },
+                error: function() { console.error("Erreur filtrage."); }
+            });
+        }
+        $('#user_name').on('keyup', filterTransactions);
+        $('#type').on('change', filterTransactions);
+    });
+    </script>
+</body>
+</html>

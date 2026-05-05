@@ -16,6 +16,42 @@ class CreditRepository extends ServiceEntityRepository
         parent::__construct($registry, Credit::class);
     }
 
+    /**
+ * @return Credit[]
+ */
+   public function findByAdvancedFilters(?string $term, ?string $status, ?float $minAmount, string $sortBy = 'date_desc')
+{
+    $qb = $this->createQueryBuilder('c')->leftJoin('c.projet', 'p');
+    
+    if ($term) {
+        $qb->andWhere('p.title LIKE :t OR c.devise LIKE :t')->setParameter('t', '%'.$term.'%');
+    }
+    if ($status) {
+        $qb->andWhere('c.status = :s')->setParameter('s', $status);
+    }
+    if ($minAmount) {
+        $qb->andWhere('c.montant >= :m')->setParameter('m', $minAmount);
+    }
+
+    // Gestion dynamique du tri
+    switch ($sortBy) {
+        case 'amount_asc':
+            $qb->orderBy('c.montant', 'ASC');
+            break;
+        case 'amount_desc':
+            $qb->orderBy('c.montant', 'DESC');
+            break;
+        case 'date_asc':
+            $qb->orderBy('c.id_credit', 'ASC');
+            break;
+        case 'date_desc':
+        default:
+            $qb->orderBy('c.id_credit', 'DESC');
+            break;
+    }
+
+    return $qb->getQuery()->getResult();
+}
 //    /**
 //     * @return Credit[] Returns an array of Credit objects
 //     */

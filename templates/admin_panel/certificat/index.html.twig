@@ -1,0 +1,130 @@
+{% extends 'back_base.html.twig' %}
+
+{% block title %}Certificats{% endblock %}
+
+{% block body_back %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800">Certificats</h1>
+            <p class="text-muted mb-0">Gestion et suivi des certifications émises.</p>
+        </div>
+        <a class="btn btn-primary shadow-sm" href="{{ path('app_admin_certificat_new') }}">
+            <i class="fas fa-plus fa-sm text-white-50 mr-1"></i> Créer un certificat
+        </a>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="search" class="form-label">Recherche</label>
+                    <input id="search" name="q" type="search" value="{{ search ?? '' }}" class="form-control" placeholder="Mention, Titre formation, Email...">
+                </div>
+                <div class="col-md-4">
+                    <label for="sort" class="form-label">Trier par</label>
+                    <select id="sort" name="sort" class="form-control">
+                        <option value="date_desc" {{ (sort ?? 'date_desc') == 'date_desc' ? 'selected' : '' }}>Plus récents d'abord</option>
+                        <option value="date_asc" {{ (sort ?? '') == 'date_asc' ? 'selected' : '' }}>Plus anciens d'abord</option>
+                    </select>
+                </div>
+                <div class="col-md-3 text-right">
+                    <button type="submit" class="btn btn-outline-primary w-100" style="margin-top: 32px;">
+                        <i class="fas fa-filter fa-sm mr-1"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Certificats Table Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Liste des Certificats</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light text-gray-700">
+                        <tr>
+                            <th class="pl-4"># ID</th>
+                            <th>Participation</th>
+                            <th>Date d'émission</th>
+                            <th>Mention</th>
+                            <th>Fichier</th>
+                            <th class="text-center pr-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for certificat in certificats %}
+                            <tr>
+                                <td class="pl-4">
+                                    <span class="badge badge-light border font-weight-bold">{{ certificat.idCertificat }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-2">
+                                            <i class="fas fa-user-graduate text-gray-400 fa-lg"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold text-gray-800" style="font-size: 0.9rem;">
+                                                {{ certificat.participation and certificat.participation.utilisateur and certificat.participation.utilisateur.email ? certificat.participation.utilisateur.email : 'Utilisateur inconnu' }}
+                                            </div>
+                                            <div class="small text-muted">
+                                                <i class="fas fa-book mr-1" style="font-size: 0.7rem;"></i> {{ certificat.participation and certificat.participation.formation ? certificat.participation.formation.titre : 'Formation Inconnue' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <i class="far fa-calendar-alt mr-1 text-gray-400"></i>
+                                    {{ certificat.dateEmission ? certificat.dateEmission|date('d/m/Y') : '-' }}
+                                </td>
+                                <td>
+                                    <span class="font-weight-bold text-primary">{{ certificat.mention ?: '-' }}</span>
+                                </td>
+                                <td>
+                                    {% if certificat.urlFichier %}
+                                        <a href="{{ certificat.urlFichier }}" target="_blank" class="text-primary font-weight-bold">
+                                            <i class="fas fa-file-pdf mr-1"></i> Consulter
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted small">Aucun fichier</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center pr-4">
+                                    <div class="btn-group shadow-sm">
+                                        <a class="btn btn-sm btn-white border" href="{{ path('app_admin_certificat_show', { id: certificat.idCertificat }) }}" title="Voir">
+                                            <i class="fas fa-eye text-primary"></i>
+                                        </a>
+                                        <a class="btn btn-sm btn-white border" href="{{ path('app_admin_certificat_edit', { id: certificat.idCertificat }) }}" title="Modifier">
+                                            <i class="fas fa-edit text-info"></i>
+                                        </a>
+                                        <form method="post" action="{{ path('app_admin_certificat_delete', { id: certificat.idCertificat }) }}" class="d-inline" onsubmit="return confirm('Voulez-vous vraiment supprimer ce certificat ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete-certificat' ~ certificat.idCertificat) }}">
+                                            <button class="btn btn-sm btn-white border" title="Supprimer">
+                                                <i class="fas fa-trash text-danger"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-gray-500">
+                                    <i class="fas fa-folder-open d-block mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
+                                    Aucun certificat disponible pour le moment.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

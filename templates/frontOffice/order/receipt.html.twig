@@ -1,0 +1,108 @@
+{% extends 'frontOffice/front_base.html.twig' %}
+
+{% block title %}Reçu #ORD-{{ order.id }} — Fintech Marketplace{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center mb-4">
+    <div class="col-lg-8">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 no-print">
+            <a href="{{ path('app_order_index') }}" class="btn btn-white border rounded-pill px-4 font-weight-bold shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i> Mes commandes
+            </a>
+            <a href="{{ path('app_order_receipt_download', { id: order.id }) }}" class="btn btn-primary rounded-pill px-4 fw-black shadow-lg">
+                <i class="fas fa-print me-2"></i> Imprimer le reçu
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white receipt-print-area" id="receipt-content">
+            <div class="card border-0">
+                <div class="p-4 p-md-5 border-bottom bg-light-soft">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                        <div>
+                            <p class="text-uppercase text-muted text-xs mb-1 letter-spacing-1">Reçu de commande</p>
+                            <h1 class="h3 fw-black text-gray-900 mb-0">#ORD-{{ order.id }}</h1>
+                            <p class="text-muted small mb-0 mt-2">{{ order.orderDate|date('d/m/Y') }} à {{ order.orderDate|date('H:i') }}</p>
+                        </div>
+                        <div class="text-md-end">
+                            <span class="badge rounded-pill px-3 py-2 bg-primary text-white fw-black">BTC</span>
+                            <p class="small text-muted mb-0 mt-2">Paiement : {{ order.paymentMethod|default('BTC') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <table class="table mb-4">
+                        <thead>
+                            <tr class="text-uppercase text-muted x-small">
+                                <th class="border-0">Article</th>
+                                <th class="border-0 text-center">Qté</th>
+                                <th class="border-0 text-end">Prix unit.</th>
+                                <th class="border-0 text-end">Sous-total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.orderItems %}
+                                <tr>
+                                    <td class="py-3 fw-bold">{{ item.product ? item.product.name : 'Produit' }}</td>
+                                    <td class="text-center text-muted">{{ item.quantity }}</td>
+                                    <td class="text-end text-muted">{{ item.unitPrice }} BTC</td>
+                                    <td class="text-end fw-black">{{ item.subTotal }} BTC</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <div class="text-muted small">
+                            <strong>Livraison</strong><br>
+                            {{ order.shippingAddress }}<br>
+                            <span class="text-xs">Tél. {{ order.phoneNumber }}</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted small font-weight-bold text-uppercase d-block">Total</span>
+                            <span class="h3 fw-black text-primary mb-0">{{ order.totalAmount }} BTC</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-top d-flex flex-column align-items-center">
+                        <p class="text-muted small mb-2">Scan QR pour verifier ce recu</p>
+                        <img id="receipt-qr"
+                             alt="QR code du recu"
+                             width="160"
+                             height="160"
+                             class="border rounded p-2 bg-white shadow-sm"
+                        >
+                        <small class="text-muted mt-2">Ref: ORD-{{ order.id }}</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 p-4 pt-0 text-center text-muted small no-print">
+                    Merci pour votre achat — Fintech Marketplace
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-black { font-weight: 800; }
+    .text-gray-900 { color: #0f172a; }
+    .bg-light-soft { background-color: #f8fafc; }
+    .x-small { font-size: 0.72rem; }
+    .letter-spacing-1 { letter-spacing: 0.05rem; }
+    .text-xs { font-size: 0.75rem; }
+    .btn-white { background: white; color: #475569; }
+    @media print {
+        .no-print, .navbar, footer, .site-header { display: none !important; }
+        body { background: white !important; }
+        .receipt-print-area { box-shadow: none !important; }
+    }
+</style>
+<script>
+    (function() {
+        var qr = document.getElementById('receipt-qr');
+        if (!qr) return;
+
+        var receiptUrl = '{{ absolute_url(path("app_order_receipt", { id: order.id })) }}';
+
+        // No backend bundle: use a public QR image endpoint.
+        qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(receiptUrl);
+    })();
+</script>
+{% endblock %}

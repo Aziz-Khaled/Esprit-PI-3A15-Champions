@@ -1,0 +1,470 @@
+{% extends 'back_base.html.twig' %}
+
+{% block title %}Dashboard - SB Admin 2{% endblock %}
+
+{% block body_back %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+    #shippingMap { height: 400px; border-radius: 15px; }
+    #calendar-holder { min-height: 650px; }
+    .map-card { border-radius: 1.5rem; overflow: hidden; }
+</style>
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
+        </a>
+    </div>
+
+
+
+
+    {# ===================== ADVANCED ANALYTICS ===================== #}
+    <style>
+        .stat-card-adv { border-radius:1rem; border:none; transition:transform .2s,box-shadow .2s; }
+        .stat-card-adv:hover { transform:translateY(-4px); box-shadow:0 8px 30px rgba(0,0,0,.12)!important; }
+        .chart-section-title { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
+        .badge-status { padding:.35em .75em; border-radius:2rem; font-size:.75rem; }
+        .tbl-top td, .tbl-top th { vertical-align:middle; font-size:.85rem; }
+        .stock-bar { height:8px; border-radius:4px; }
+        .growth-up   { color:#1cc88a; }
+        .growth-down { color:#e74a3b; }
+    </style>
+
+    {# --- Revenue KPI Cards --- #}
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card-adv shadow h-100 py-2 border-left-primary">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Revenu ce mois</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ revenueThisMonth|number_format(4,'.',',') }} BTC</div>
+                    <div class="mt-1 small {% if revenueGrowth >= 0 %}growth-up{% else %}growth-down{% endif %}">
+                        <i class="fas fa-{% if revenueGrowth >= 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                        {{ revenueGrowth }}% vs mois dernier
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card-adv shadow h-100 py-2 border-left-success">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Revenu mois dernier</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ revenueLastMonth|number_format(4,'.',',') }} BTC</div>
+                    <div class="mt-1 small text-muted">Période précédente</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card-adv shadow h-100 py-2 border-left-info">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Panier moyen</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ avgOrderValue|number_format(4,'.',',') }} BTC</div>
+                    <div class="mt-1 small text-muted">Par commande</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card-adv shadow h-100 py-2 border-left-warning">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Valeur du stock</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalStockValue|number_format(2,'.',',') }} BTC</div>
+                    <div class="mt-1 small text-muted">{{ newProductsMonth }} nouveaux ce mois</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    {# --- Innovative Row: Smart Insights + Goal Gauge --- #}
+    <div class="row mb-4">
+        <!-- Répartition par Catégorie -->
+        <div class="col-xl-7 mb-4">
+            <div class="card shadow h-100 border-bottom-primary">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+                    <h6 class="m-0 font-weight-bold text-primary chart-section-title">
+                        <i class="fas fa-chart-pie mr-1"></i> Répartition par Catégorie
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div style="position:relative;height:260px;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Goal Gauge -->
+        <div class="col-xl-5 mb-4">
+            <div class="card shadow h-100 border-bottom-success">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+                    <h6 class="m-0 font-weight-bold text-success chart-section-title">
+                        <i class="fas fa-bullseye mr-1"></i> Objectif de Ventes Mensuel
+                    </h6>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+                    <div style="position:relative;height:160px;width:100%;max-width:300px;margin-bottom:-30px;">
+                        <canvas id="goalGaugeChart"></canvas>
+                        <div style="position:absolute;top:70%;left:50%;transform:translate(-50%, -50%);">
+                            <h3 class="font-weight-bold text-gray-800 mb-0">{{ totalRevenue|number_format(2,'.','') }} <span class="small">BTC</span></h3>
+                            <span class="small text-muted">Atteint</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 w-100 px-4">
+                        <div class="d-flex justify-content-between small font-weight-bold text-muted mb-1">
+                            <span>0 BTC</span>
+                            <span>Objectif: 30 BTC</span>
+                        </div>
+                        <p class="small text-muted mt-2">Vous êtes sur la bonne voie. Plus de promotions pourraient booster vos ventes !</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- Product Health Row --- #}
+    <div class="row mb-4">
+        {# Stock breakdown donut #}
+        <div class="col-xl-3 col-lg-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary chart-section-title">
+                        <i class="fas fa-boxes mr-1"></i> État du Stock
+                    </h6>
+                </div>
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <div style="position:relative;height:180px;width:180px;">
+                        <canvas id="stockStatusChart"></canvas>
+                    </div>
+                    <div class="mt-3 small text-center">
+                        <span class="mr-2"><i class="fas fa-circle text-success"></i> En stock ({{ stockBreakdown.in_stock ?? 0 }})</span>
+                        <span class="mr-2"><i class="fas fa-circle text-warning"></i> Faible ({{ stockBreakdown.low_stock ?? 0 }})</span>
+                        <span><i class="fas fa-circle text-danger"></i> Épuisé ({{ stockBreakdown.out_of_stock ?? 0 }})</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Top rated products table #}
+        <div class="col-xl-5 col-lg-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary chart-section-title">
+                        <i class="fas fa-star mr-1"></i> Produits Mieux Notés
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-hover mb-0 tbl-top">
+                        <thead class="thead-light">
+                            <tr><th>Produit</th><th>Catégorie</th><th>Note</th><th>Prix</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for p in topRatedProducts %}
+                            <tr>
+                                <td class="font-weight-bold">{{ p.name }}</td>
+                                <td><span class="badge badge-light">{{ p.category }}</span></td>
+                                <td>
+                                    <span class="text-warning">
+                                        {% for i in 1..5 %}
+                                            <i class="fas fa-star{% if i > p.avgRating %}-half-alt{% endif %}" style="font-size:.7rem"></i>
+                                        {% endfor %}
+                                    </span>
+                                    <small class="text-muted">({{ p.avgRating|number_format(1) }})</small>
+                                </td>
+                                <td>{{ p.price|number_format(2) }} BTC</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-3">Aucune évaluation</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {# Low stock alert table #}
+        <div class="col-xl-4 col-lg-4 mb-4">
+            <div class="card shadow h-100 border-left-danger">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger chart-section-title">
+                        <i class="fas fa-exclamation-triangle mr-1"></i> Alerte Stock Faible
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-hover mb-0 tbl-top">
+                        <thead class="thead-light">
+                            <tr><th>Produit</th><th>Stock</th><th>Prix</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for p in lowStockProducts %}
+                            <tr>
+                                <td class="font-weight-bold">{{ p.name }}</td>
+                                <td>
+                                    <span class="badge badge-{% if p.stock <= 3 %}danger{% else %}warning{% endif %}">
+                                        {{ p.stock }} restant{{ p.stock > 1 ? 's' : '' }}
+                                    </span>
+                                </td>
+                                <td>{{ p.price|number_format(2) }} BTC</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-center text-success py-3"><i class="fas fa-check-circle mr-1"></i>Stocks OK</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ===================== MAP ROW ===================== #}
+    <!-- Map Row -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 map-card">
+                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between border-bottom border-light">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-map-marked-alt mr-2"></i> Distribution des Commandes par Zone
+                    </h6>
+                    <span class="badge badge-primary-soft text-primary px-3 py-1 rounded-pill">Visualisation Live</span>
+                </div>
+                <div class="card-body p-0">
+                    <div id="shippingMap"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 map-card">
+                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between border-bottom border-light">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-calendar-alt mr-2"></i> Produits et Commandes - Calendrier
+                    </h6>
+                    <div class="small text-muted">
+                        <span class="badge badge-success mr-2">Products</span>
+                        <span class="badge badge-primary">Orders</span>
+                    </div>
+                </div>
+                <div class="card-body bg-white">
+                    <div id="calendar-holder"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="/vendor/chart.js/Chart.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set new default font family and font color to mimic Bootstrap's default styling
+            Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+            Chart.defaults.global.defaultFontColor = '#858796';
+
+
+            // Leaflet Map Initialization
+            var shippingStats = {{ shippingStats|raw }};
+            const cityCoords = {
+                // Grand Tunis
+                "Tunis":      [36.8065, 10.1815],
+                "Ariana":     [36.8665, 10.1647],
+                "Ben Arous":  [36.7533, 10.2289],
+                "Manouba":    [36.8100, 10.0986],
+                // Nord-Est
+                "Nabeul":     [36.4561, 10.7376],
+                "Hammamet":   [36.4000, 10.6167],
+                "Zaghouan":   [36.4029, 10.1429],
+                "Bizerte":    [37.2744,  9.8739],
+                // Nord-Ouest
+                "Beja":       [36.7256,  9.1817],
+                "Béja":       [36.7256,  9.1817],
+                "Jendouba":   [36.5011,  8.7803],
+                "Le Kef":     [36.1740,  8.7048],
+                "Kef":        [36.1740,  8.7048],
+                "Siliana":    [36.0847,  9.3708],
+                // Centre-Est
+                "Sousse":     [35.8256, 10.6369],
+                "Souse":      [35.8256, 10.6369],
+                "Monastir":   [35.7643, 10.8113],
+                "Mahdia":     [35.5047, 11.0622],
+                // Centre-Ouest
+                "Kairouan":   [35.6781, 10.0963],
+                "Kasserine":  [35.1676,  8.8365],
+                "Sidi Bouzid":[35.0382,  9.4849],
+                // Sud-Est
+                "Sfax":       [34.7406, 10.7603],
+                "Gabes":      [33.8815, 10.0982],
+                "Gabès":      [33.8815, 10.0982],
+                "Medenine":   [33.3549, 10.5055],
+                "Médenine":   [33.3549, 10.5055],
+                "Tataouine":  [32.9211, 10.4511],
+                // Sud-Ouest
+                "Gafsa":      [34.4250,  8.7842],
+                "Tozeur":     [33.9197,  8.1335],
+                "Kebili":     [33.7046,  8.9694],
+                "Kébili":     [33.7046,  8.9694]
+            };
+
+            var mapContainer = document.getElementById('shippingMap');
+            if (mapContainer) {
+                var map = L.map('shippingMap').setView([36.0, 10.1815], 7);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+
+                shippingStats.forEach(function(stat) {
+                    var address = stat.shippingAddress;
+                    var count = stat.count;
+                    var coords = [36.8065, 10.1815];
+                   
+                    for (let city in cityCoords) {
+                        if (address.toLowerCase().includes(city.toLowerCase())) {
+                            coords = cityCoords[city];
+                            break;
+                        }
+                    }
+
+                    var lat = coords[0] + (Math.random() - 0.5) * 0.1;
+                    var lng = coords[1] + (Math.random() - 0.5) * 0.1;
+
+                    L.circle([lat, lng], {
+                        color: '#4e73df',
+                        fillColor: '#4e73df',
+                        fillOpacity: 0.5,
+                        radius: 2000 + (count * 1000)
+                    }).addTo(map)
+                    .bindPopup("<b>" + address + "</b><br>Commandes: " + count);
+                });
+
+                // Fix for Leaflet grey tiles / size issue in some browsers
+                setTimeout(function(){ map.invalidateSize(); }, 500);
+            }
+
+            var calendarEl = document.getElementById('calendar-holder');
+            if (calendarEl) {
+                var calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    height: 650,
+                    headerToolbar: {
+                        start: 'prev,next today',
+                        center: 'title',
+                        end: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    },
+                    eventSources: [{
+                        url: '/fc-load-events',
+                        method: 'POST',
+                        extraParams: {
+                            filters: JSON.stringify({ source: 'admin-dashboard' })
+                        },
+                        failure: function() {
+                            console.error('Calendar events load failed');
+                        }
+                    }],
+                    eventTimeFormat: {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    }
+                });
+
+                calendar.render();
+            }
+
+            // ========== ADVANCED CHARTS ==========
+            var statusColors  = ['#4e73df','#1cc88a','#36b9cc','#f6c23e','#e74a3b','#858796'];
+
+            // Category Doughnut Chart
+            var catDist = {{ categoryDist|raw }};
+            var ctxCat = document.getElementById('categoryChart');
+            if (ctxCat && catDist.length) {
+                new Chart(ctxCat, {
+                    type: 'doughnut',
+                    data: {
+                        labels: catDist.map(d => d.category ? d.category : 'Autre'),
+                        datasets: [{
+                            data: catDist.map(d => d.count),
+                            backgroundColor: statusColors,
+                            hoverBorderColor: 'rgba(234,236,244,1)'
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        cutoutPercentage: 60,
+                        legend: { position: 'right' },
+                        tooltips: { backgroundColor:'#fff', bodyFontColor:'#858796', borderColor:'#dddfeb', borderWidth:1, xPadding:15, yPadding:15 }
+                    }
+                });
+            }
+            // Goal Gauge Chart (Half-Doughnut)
+            var currentRevenue = parseFloat("{{ totalRevenue|number_format(2,'.','') }}");
+            var targetRevenue = 30.0; // Objectif fictif de 30 BTC
+            var percentComplete = currentRevenue / targetRevenue;
+            if (percentComplete > 1) percentComplete = 1;
+           
+            var ctxGoal = document.getElementById('goalGaugeChart');
+            if (ctxGoal) {
+                new Chart(ctxGoal, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Réalisé', 'Restant'],
+                        datasets: [{
+                            data: [currentRevenue, targetRevenue - currentRevenue > 0 ? targetRevenue - currentRevenue : 0],
+                            backgroundColor: ['#1cc88a', '#eaecf4'],
+                            hoverBackgroundColor: ['#17a673', '#eaecf4'],
+                            borderWidth: 0,
+                            hoverBorderWidth: 0
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        circumference: Math.PI,
+                        rotation: -Math.PI,
+                        cutoutPercentage: 85,
+                        legend: { display: false },
+                        tooltips: {
+                            backgroundColor: '#fff',
+                            bodyFontColor: '#858796',
+                            borderColor: '#dddfeb',
+                            borderWidth: 1,
+                            xPadding: 15,
+                            yPadding: 15,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(tooltipItem, data) {
+                                    return data.labels[tooltipItem.index] + ': ' + data.datasets[0].data[tooltipItem.index].toFixed(2) + ' BTC';
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 5. Stock Status Doughnut
+            var stockBreakdown = {
+                in_stock:    {{ stockBreakdown.in_stock    ?? 0 }},
+                low_stock:   {{ stockBreakdown.low_stock   ?? 0 }},
+                out_of_stock:{{ stockBreakdown.out_of_stock ?? 0 }}
+            };
+            var ctxStock = document.getElementById('stockStatusChart');
+            if (ctxStock) {
+                new Chart(ctxStock, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['En stock','Stock faible','Épuisé'],
+                        datasets: [{ data: [stockBreakdown.in_stock, stockBreakdown.low_stock, stockBreakdown.out_of_stock],
+                            backgroundColor:['#1cc88a','#f6c23e','#e74a3b'], hoverBorderColor:'rgba(234,236,244,1)' }]
+                    },
+                    options: { maintainAspectRatio:false, cutoutPercentage:70, legend:{display:false},
+                        tooltips:{ backgroundColor:'#fff', bodyFontColor:'#858796', borderColor:'#dddfeb', borderWidth:1, xPadding:15, yPadding:15, displayColors:false } }
+                });
+            }
+        });
+    </script>
+{% endblock %}

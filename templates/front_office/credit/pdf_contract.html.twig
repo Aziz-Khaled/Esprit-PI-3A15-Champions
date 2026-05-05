@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.6; padding: 20px; }
+        .header { text-align: center; border-bottom: 2px solid #8353E2; padding-bottom: 20px; margin-bottom: 30px; }
+        .contract-title { color: #8353E2; text-transform: uppercase; margin-bottom: 5px; }
+        .section { margin: 25px 0; padding: 15px; border-left: 3px solid #eee; }
+        .label { font-weight: bold; color: #555; display: inline-block; width: 120px; }
+        .footer { margin-top: 50px; padding-top: 20px; border-top: 1px dashed #ccc; font-size: 10px; color: #777; }
+        .signature-box { margin-top: 40px; width: 100%; display: block; overflow: hidden; }
+        .signature { width: 45%; border: 1px solid #e0e0e0; padding: 15px; border-radius: 5px; background: #fafafa; float: left; margin-right: 2%; min-height: 120px; }
+        .hash-code { font-family: monospace; background: #f4f4f4; word-break: break-all; font-size: 8px; padding: 5px; margin-top: 10px; border: 1px solid #ddd; }
+        .btn-sign { 
+            background-color: #28a745; color: white; padding: 12px 25px; 
+            border: none; border-radius: 5px; cursor: pointer; font-size: 16px; 
+            text-decoration: none; display: inline-block; margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .btn-sign:hover { background-color: #218838; }
+        .preview-banner { background: #fff3cd; color: #856404; padding: 10px; text-align: center; border: 1px solid #ffeeba; margin-bottom: 20px; }
+        .clear { clear: both; }
+    </style>
+</head>
+<body>
+
+    {% if is_preview %}
+        <div class="preview-banner">
+            <strong>Mode Prévisualisation :</strong> Veuillez vérifier les informations avant de signer numériquement.
+        </div>
+    {% endif %}
+
+    <div class="header">
+        <h1 class="contract-title">Contrat de Financement Numérique</h1>
+        {# On affiche l'ID de contrat s'il existe, sinon on affiche une mention temporaire #}
+        <p>Référence : <strong>{{ credit.contratId ? credit.contratId|slice(0, 20) : 'EN ATTENTE DE SIGNATURE' }}</strong></p>
+    </div>
+
+    <div class="section">
+        <h3>1. Parties Contractantes</h3>
+        <p>
+            <span class="label">L'Emprunteur :</span> 
+            <strong>{{ credit.borrower.prenom|upper }} {{ credit.borrower.nom|upper }}</strong>
+        </p>
+        <p>
+            <span class="label">L'Investisseur :</span> 
+            <strong>{{ credit.investisseur ? (credit.investisseur.prenom|upper ~ ' ' ~ credit.investisseur.nom|upper) : 'Non assigné' }}</strong>
+        </p>
+    </div>
+
+    <div class="section">
+        <h3>2. Détails de l'Engagement</h3>
+        <p><span class="label">Montant :</span> {{ credit.montant|number_format(2, ',', ' ') }} {{ credit.devise|default('TND') }}</p>
+        <p><span class="label">Taux d'intérêt :</span> {{ credit.taux }}% annuel</p>
+        <p><span class="label">Durée :</span> {{ credit.duree }} mois</p>
+    </div>
+
+    <div class="signature-box">
+        {# Signature Emprunteur #}
+        <div class="signature">
+            <p class="label" style="width: 100%;">Signature de l'Emprunteur</p>
+            <p>Fait à Tunis, le {{ date|date('d/m/Y H:i') }}</p>
+            <div class="hash-code">
+                CERT-CLIENT-{{ final_hash|default('PENDING')|slice(0, 32) }}
+            </div>
+        </div>
+
+        {# Signature Investisseur #}
+        <div class="signature">
+            <p class="label" style="width: 100%;">Signature de l'Investisseur</p>
+            <p>Approuvé électroniquement</p>
+            <div class="hash-code" style="color: green;">
+                SECURE-V-{{ credit.investisseur ? credit.investisseur.idUser : '0' }}-SIGNED
+            </div>
+        </div>
+    </div>
+    <div class="clear"></div>
+
+    {% if is_preview %}
+        <div style="text-align: center; margin-top: 30px;">
+            {# Assure-toi que idCredit est bien le nom de ton champ ID dans l'entité Credit #}
+            <form action="{{ path('app_front_client_sign_finish', {'id': credit.idCredit}) }}" method="POST">
+                <button type="submit" class="btn-sign">
+                    ⚡ Confirmer et Signer le Contrat
+                </button>
+            </form>
+        </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>Ce document est généré électroniquement par <strong>ChampionsFinance IT Services</strong>.</p>
+        <p>L'empreinte numérique (Hash) garantit l'intégrité du contenu. Empreinte technique complète :</p>
+        <div style="font-size: 8px; color: #999; word-break: break-all;">{{ final_hash }}</div>
+    </div>
+
+</body>
+</html>

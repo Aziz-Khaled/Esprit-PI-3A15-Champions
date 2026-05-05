@@ -3,3 +3,11 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+
+connect_auth0_start:
+    path: /connect/google
+    controller: App\Controller\frontOffice\Auth0Controller::connect
+
+connect_auth0_check:
+    path: /connect/google/check
+    controller: App\Controller\frontOffice\Auth0Controller::connectCheck

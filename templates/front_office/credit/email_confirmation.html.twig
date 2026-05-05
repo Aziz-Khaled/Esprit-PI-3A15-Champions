@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+        <h2 style="color: #8353E2;">Félicitations {{ credit.borrower.prenom }} !</h2>
+        
+        <p>Nous avons le plaisir de vous confirmer que votre contrat de financement pour le projet <strong>"{{ credit.titreProjet }}"</strong> est désormais actif et scellé.</p>
+        
+        <p>Vous trouverez en pièces jointes de cet e-mail :</p>
+        <ul>
+            <li><strong>Votre Contrat :</strong> Signé numériquement par les deux parties.</li>
+            <li><strong>Votre Échéancier :</strong> Le détail de vos futurs remboursements.</li>
+        </ul>
+
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Récapitulatif :</strong></p>
+            <p style="margin: 5px 0;">Montant : {{ credit.montant|number_format(2, ',', ' ') }} {{ credit.devise }}</p>
+            <p style="margin: 5px 0;">Durée : {{ credit.duree }} mois</p>
+        </div>
+
+        <p>Toute l'équipe <strong>ChampionsFinance</strong> vous remercie de votre confiance.</p>
+        
+        <hr style="border: 0; border-top: 1px solid #eee;">
+        <p style="font-size: 11px; color: #888;">Ceci est un message automatique, merci de ne pas y répondre.</p>
+    </div>
+</body>
+</html>

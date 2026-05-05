@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>ChampionsPi - Currencies</title>
+
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+
+    <div id="wrapper">
+        {# Sidebar #}
+       
+        <!-- Sidebar -->
+ <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ path('app_admin_panel') }}">
+                <div class="sidebar-brand-text mx-3">NexVault Admin panel</div>
+            </a>
+
+            <hr class="sidebar-divider my-0">
+
+            <!-- Dashboard -->
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ path('app_admin_panel') }}">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">User Management</div>
+
+            <!-- Pending Approvals -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_pending_users') }}">
+                    <i class="fas fa-fw fa-user-clock"></i>
+                    <span>Pending Approvals</span>
+                </a>
+            </li>
+
+            <!-- All Users -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_users_list') }}">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Users</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Trading</div>
+
+            <!-- Assets -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_backoffice_asset_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Assets</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Interface</div>
+
+            <!-- Assets -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_back_product_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Produits</span>
+                </a>
+            </li>
+
+             <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_back_order_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Commandes</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Billing</div>
+                
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_transactions') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>transactions</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_currency_index') }}">
+                    <i class="fas fa-fw fa-coins"></i>
+                    <span>Currencies</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Formations</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_formation_index') }}">
+                    <i class="fas fa-fw fa-graduation-cap"></i>
+                    <span>Formations</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_admin_certificat_index') }}">
+                    <i class="fas fa-fw fa-certificate"></i>
+                    <span>Certificats</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+            <!-- Logout -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_logout') }}">
+                    <i class="fas fa-fw fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+
+            
+
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Sidebar Toggler -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+
+        </ul>
+        <!-- End of Sidebar -->
+                </nav>
+
+                <div class="container-fluid">
+                    {# Flash Messages #}
+                    {% for label, messages in app.flashes %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ label == 'error' ? 'danger' : 'success' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Currencies Management</h1>
+                        <button class="btn btn-primary btn-icon-split" data-toggle="modal" data-target="#modalNew">
+                            <span class="icon text-white-50"><i class="fas fa-plus"></i></span>
+                            <span class="text">Add New Currency</span>
+                        </button>
+                    </div>
+
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">System Currencies</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th class="text-center">Trading</th>
+                                            <th class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for c in currencies %}
+                                            <tr>
+                                                <td class="font-weight-bold text-dark">{{ c.code }}</td>
+                                                <td>{{ c.nom }}</td>
+                                                <td>
+                                                    {# CORRECTION ICI : c.typeCurrency au lieu de c.type #}
+                                                    <span class="badge badge-{{ c.typeCurrency|lower == 'crypto' ? 'warning' : 'info' }}">
+                                                        {{ c.typeCurrency }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <i class="fas fa-{{ c.isTrading ? 'check-circle text-success' : 'times-circle text-danger' }}"></i>
+                                                </td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-info btn-circle" data-toggle="modal" data-target="#modalEdit{{ c.id }}">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+
+                                                    <form method="post" action="{{ path('app_admin_currency_delete', {'id': c.id}) }}" style="display:inline" onsubmit="return confirm('Delete this currency?');">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ c.id) }}">
+                                                        <button class="btn btn-sm btn-danger btn-circle"><i class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+
+                                            {# MODAL EDIT #}
+                                            <div class="modal fade" id="modalEdit{{ c.id }}" tabindex="-1" role="dialog">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <form action="{{ path('app_admin_currency_edit', {'id': c.id}) }}" method="POST">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Edit Trading Status: {{ c.code }}</h5>
+                                                                <button class="close" data-dismiss="modal">&times;</button>
+                                                            </div>
+                                                            <div class="modal-body text-center">
+                                                                <p>Enable trading for this currency?</p>
+                                                                <div class="custom-control custom-switch">
+                                                                    <input type="checkbox" name="is_trading" class="custom-control-input" id="sw{{ c.id }}" {{ c.isTrading ? 'checked' : '' }}>
+                                                                    <label class="custom-control-label" for="sw{{ c.id }}">Active</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="submit" class="btn btn-primary">Save</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <tr><td colspan="5" class="text-center">No data found.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto"><div class="copyright text-center my-auto"><span>Copyright &copy; ChampionsPi 2026</span></div></div>
+            </footer>
+        </div>
+    </div>
+
+    {# MODAL NEW CURRENCY #}
+    <div class="modal fade" id="modalNew" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                {{ form_start(form_new, {'action': path('app_admin_currency_new')}) }}
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Currency</h5>
+                    <button class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    {{ form_rest(form_new) }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+                {{ form_end(form_new) }}
+            </div>
+        </div>
+    </div>
+
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sb-admin-2.min.js"></script>
+</body>
+</html>

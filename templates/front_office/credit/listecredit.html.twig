@@ -1,0 +1,576 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Champions — My Credit Requests{% endblock %}
+
+{% block stylesheets %}
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:      #080d14;
+    --bg-card:      #0e1623;
+    --bg-card2:     #111b2b;
+    --border:       #1a2a40;
+    --border-glow:  rgba(0,229,255,.15);
+    --accent:       #00e5ff;
+    --accent2:      #00b4cc;
+    --accent-glow:  rgba(0,229,255,.18);
+    --gold:         #f0b429;
+    --gold-dim:     rgba(240,180,41,.10);
+    --green:        #00e676;
+    --green-dim:    rgba(0,230,118,.10);
+    --red:          #ff1744;
+    --red-dim:      rgba(255,23,68,.10);
+    --violet:       #8353E2;
+    --violet-light: #a77af5;
+    --text-1:       #f0f4ff;
+    --text-2:       #b0bdd0;
+    --text-3:       #5a7090;
+    --font-head:    'Syne', sans-serif;
+    --font-body:    'Space Grotesk', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+    --radius:       16px;
+    --navbar-h:     64px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-base);
+    color: var(--text-1);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.2); border-radius: 3px; }
+
+  .bg-grid {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+    background-size: 52px 52px;
+    animation: gridDrift 25s linear infinite;
+  }
+  @keyframes gridDrift { 0% { background-position: 0 0; } 100% { background-position: 52px 52px; } }
+
+  .bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .bg-orb-1 {
+    width: 600px; height: 600px; top: -200px; left: -150px;
+    background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%);
+    animation: orbFloat 10s ease-in-out infinite alternate;
+  }
+  .bg-orb-2 {
+    width: 440px; height: 440px; bottom: -160px; right: -100px;
+    background: radial-gradient(circle, rgba(240,180,41,.07) 0%, transparent 70%);
+    animation: orbFloat 14s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes orbFloat { from { transform: translate(0,0) scale(1); } to { transform: translate(28px,18px) scale(1.06); } }
+
+  .app-shell { display: flex; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── NAVBAR ── */
+  .topnav {
+    position: sticky; top: 0; z-index: 200; height: var(--navbar-h);
+    background: rgba(8,13,20,.97); border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    display: flex; align-items: center; padding: 0 32px; gap: 0; overflow: hidden;
+  }
+  .topnav::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+    opacity: 0.25;
+  }
+  .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; margin-right: 36px; }
+  .logo-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, #1de9b6, #00b4cc);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: #080d14; font-family: var(--font-head);
+    box-shadow: 0 0 16px rgba(0,229,255,.3); flex-shrink: 0;
+  }
+  .logo-text {
+    font-family: var(--font-head); font-size: 18px; font-weight: 700;
+    background: linear-gradient(90deg, var(--text-1), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .topnav-links { display: flex; align-items: center; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+  .topnav-links::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 14px; border-radius: 10px; text-decoration: none; color: var(--text-1);
+    font-size: 14px; font-weight: 500; transition: all .2s ease; position: relative;
+    white-space: nowrap; background: none; border: none; cursor: pointer;
+    font-family: var(--font-body); text-align: left; flex-shrink: 0;
+  }
+  .nav-btn i { font-size: 13px; flex-shrink: 0; }
+  .nav-btn:hover { color: var(--text-1); background: rgba(255,255,255,.05); }
+  .nav-btn.active { color: var(--accent); background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.15); }
+  .nav-btn.active i { color: var(--accent); }
+  .nav-btn .nav-badge {
+    padding: 1px 7px; border-radius: 20px; background: rgba(0,229,255,.12); color: var(--accent);
+    font-size: 10.5px; font-weight: 700; font-family: var(--font-mono); flex-shrink: 0;
+  }
+  .nav-btn.danger { color: var(--red); }
+  .nav-btn.danger:hover { background: rgba(255,23,68,.08); color: var(--red); }
+  .topnav-sep { width: 1px; height: 24px; background: var(--border); margin: 0 8px; flex-shrink: 0; }
+  .topnav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 16px; }
+  .user-card {
+    display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px;
+    background: rgba(255,255,255,.03); border: 1px solid var(--border); cursor: pointer; transition: border-color .2s;
+  }
+  .user-card:hover { border-color: rgba(0,229,255,.2); }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, rgba(0,229,255,.2), rgba(0,180,204,.2));
+    border: 1px solid rgba(0,229,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--accent); flex-shrink: 0;
+  }
+  .user-info { line-height: 1.25; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+  .user-role { font-size: 10.5px; color: var(--text-3); font-family: var(--font-mono); }
+
+  /* ── TICKER ── */
+  .ticker-wrap { width: 100%; background: rgba(8,13,20,.95); border-top: 1px solid var(--border); height: 38px; overflow: hidden; flex-shrink: 0; }
+  .ticker-track { display: flex; align-items: center; height: 100%; white-space: nowrap; animation: tickerScroll 35s linear infinite; width: max-content; }
+  .ticker-item { display: inline-flex; align-items: center; gap: 6px; padding: 0 28px; font-size: 13px; font-family: var(--font-mono); color: var(--text-2); border-right: 1px solid var(--border); }
+  .ticker-item .sym { color: var(--accent); font-weight: 600; }
+  .ticker-item .up { color: var(--green); }
+  .ticker-item .dn { color: var(--red); }
+  @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* ── MAIN CONTENT ── */
+  .main-content { flex: 1; padding: 36px 48px 60px; display: flex; flex-direction: column; gap: 28px; }
+
+  /* ── PAGE HEADER ── */
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .page-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .page-title { font-family: var(--font-head); font-size: 32px; font-weight: 800; line-height: 1.1; letter-spacing: -.02em; margin-bottom: 6px; }
+  .page-sub { font-size: 15px; color: var(--text-2); }
+
+  /* ── STATS ROW ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; position: relative; overflow: hidden; transition: border-color .25s, transform .2s; }
+  .stat-card:hover { border-color: rgba(0,229,255,.2); transform: translateY(-1px); }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: var(--radius) var(--radius) 0 0; }
+  .stat-card.cyan::before  { background: linear-gradient(90deg, var(--accent), transparent); }
+  .stat-card.gold::before  { background: linear-gradient(90deg, var(--gold), transparent); }
+  .stat-card.green::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .stat-card.violet::before { background: linear-gradient(90deg, var(--violet-light), transparent); }
+  .stat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 14px; }
+  .stat-icon.cyan   { background: rgba(0,229,255,.1);   color: var(--accent); }
+  .stat-icon.gold   { background: rgba(240,180,41,.1);  color: var(--gold); }
+  .stat-icon.green  { background: rgba(0,230,118,.1);   color: var(--green); }
+  .stat-icon.violet { background: rgba(131,83,226,.1);  color: var(--violet-light); }
+  .stat-label { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+  .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 700; color: var(--text-1); }
+
+  /* ── NEW REQUEST BUTTON ── */
+  .btn-new-request {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px; border-radius: 12px; font-weight: 700;
+    font-size: 14px; color: #080d14; text-decoration: none;
+    background: linear-gradient(135deg, var(--gold) 0%, #e09000 100%);
+    box-shadow: 0 8px 24px rgba(240,180,41,.25);
+    transition: transform .2s, box-shadow .2s;
+    border: none; cursor: pointer; font-family: var(--font-head);
+    letter-spacing: .03em;
+  }
+  .btn-new-request:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(240,180,41,.35); color: #080d14; }
+
+  .btn-investor {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    color: var(--red); background: rgba(255,23,68,.08);
+    border: 1px solid rgba(255,23,68,.25); text-decoration: none;
+    transition: all .2s; font-family: var(--font-body);
+  }
+  .btn-investor:hover { background: rgba(255,23,68,.15); color: var(--red); border-color: rgba(255,23,68,.4); }
+
+  /* ── TABLE CARD ── */
+  .table-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; position: relative;
+  }
+  .table-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+    opacity: 0.3;
+  }
+
+  .cf-table-head {
+    display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr 1.5fr;
+    padding: 14px 24px;
+    background: rgba(0,229,255,.04);
+    border-bottom: 1px solid var(--border);
+  }
+  .cf-th {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--text-3); font-family: var(--font-mono);
+  }
+  .cf-th.center { text-align: center; }
+  .cf-th.right  { text-align: right; }
+
+  .cf-row {
+    display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr 1.5fr;
+    padding: 18px 24px; align-items: center;
+    border-bottom: 1px solid var(--border);
+    transition: background .2s;
+  }
+  .cf-row:last-child { border-bottom: none; }
+  .cf-row:hover { background: rgba(0,229,255,.025); }
+
+  /* ── PROJECT ICON ── */
+  .proj-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(131,83,226,.15); border: 1px solid rgba(131,83,226,.25);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  /* ── STATUS BADGES ── */
+  .cf-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; font-family: var(--font-mono);
+    letter-spacing: .05em; white-space: nowrap;
+  }
+  .badge-pending   { background: rgba(0,229,255,.1);   color: var(--accent);        border: 1px solid rgba(0,229,255,.2); }
+  .badge-approved  { background: rgba(0,230,118,.1);   color: var(--green);         border: 1px solid rgba(0,230,118,.2); }
+  .badge-signed    { background: rgba(240,180,41,.1);  color: var(--gold);          border: 1px solid rgba(240,180,41,.2); }
+  .badge-closed    { background: rgba(131,83,226,.12); color: var(--violet-light);  border: 1px solid rgba(131,83,226,.25); }
+  .badge-other     { background: rgba(255,255,255,.06); color: var(--text-3);       border: 1px solid var(--border); }
+
+  /* ── ACTION BUTTONS ── */
+  .btn-action {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 9px; font-size: 12px; font-weight: 600;
+    font-family: var(--font-body); text-decoration: none; border: none;
+    cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .btn-sign    { background: linear-gradient(135deg, #059669, #10b981); color: #fff; box-shadow: 0 4px 14px rgba(16,185,129,.25); }
+  .btn-sign:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,.35); color: #fff; }
+  .btn-edit    { background: rgba(255,255,255,.08); color: var(--text-1); border: 1px solid var(--border); }
+  .btn-edit:hover { background: rgba(255,255,255,.14); color: var(--text-1); border-color: rgba(255,255,255,.2); }
+  .btn-dl-contract { background: rgba(5,150,105,.15);  color: #34d399; border: 1px solid rgba(5,150,105,.3); }
+  .btn-dl-contract:hover { background: rgba(5,150,105,.25); color: #34d399; }
+  .btn-dl-schedule { background: rgba(131,83,226,.15); color: var(--violet-light); border: 1px solid rgba(131,83,226,.3); }
+  .btn-dl-schedule:hover { background: rgba(131,83,226,.25); color: var(--violet-light); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center; padding: 80px 20px;
+    border: 1px dashed rgba(26,42,64,.8); border-radius: var(--radius);
+  }
+  .empty-state i { font-size: 3rem; color: var(--text-3); opacity: .3; margin-bottom: 14px; display: block; }
+  .empty-state p { color: var(--text-3); font-size: 15px; }
+
+  /* ── FOOTER ── */
+  .site-footer { background: rgba(8,13,20,.98); border-top: 1px solid var(--border); position: relative; z-index: 10; flex-shrink: 0; }
+  .site-footer::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent); opacity: 0.35; }
+  .footer-inner { max-width: 1400px; margin: 0 auto; padding: 40px 48px 28px; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; }
+  .footer-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 14px; }
+  .footer-tagline { font-size: 13.5px; color: var(--text-3); line-height: 1.65; max-width: 260px; margin-bottom: 20px; }
+  .footer-socials { display: flex; gap: 10px; }
+  .social-btn { width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,.04); border: 1px solid var(--border); color: var(--text-3); font-size: 13px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all .2s; }
+  .social-btn:hover { color: var(--accent); border-color: rgba(0,229,255,.25); background: rgba(0,229,255,.07); }
+  .footer-col-title { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .footer-links li a { font-size: 14px; color: var(--text-3); text-decoration: none; transition: color .2s; }
+  .footer-links li a:hover { color: var(--text-1); }
+  .footer-bottom { border-top: 1px solid var(--border); padding: 18px 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; max-width: 1400px; margin: 0 auto; }
+  .footer-copy { font-size: 13px; color: var(--text-3); font-family: var(--font-mono); }
+  .footer-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.15); font-size: 11.5px; font-weight: 600; color: var(--accent); font-family: var(--font-mono); }
+  .footer-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1200px) { .stats-row { grid-template-columns: repeat(2,1fr); } .footer-inner { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 900px) {
+    .main-content { padding: 24px 20px 40px; }
+    .topnav { padding: 0 16px; }
+    .topnav-links .nav-btn span:not(.nav-badge) { display: none; }
+    .cf-table-head, .cf-row { grid-template-columns: 2fr 1fr 1fr; }
+    .cf-th:nth-child(2), .cf-row > div:nth-child(2) { display: none; }
+    .cf-th:nth-child(3), .cf-row > div:nth-child(3) { display: none; }
+  }
+  @media (max-width: 600px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<div class="app-shell">
+
+  <!-- ══ NAVBAR ══ -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="#">
+      <div class="logo-icon">C</div>
+      <div class="logo-text">Champions</div>
+    </a>
+    <div class="topnav-links">
+      <a href="#" class="nav-btn"><i class="fas fa-th-large"></i> <span>Dashboard</span></a>
+      <a href="{{ path('app_wallet_index') }}" class="nav-btn"><i class="fas fa-wallet"></i> <span>My Wallets</span></a>
+      <a href="{{ path('app_trading_dashboard') }}" class="nav-btn"><i class="fas fa-chart-line"></i> <span>Trades</span></a>
+      <a href="{{ path('app_marketplace_index') }}" class="nav-btn"><i class="fas fa-shopping-cart"></i> <span>Marketplace</span></a>
+      <a href="{{ path('app_credit_index') }}" class="nav-btn active">
+        <i class="fas fa-hand-holding-usd"></i> <span>Credit</span>
+        <span class="nav-badge">{{ credits|length }}</span>
+      </a>
+      <a href="{{ path('app_projet_index') }}" class="nav-btn"><i class="fas fa-graduation-cap"></i> <span>Projects</span></a>
+      <div class="topnav-sep"></div>
+      <a href="{{ path('app_formations_index') }}" class="nav-btn"><i class="fas fa-book-open"></i> <span>Formations</span></a>
+    </div>
+    <div class="topnav-right">
+      <a href="{{ path('app_credit_investor_index') }}" class="nav-btn danger" style="padding:8px 14px; border:1px solid rgba(255,23,68,.2);">
+        <i class="fas fa-exchange-alt"></i> <span>Investor View</span>
+      </a>
+      <a href="#" class="nav-btn danger" style="padding:8px 12px"><i class="fas fa-sign-out-alt"></i></a>
+      <div class="user-card">
+        <div class="user-avatar"><i class="fas fa-user-tie"></i></div>
+        <div class="user-info">
+          <div class="user-name">Borrower</div>
+          <div class="user-role">ACTIVE</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══ TICKER ══ -->
+  <div class="ticker-wrap">
+    <div class="ticker-track">
+      {% set ticks = [
+        {sym:'BTC/USD', price:'67,412.50', change:'+2.34%', up:true},
+        {sym:'ETH/USD', price:'3,521.80',  change:'+1.87%', up:true},
+        {sym:'SOL/USD', price:'152.45',    change:'-0.62%', up:false},
+        {sym:'BNB/USD', price:'578.20',    change:'+0.94%', up:true},
+        {sym:'XRP/USD', price:'0.6120',    change:'-1.10%', up:false},
+        {sym:'ADA/USD', price:'0.4530',    change:'+3.21%', up:true},
+        {sym:'DOGE/USD',price:'0.1620',    change:'+5.44%', up:true},
+        {sym:'AVAX/USD',price:'38.91',     change:'-2.15%', up:false},
+        {sym:'LINK/USD',price:'14.72',     change:'+1.23%', up:true},
+      ] %}
+      {% for t in ticks %}{% for i in 1..2 %}
+        <span class="ticker-item">
+          <span class="sym">{{ t.sym }}</span>
+          {{ t.price }}
+          <span class="{{ t.up ? 'up' : 'dn' }}">{{ t.change }}</span>
+        </span>
+      {% endfor %}{% endfor %}
+    </div>
+  </div>
+
+  <!-- ══ MAIN CONTENT ══ -->
+  <main class="main-content">
+
+    {# ── Page header ── #}
+    <div class="page-header">
+      <div>
+        <div class="page-label">Financing Hub</div>
+        <div class="page-title">My Credit Requests</div>
+        <div class="page-sub">Manage your loan contracts and track validations in real time.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <a href="{{ path('app_credit_investor_index') }}" class="btn-investor">
+          <i class="fas fa-exchange-alt"></i> Investor View
+        </a>
+        <a href="{{ path('app_credit_new') }}" class="btn-new-request">
+          <i class="fas fa-plus"></i> New Request
+        </a>
+      </div>
+    </div>
+
+    {# ── Stats row ── #}
+    <div class="stats-row">
+      <div class="stat-card cyan">
+        <div class="stat-icon cyan"><i class="fas fa-file-invoice-dollar"></i></div>
+        <div class="stat-label">Total Requests</div>
+        <div class="stat-value">{{ credits|length }}</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-icon gold"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-label">Pending</div>
+        <div class="stat-value">{{ credits|filter(c => c.status|upper == 'OPEN')|length }}</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-label">Approved</div>
+        <div class="stat-value">{{ credits|filter(c => c.status|upper == 'APPROVED' or c.status|upper == 'SIGNED')|length }}</div>
+      </div>
+      <div class="stat-card violet">
+        <div class="stat-icon violet"><i class="fas fa-lock"></i></div>
+        <div class="stat-label">Sealed</div>
+        <div class="stat-value">{{ credits|filter(c => c.status|upper == 'CLOSED')|length }}</div>
+      </div>
+    </div>
+
+    {# ── Table card ── #}
+    <div class="table-card">
+      <div class="cf-table-head">
+        <div class="cf-th">Project</div>
+        <div class="cf-th">Commitment</div>
+        <div class="cf-th center">Conditions</div>
+        <div class="cf-th center">Status</div>
+        <div class="cf-th right">Actions</div>
+      </div>
+
+      {% for credit in credits %}
+      <div class="cf-row">
+
+        {# Project ─ col 1 #}
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="proj-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a77af5" stroke-width="2">
+              <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-weight:600;font-size:14px;color:var(--text-1)">{{ credit.projet.title }}</div>
+            <div style="font-size:11px;color:var(--text-3);font-family:var(--font-mono)">#{{ credit.idCredit }}</div>
+          </div>
+        </div>
+
+        {# Commitment ─ col 2 #}
+        <div>
+          <div style="font-family:var(--font-head);font-size:1.1rem;font-weight:800;color:var(--gold)">
+            {{ credit.montant|number_format(2) }}
+          </div>
+          <div style="font-size:11px;color:var(--text-3);font-family:var(--font-mono)">{{ credit.devise }}</div>
+        </div>
+
+        {# Conditions ─ col 3 #}
+        <div style="text-align:center;">
+          <span style="background:rgba(255,255,255,.06);padding:5px 12px;border-radius:8px;font-size:12px;font-family:var(--font-mono);color:var(--text-2)">
+            {{ credit.taux }}% · {{ credit.duree }} mo
+          </span>
+        </div>
+
+        {# Status ─ col 4 #}
+        <div style="text-align:center;">
+          {% if credit.status|upper == 'OPEN' %}
+            <span class="cf-badge badge-pending"><i class="fas fa-circle" style="font-size:6px"></i> Pending</span>
+          {% elseif credit.status|upper == 'APPROVED' %}
+            <span class="cf-badge badge-approved"><i class="fas fa-circle" style="font-size:6px"></i> Approved</span>
+          {% elseif credit.status|upper == 'SIGNED' %}
+            <span class="cf-badge badge-signed"><i class="fas fa-circle" style="font-size:6px"></i> Awaiting Signature</span>
+          {% elseif credit.status|upper == 'CLOSED' %}
+            <span class="cf-badge badge-closed"><i class="fas fa-lock" style="font-size:9px"></i> Contract Sealed</span>
+          {% else %}
+            <span class="cf-badge badge-other">{{ credit.status }}</span>
+          {% endif %}
+        </div>
+
+        {# Actions ─ col 5 #}
+        <div style="text-align:right;">
+          {# --- DÉBUT LOGIQUE ACTIONS CORRIGÉE --- #}
+          {% if credit.status|upper == 'SIGNED' or credit.status|upper == 'APPROVED' %}
+            {# ACTION : SIGNER (Via la page de preview) #}
+            <a href="{{ path('app_front_credit_preview', {'id': credit.idCredit}) }}" class="btn-action btn-sign">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/>
+                <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/>
+              </svg>
+              View &amp; Sign
+            </a>
+
+          {% elseif credit.status|upper == 'CLOSED' %}
+            {# ACTION : TÉLÉCHARGER #}
+            <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
+              <a href="{{ asset('uploads/contracts/Contract_Final_' ~ credit.idCredit ~ '.pdf') }}"
+                 class="btn-action btn-dl-contract"
+                 target="_blank">
+                <i class="fas fa-file-pdf"></i> Contract
+              </a>
+              <a href="{{ asset('uploads/contracts/Echeancier_' ~ credit.idCredit ~ '.pdf') }}"
+                 class="btn-action btn-dl-schedule"
+                 target="_blank">
+                <i class="fas fa-calendar-alt"></i> Schedule
+              </a>
+            </div>
+
+          {% elseif credit.status|upper == 'OPEN' or credit.status is empty %}
+            {# ACTION : MODIFIER #}
+            <a href="{{ path('app_credit_edit', {'id_credit': credit.idCredit}) }}" class="btn-action btn-edit">
+              <i class="fas fa-edit"></i> Edit
+            </a>
+
+          {% else %}
+            <span style="font-size:12px;color:var(--text-3);font-family:var(--font-mono)">Processing…</span>
+          {% endif %}
+          {# --- FIN LOGIQUE ACTIONS --- #}
+        </div>
+
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <p>No credit requests found. <a href="{{ path('app_credit_new') }}" style="color:var(--accent)">Submit your first request →</a></p>
+      </div>
+      {% endfor %}
+    </div>
+
+  </main>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <a class="footer-logo" href="#">
+          <div class="logo-icon">C</div>
+          <div class="logo-text">Champions</div>
+        </a>
+        <p class="footer-tagline">Your all-in-one digital finance platform. Manage fiat, crypto, and trading assets with confidence.</p>
+        <div class="footer-socials">
+          <a href="#" class="social-btn"><i class="fab fa-x-twitter"></i></a>
+          <a href="#" class="social-btn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" class="social-btn"><i class="fab fa-telegram-plane"></i></a>
+          <a href="#" class="social-btn"><i class="fab fa-github"></i></a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Platform</div>
+        <ul class="footer-links">
+          <li><a href="{{ path('app_wallet_index') }}"><i class="fas fa-wallet" style="width:14px;margin-right:7px;opacity:.5"></i>My Wallets</a></li>
+          <li><a href="{{ path('app_trading_dashboard') }}"><i class="fas fa-chart-line" style="width:14px;margin-right:7px;opacity:.5"></i>Trades</a></li>
+          <li><a href="{{ path('app_marketplace_index') }}"><i class="fas fa-shopping-cart" style="width:14px;margin-right:7px;opacity:.5"></i>Marketplace</a></li>
+          <li><a href="{{ path('app_formations_index') }}"><i class="fas fa-book-open" style="width:14px;margin-right:7px;opacity:.5"></i>Formations</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Credit</div>
+        <ul class="footer-links">
+          <li><a href="{{ path('app_credit_index') }}"><i class="fas fa-hand-holding-usd" style="width:14px;margin-right:7px;opacity:.5"></i>My Requests</a></li>
+          <li><a href="{{ path('app_credit_investor_index') }}"><i class="fas fa-exchange-alt" style="width:14px;margin-right:7px;opacity:.5"></i>Investor View</a></li>
+          <li><a href="{{ path('app_credit_new') }}"><i class="fas fa-plus-circle" style="width:14px;margin-right:7px;opacity:.5"></i>New Request</a></li>
+          <li><a href="{{ path('app_front_negociation_received') }}"><i class="fas fa-inbox" style="width:14px;margin-right:7px;opacity:.5"></i>Received Offers</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Account</div>
+        <ul class="footer-links">
+          <li><a href="#"><i class="fas fa-shield-alt" style="width:14px;margin-right:7px;opacity:.5"></i>Security</a></li>
+          <li><a href="#"><i class="fas fa-cog" style="width:14px;margin-right:7px;opacity:.5"></i>Settings</a></li>
+          <li><a href="#" style="color:var(--red)"><i class="fas fa-sign-out-alt" style="width:14px;margin-right:7px;opacity:.5"></i>Sign Out</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© {{ "now"|date("Y") }} Champions Group. All rights reserved.</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="footer-badge"><span class="dot"></span> All systems operational</span>
+        <span class="footer-copy" style="font-size:11px">v2.4.1</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+{% endblock %}

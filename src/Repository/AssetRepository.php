@@ -16,6 +16,21 @@ class AssetRepository extends ServiceEntityRepository
         parent::__construct($registry, Asset::class);
     }
 
+    /**
+ * @return Asset[]
+ */
+       public function search(string $query): array
+    {
+        return $this->createQueryBuilder('a')
+            ->where('a.symbol LIKE :q OR a.name LIKE :q OR a.type LIKE :q OR a.market LIKE :q')
+            ->setParameter('q', '%' . $query . '%')
+            ->orderBy('a.symbol', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
+
 //    /**
 //     * @return Asset[] Returns an array of Asset objects
 //     */
