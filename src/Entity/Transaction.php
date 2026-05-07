@@ -49,7 +49,8 @@ class Transaction
     private ?Conversion $conversion = null;
 
     /** @var Collection<int, Blockchain> */
-    #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'transaction')]
+    #[ORM\OneToMany(targetEntity: Blockchain::class, mappedBy: 'transaction', cascade: ['remove'])]
+
     private Collection $blockchains;
 
     public function __construct()

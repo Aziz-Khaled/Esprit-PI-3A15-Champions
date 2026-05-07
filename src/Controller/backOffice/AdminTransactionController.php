@@ -33,34 +33,25 @@ class AdminTransactionController extends AbstractController
             $transactions = $repo->findBy([], ['dateTransaction' => 'DESC']);
         }
 
-      /* foreach ($transactions as $t) {
+        $aiPredictions = [];
+        foreach ($transactions as $t) {
             $aiResult = $fraudService->verifyTransaction($t->getIdTransaction());
-            
-            $t->aiPrediction = [
+            $aiPredictions[$t->getIdTransaction()] = [
                 'is_fraud' => $aiResult['fraud_alert'] ?? false,
                 'score'    => $aiResult['percentage'] ?? 0,
                 'error'    => $aiResult['error'] ?? null
             ];
-        }*/
-
-            $aiPredictions = [];
-foreach ($transactions as $t) {
-    $aiResult = $fraudService->verifyTransaction($t->getIdTransaction());
-    $aiPredictions[$t->getIdTransaction()] = [
-        'is_fraud' => $aiResult['fraud_alert'] ?? false,
-        'score'    => $aiResult['percentage'] ?? 0,
-        'error'    => $aiResult['error'] ?? null
-    ];
-}
+        }
 
         $notifications = $notifRepo->findBy(['is_read' => [false, null]], ['created_at' => 'DESC']);
         $count = count($notifications);
 
         return $this->render('admin_panel/transactions.html.twig', [
-            'transactions' => $transactions,
-            'current_user_name' => $userName,
-            'current_type' => $type,
-            'notifications' => $notifications, 
+            'transactions'             => $transactions,
+            'aiPredictions'            => $aiPredictions,
+            'current_user_name'        => $userName,
+            'current_type'             => $type,
+            'notifications'            => $notifications, 
             'unreadNotificationsCount' => $count 
         ]);
     }

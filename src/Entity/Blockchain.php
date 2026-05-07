@@ -15,7 +15,7 @@ class Blockchain
     private ?int $id_block = null;
 
     #[ORM\ManyToOne(targetEntity: Transaction::class, inversedBy: 'blockchains')]
-    #[ORM\JoinColumn(name: 'id_transaction_id', referencedColumnName: 'id_transaction')]
+    #[ORM\JoinColumn(name: 'id_transaction_id', referencedColumnName: 'id_transaction', onDelete: 'CASCADE')]
     private ?Transaction $transaction = null;
 
     #[ORM\Column(type: 'integer', nullable: false)]

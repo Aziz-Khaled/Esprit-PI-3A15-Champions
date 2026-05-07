@@ -13,30 +13,30 @@ class FraudDetectionService
     public function __construct(
         private HttpClientInterface $client,
         private TransactionRepository $repository,
-        private string $apiUrl,
+        private string $fraudApiUrl,
     ) {}
 
     /**
  * @return array{fraud_alert: bool, percentage: int|float, error?: string}
  */
     public function verifyTransaction(int $transactionId): array
-    {
-        $data = [
-            'is_same_card_repeat'        => 1, 
-            'montant_category'           => 2,
-            'consecutive_card_recharges' => 5,
-            'trading_flow_signal'        => 0,
-            'daily_internal_transfers'   => 6,
-            'daily_conversion_count'     => 15
-        ];
+{
+    $data = [
+        'is_same_card_repeat'        => 1, 
+        'montant_category'           => 2,
+        'consecutive_card_recharges' => 3,
+        'trading_flow_signal'        => 0,
+        'daily_internal_transfers'   => 2,
+        'daily_conversion_count'     => 0
+    ];
 
-        try {
-            $response = $this->client->request('POST', $this->apiUrl, ['json' => $data, 'timeout' => 2]);
-            return $response->toArray();
-        } catch (\Exception $e) {
-            return ['fraud_alert' => false, 'percentage' => 0, 'error' => 'IA Offline'];
-        }
+    try {
+        $response = $this->client->request('POST', $this->fraudApiUrl, ['json' => $data, 'timeout' => 2]);
+        return $response->toArray();
+    } catch (\Exception $e) {
+        return ['fraud_alert' => false, 'percentage' => 0, 'error' => 'IA Offline'];
     }
+}
 
 /**
  * @param Transaction[] $transactions
@@ -115,7 +115,7 @@ $end   = (clone $date)->setTime(23, 59, 59);
         ];
 
         try {
-            $response = $this->client->request('POST', $this->apiUrl, ['json' => $dataForAI]);
+            $response = $this->client->request('POST', $this->fraudApiUrl, ['json' => $dataForAI]);
             $result   = $response->toArray();
 
             if (isset($result['fraud_alert']) && $result['fraud_alert'] === true) {

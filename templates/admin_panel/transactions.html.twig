@@ -280,16 +280,17 @@
                                                     <span class="badge badge-{{ badgeColor }} text-uppercase">{{ t.type }}</span>
                                                 </td>
                                                 <td>
-                                                    {% if t.aiPrediction is defined %}
-                                                        {% if t.aiPrediction.is_fraud %}
-                                                            <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> FRAUD ({{ t.aiPrediction.score }}%)</span>
-                                                        {% else %}
-                                                            <span class="badge badge-success"><i class="fas fa-check-circle"></i> Secure ({{ t.aiPrediction.score }}%)</span>
-                                                        {% endif %}
-                                                    {% else %}
-                                                        <span class="text-muted small">N/A</span>
-                                                    {% endif %}
-                                                </td>
+    {% set ai = aiPredictions[t.idTransaction] ?? null %}
+    {% if ai %}
+        {% if ai.is_fraud %}
+            <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> FRAUD ({{ ai.score }}%)</span>
+        {% else %}
+            <span class="badge badge-success"><i class="fas fa-check-circle"></i> Secure ({{ ai.score }}%)</span>
+        {% endif %}
+    {% else %}
+        <span class="text-muted small">N/A</span>
+    {% endif %}
+</td>
                                                 <td>{{ t.dateTransaction ? t.dateTransaction|date('M d, Y H:i') : 'N/A' }}</td>
                                             </tr>
                                         {% else %}
