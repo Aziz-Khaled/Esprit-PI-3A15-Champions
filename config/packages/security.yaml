@@ -51,7 +51,3 @@ security:
         - { path: ^/connect,  roles: PUBLIC_ACCESS }
         - { path: ^/admin/users/tesseract-debug,  roles: PUBLIC_ACCESS }
         - { path: ^/admin/users/extract-id-raw,   roles: PUBLIC_ACCESS }
-
-
-
-

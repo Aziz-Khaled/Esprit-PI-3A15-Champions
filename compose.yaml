@@ -1,20 +1,47 @@
+version: '3.8'
 
 services:
-###> doctrine/doctrine-bundle ###
-  database:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: symfony_web
+    restart: always
+    ports:
+      - "8000:80"
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
+      # L'URL de la base de données configurée pour pointer vers le conteneur `database`
+      - DATABASE_URL=mysql://db_user:db_password@database:3306/db_name?serverVersion=8&charset=utf8mb4
+      # On peut ajouter ici d'autres variables d'environnement utiles, ex:
+      - APP_ENV=prod
+      - APP_SECRET=ChangeMeInProduction
+    depends_on:
+      - database
+      - fraud_api
+
+  fraud_api:
+    build:
+      context: ./fraud_api
+      dockerfile: Dockerfile
+    container_name: python_fraud_api
+    restart: always
+    ports:
+      - "5000:5000"
+
+  database:
+    image: mysql:8.0
+    container_name: mysql_database
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: db_name
+      MYSQL_USER: db_user
+      MYSQL_PASSWORD: db_password
     volumes:
-      - database_data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
+      - database_data:/var/lib/mysql
+    # Optionnel, exposer le port si vous voulez y accéder depuis l'extérieur (ex: DBeaver)
+    # ports:
+    #   - "3306:3306"
 
 volumes:
-###> doctrine/doctrine-bundle ###
   database_data:
-###< doctrine/doctrine-bundle ###
