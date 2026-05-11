@@ -1,84 +1,81 @@
-    {% for product in products %}
-    <div class="col-sm-6 col-lg-6 col-xl-4 col-xxl-3 product-card-col">
-        <!-- ... card content ... -->
-        <div class="card h-100 premium-card transition-premium p-0 border-0 bg-white" style="position: relative; overflow: visible !important;">
+ {% for product in products %}
+    <div class="col-sm-6 col-lg-4 col-xl-3 product-card-col">
+        <div class="wallet-card h-100 d-flex flex-column" style="background: var(--bg-card);">
+            <!-- Wishlist Heart Button -->
+            <button class="wishlist-btn-floating act-btn position-absolute"
+                    data-id="{{ product.id }}"
+                    style="top: 15px; right: 15px; z-index: 10;">
+                <i class="{{ product.id in app.session.get('wishlist', []) ? 'fas' : 'far' }} fa-heart" style="color: var(--red);"></i>
+            </button>
+
             <!-- Media Area -->
-            <div class="media-container position-relative overflow-hidden m-3 rounded-5 bg-soft-light d-flex align-items-center justify-content-center">
+            <a href="{{ path('app_marketplace_product_show', {id: product.id}) }}" class="d-block position-relative overflow-hidden rounded-4 mb-3" style="aspect-ratio: 1/1; background: rgba(0,0,0,0.2); border: 1px solid var(--border); text-decoration: none;">
                 {% if product.imageUrl %}
-                    <img src="{{ product.imageUrl|slice(0, 4) == 'http' ? product.imageUrl : asset('uploads/products/' ~ product.imageUrl) }}" class="card-img-top premium-img" alt="{{ product.name }}">
+                    <img src="{{ product.imageUrl|slice(0, 4) == 'http' ? product.imageUrl : asset('uploads/products/' ~ product.imageUrl) }}"
+                         class="w-100 h-100 object-fit-cover transition-all" style="transition: transform 0.5s ease;" alt="{{ product.name }}">
                 {% else %}
-                    <div class="placeholder-icon text-center">
-                        <i class="fas fa-cube fa-6x text-gradient-blue opacity-25"></i>
+                    <div class="w-100 h-100 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-cube fa-3x" style="color: var(--accent); opacity: 0.2;"></i>
                     </div>
                 {% endif %}
-                
-                <div class="category-floating">
-                    <span class="badge badge-premium shadow-sm">
-                        <i class="fas fa-tag me-2"></i> {{ product.category|replace({'_': ' '})|title }}
+               
+                <div class="position-absolute bottom-0 start-0 p-3 w-100" style="background: linear-gradient(to top, rgba(8,13,20,0.8), transparent);">
+                    <span class="tx-type" style="font-size: 9px;">
+                        {{ product.category|replace({'_': ' '})|upper }}
                     </span>
                 </div>
-
-                <div class="quick-action-overlay d-flex flex-column gap-2 p-4 justify-content-center align-items-center">
-                    <a href="{{ path('app_marketplace_product_show', {id: product.id}) }}" class="btn btn-glass w-100 rounded-pill fw-bold text-decoration-none">
-                        <i class="fas fa-eye me-2"></i> Details
-                    </a>
-                </div>
-            </div>
-            
+            </a>
+           
             <!-- Content Area -->
-            <div class="card-body p-4 pt-2 d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="flex-grow-1 pe-2">
-                        <h3 class="h5 fw-black mb-1 card-title-premium text-gray-900">{{ product.name }}</h3>
-                        <div class="d-flex align-items-center">
-                            <span class="brand-tag text-uppercase letter-spacing-1">{{ product.brand ?: 'Fintech Asset' }}</span>
-                            <span class="dot-separator mx-2"></span>
-                            <div class="rating-stars small text-warning">
-                                <i class="fas fa-star"></i>
-                                <span class="text-muted fw-bold ms-1">{{ product.avgRating ?: '4.5' }}</span>
-                            </div>
+            <div class="d-flex flex-column flex-grow-1">
+                <div class="mb-2">
+                    <a href="{{ path('app_marketplace_product_show', {id: product.id}) }}" class="text-decoration-none">
+                        <h3 class="h6 fw-bold mb-1 text-white truncate-1">{{ product.name }}</h3>
+                    </a>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="user-role" style="font-size: 9px;">{{ product.brand ?: 'CHAMPIONS CORE' }}</span>
+                        <div class="d-flex align-items-center text-warning" style="font-size: 10px;">
+                            <i class="fas fa-star me-1"></i>
+                            <span class="text-white opacity-75">{{ product.avgRating ?: '4.5' }}</span>
                         </div>
                     </div>
                 </div>
-                
-                <div class="d-flex align-items-center justify-content-between mb-4 mt-2">
-                    <div class="price-stack">
-                        {% if product.discountPrice and product.discountPrice > 0 %}
-                            <div class="price-actual fw-black text-success h4 mb-0">{{ product.discountPrice }}<small class="x-small ms-1">BTC</small></div>
-                            <del class="price-old text-muted x-small font-weight-bold">{{ product.price }} BTC</del>
-                        {% else %}
-                            <div class="price-actual fw-black text-primary h4 mb-0">{{ product.price }}<small class="x-small ms-1">BTC</small></div>
-                            <span class="price-badge-sub">Market Price</span>
-                        {% endif %}
+               
+                <div class="mt-auto">
+                    <div class="d-flex align-items-center justify-content-between mb-3 p-2 rounded-3" style="background: rgba(0,0,0,0.2); border: 1px solid var(--border);">
+                        <div>
+                            {% if product.discountPrice and product.discountPrice > 0 %}
+                                <div class="tx-amount up" style="font-size: 16px;">{{ product.discountPrice }} <small style="font-size: 10px;">BTC</small></div>
+                                <del class="text-muted" style="font-size: 10px;">{{ product.price }} BTC</del>
+                            {% else %}
+                                <div class="tx-amount" style="font-size: 16px; color: var(--accent);">{{ product.price }} <small style="font-size: 10px;">BTC</small></div>
+                                <span class="user-role" style="font-size: 8px;">MARKET PRICE</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-end">
+                            {% if product.stock > 0 %}
+                                <div class="status-badge actif py-1 px-2" style="font-size: 8px;">IN STOCK</div>
+                                <div class="user-role mt-1" style="font-size: 9px;">{{ product.stock }} UNITS</div>
+                            {% else %}
+                                <div class="status-badge bloque py-1 px-2" style="font-size: 8px;">SOLD OUT</div>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div class="stock-panel text-end">
-                        {% if product.stock > 0 %}
-                            <div class="stock-status-active x-small fw-black">
-                                <span class="status-pulse me-1"></span> IN STOCK
-                            </div>
-                            <div class="stock-count text-muted">{{ product.stock }} units</div>
-                        {% else %}
-                            <div class="stock-status-out x-small fw-black">SOLD OUT</div>
-                        {% endif %}
-                    </div>
-                </div>
 
-                <div class="mt-auto action-block d-flex gap-2">
-                    {% if product.stock > 0 %}
-                        <a href="{{ path('app_cart_add', {id: product.id}) }}" class="btn btn-primary-premium flex-grow-1 py-3 rounded-4 fw-black shadow-glow text-decoration-none d-flex align-items-center justify-content-center">
-                            <i class="fas fa-shopping-bag me-2"></i> ACHETER
+                    <div class="d-flex gap-2">
+                        <a href="{{ path('app_marketplace_product_show', {id: product.id}) }}" class="btn-outline-head flex-grow-1 py-2" style="font-size: 11px;">
+                            <i class="fas fa-eye me-1"></i> DETAILS
                         </a>
-                    {% else %}
-                        <button class="btn btn-disabled flex-grow-1 py-3 rounded-4 fw-black border-dashed" disabled>
-                            <i class="fas fa-exclamation-circle me-2"></i> RUPTURE
-                        </button>
-                    {% endif %}
-                    
-                    <button class="wishlist-btn-floating btn btn-white border rounded-4 px-3 hov-up shadow-sm transition-all" 
-                            data-id="{{ product.id }}"
-                            style="min-width: 54px; background: #fffcfc;">
-                        <i class="{{ product.id in app.session.get('wishlist', []) ? 'fas animate-heart' : 'far' }} fa-heart text-danger h5 mb-0"></i>
-                    </button>
+                        {% if product.stock > 0 %}
+                            <a href="{{ path('app_cart_add', {id: product.id}) }}" class="modal-btn-primary flex-grow-1 py-2 text-center text-decoration-none d-block">
+                                <i class="fas fa-shopping-bag me-1"></i> BUY
+                            </a>
+                        {% else %}
+                            <button class="modal-btn-secondary py-2 flex-grow-1 opacity-50" disabled style="font-size: 10px;">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -87,8 +84,8 @@
     <div class="col-12">
         <div class="text-center py-5">
             <div class="py-4">
-                <i class="fas fa-search fa-4x mb-4" style="color: #cbd5e1;"></i>
-                <h4 class="fw-bold text-muted mb-2">Aucun produit trouvé</h4>
+                <i class="fas fa-search fa-4x mb-4" style="color: var(--text-3); opacity: 0.3;"></i>
+                <h4 class="fw-bold text-white mb-2">Aucun produit trouvé</h4>
                 <p class="text-muted">Essayez un autre mot-clé de recherche ou modifiez les filtres</p>
             </div>
         </div>

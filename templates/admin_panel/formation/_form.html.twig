@@ -1,69 +1,259 @@
-<div class="row g-3">
-    <div class="col-md-6">{{ form_row(form.titre) }}</div>
-    <div class="col-md-6">{{ form_row(form.domaine) }}</div>
-    <div class="col-md-6">{{ form_row(form.dateDebut) }}</div>
-    <div class="col-md-6">{{ form_row(form.dateFin) }}</div>
-    <div class="col-md-4">{{ form_row(form.prix) }}</div>
-    <div class="col-md-4">{{ form_row(form.capaciteMax) }}</div>
-    <div class="col-md-4">{{ form_row(form.statut) }}</div>
-    <div class="col-12 position-relative">
-        <button type="button" class="btn btn-sm btn-outline-info position-absolute" id="btn-generate-ai" style="right: 15px; top: 0; z-index: 10;">
-            <i class="fas fa-robot"></i> Générer avec l'IA
-        </button>
-        {{ form_row(form.description) }}
-    </div>
-    <div class="col-12">{{ form_row(form.utilisateur) }}</div>
+
+
+{% block title %}{{ button_label|default('Enregistrer') == 'Modifier' ? 'Modifier' : 'Nouvelle' }} Formation — NexVault Admin{% endblock %}
+
+{% block content %}
+
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        <i class="fas fa-graduation-cap mr-2 text-primary"></i>
+        {{ button_label|default('Enregistrer') == 'Modifier' ? 'Modifier la formation' : 'Nouvelle formation' }}
+    </h1>
+    <a href="{{ path('app_admin_formation_index') }}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left fa-sm text-white-50 mr-1"></i> Retour à la liste
+    </a>
 </div>
 
-<div class="mt-4 d-flex justify-content-between">
-    <a href="{{ path('app_admin_formation_index') }}" class="btn btn-secondary">Retour</a>
-    <button type="submit" class="btn btn-success">{{ button_label|default('Enregistrer') }}</button>
+<!-- Form Card -->
+<div class="row justify-content-center">
+    <div class="col-xl-10 col-lg-12">
+        <div class="card shadow mb-4">
+
+            <div class="card-header py-3 d-flex align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-edit mr-2"></i>
+                    Informations de la formation
+                </h6>
+            </div>
+
+            <div class="card-body">
+                {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                    {# ── ROW 1 : Titre + Domaine ── #}
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            {{ form_label(form.titre, 'Titre', {'label_attr': {'class': 'font-weight-bold text-gray-700 small'}}) }}
+                            {{ form_widget(form.titre, {'attr': {'class': 'form-control form-control-user', 'placeholder': 'Titre de la formation'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.titre) }}</div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            {{ form_label(form.domaine, 'Domaine', {'label_attr': {'class': 'font-weight-bold text-gray-700 small'}}) }}
+                            {{ form_widget(form.domaine, {'attr': {'class': 'form-control'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.domaine) }}</div>
+                        </div>
+                    </div>
+
+                    {# ── ROW 2 : Dates ── #}
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            {{ form_label(form.dateDebut, 'Date de début', {'label_attr': {'class': 'font-weight-bold text-gray-700 small'}}) }}
+                            {{ form_widget(form.dateDebut, {'attr': {'class': 'form-control'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.dateDebut) }}</div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            {{ form_label(form.dateFin, 'Date de fin', {'label_attr': {'class': 'font-weight-bold text-gray-700 small'}}) }}
+                            {{ form_widget(form.dateFin, {'attr': {'class': 'form-control'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.dateFin) }}</div>
+                        </div>
+                    </div>
+
+                    {# ── ROW 3 : Prix + Capacité + Statut ── #}
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            {{ form_label(form.prix, 'Prix (TND)', {'label_attr': {'class': 'font-weight-bold text-gray-700 small'}}) }}
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light border-right-0">
+                                        <i class="fas fa-money-bill-wave text-success fa-sm"></i>
+                                    </span>
+                                </div>
+                                {{ form_widget(form.prix, {'attr': {'class': 'form-control border-left-0', 'placeholder': '0.00'}}) }}
+                            </div>
+                            <div class="text-danger small mt-1">{{ form_errors(form.prix) }}</div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            {{ form_label(form.capaciteMax, 'Capacité max.', {'label_attr': {'class': 'font-weight-bold text-gray-700 small'}}) }}
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light border-right-0">
+                                        <i class="fas fa-users text-info fa-sm"></i>
+                                    </span>
+                                </div>
+                                {{ form_widget(form.capaciteMax, {'attr': {'class': 'form-control border-left-0', 'placeholder': '0'}}) }}
+                            </div>
+                            <div class="text-danger small mt-1">{{ form_errors(form.capaciteMax) }}</div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            {{ form_label(form.statut, 'Statut', {'label_attr': {'class': 'font-weight-bold text-gray-700 small'}}) }}
+                            {{ form_widget(form.statut, {'attr': {'class': 'form-control custom-select'}}) }}
+                            <div class="text-danger small mt-1">{{ form_errors(form.statut) }}</div>
+                        </div>
+                    </div>
+
+                    {# ── DESCRIPTION + AI BUTTON ── #}
+                    <div class="form-group">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="font-weight-bold text-gray-700 small mb-0">Description</label>
+                            <button type="button" class="btn btn-sm btn-outline-info" id="btn-generate-ai">
+                                <i class="fas fa-robot mr-1"></i> Générer avec l'IA
+                            </button>
+                        </div>
+                        {{ form_widget(form.description, {'attr': {
+                            'class': 'form-control',
+                            'rows': 5,
+                            'placeholder': 'Décrivez le contenu, les objectifs et le public cible de cette formation…'
+                        }}) }}
+                        <div class="text-danger small mt-1">{{ form_errors(form.description) }}</div>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-lightbulb text-warning mr-1"></i>
+                            Saisissez d'abord un titre, puis cliquez sur <strong>Générer avec l'IA</strong> pour obtenir une description automatique.
+                        </small>
+                    </div>
+
+                    {# ── UTILISATEUR ── #}
+                    <div class="form-group">
+                        {{ form_label(form.utilisateur, 'Formateur / Responsable', {'label_attr': {'class': 'font-weight-bold text-gray-700 small'}}) }}
+                        {{ form_widget(form.utilisateur, {'attr': {'class': 'form-control custom-select'}}) }}
+                        <div class="text-danger small mt-1">{{ form_errors(form.utilisateur) }}</div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    {# ── ACTIONS ── #}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ path('app_admin_formation_index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="fas fa-save mr-1"></i>
+                            {{ button_label|default('Enregistrer') }}
+                        </button>
+                    </div>
+
+                {{ form_end(form) }}
+            </div>
+            {# end card-body #}
+
+        </div>
+        {# end card #}
+    </div>
 </div>
+
+{% endblock %}
+
+{% block javascripts %}
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const btnGenerate = document.getElementById('btn-generate-ai');
-    // Find the inputs. Since Symfony generates IDs like formation_titre and formation_description
-    const titreInput = document.querySelector('input[id$="_titre"]');
+document.addEventListener('DOMContentLoaded', function () {
+
+    const btnGenerate  = document.getElementById('btn-generate-ai');
+    const titreInput   = document.querySelector('input[id$="_titre"]');
     const descTextarea = document.querySelector('textarea[id$="_description"]');
 
-    if (btnGenerate && titreInput && descTextarea) {
-        btnGenerate.addEventListener('click', function() {
-            const titre = titreInput.value.trim();
-            if (!titre) {
-                alert('Veuillez d\'abord saisir un titre pour la formation.');
-                return;
+    if (!btnGenerate || !titreInput || !descTextarea) return;
+
+    btnGenerate.addEventListener('click', function () {
+        const titre = titreInput.value.trim();
+
+        if (!titre) {
+            /* Bootstrap-style inline alert instead of native alert() */
+            showToast('Veuillez d\'abord saisir un titre pour la formation.', 'warning');
+            titreInput.focus();
+            return;
+        }
+
+        const originalHTML = btnGenerate.innerHTML;
+        btnGenerate.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Génération…';
+        btnGenerate.disabled  = true;
+
+        fetch('{{ path("app_admin_formation_generate_description") }}', {
+            method:  'POST',
+            headers: {
+                'Content-Type':     'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ titre: titre })
+        })
+        .then(function (response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function (data) {
+            if (data.error) {
+                showToast('Erreur : ' + data.error, 'danger');
+            } else if (data.description) {
+                descTextarea.value = data.description;
+                /* Subtle highlight to signal the field was filled */
+                descTextarea.classList.add('border-info');
+                setTimeout(function () {
+                    descTextarea.classList.remove('border-info');
+                }, 2000);
+                showToast('Description générée avec succès !', 'success');
             }
-
-            const originalText = btnGenerate.innerHTML;
-            btnGenerate.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération...';
-            btnGenerate.disabled = true;
-
-            fetch('{{ path("app_admin_formation_generate_description") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ titre: titre })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert('Erreur: ' + data.error);
-                } else if (data.description) {
-                    descTextarea.value = data.description;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Une erreur est survenue lors de la génération.');
-            })
-            .finally(() => {
-                btnGenerate.innerHTML = originalText;
-                btnGenerate.disabled = false;
-            });
+        })
+        .catch(function (err) {
+            console.error('AI generation error:', err);
+            showToast('Une erreur est survenue lors de la génération.', 'danger');
+        })
+        .finally(function () {
+            btnGenerate.innerHTML = originalHTML;
+            btnGenerate.disabled  = false;
         });
+    });
+
+    /* ── Lightweight toast helper (no extra dependencies) ── */
+    function showToast(message, type) {
+        var existing = document.getElementById('ai-toast');
+        if (existing) existing.remove();
+
+        var colorMap = {
+            success: { bg: '#1cc88a', icon: 'fa-check-circle' },
+            warning: { bg: '#f6c23e', icon: 'fa-exclamation-triangle' },
+            danger:  { bg: '#e74a3b', icon: 'fa-times-circle'         },
+            info:    { bg: '#36b9cc', icon: 'fa-info-circle'           }
+        };
+        var c = colorMap[type] || colorMap['info'];
+
+        var toast = document.createElement('div');
+        toast.id  = 'ai-toast';
+        toast.style.cssText = [
+            'position:fixed',
+            'bottom:24px',
+            'right:24px',
+            'z-index:9999',
+            'min-width:280px',
+            'max-width:380px',
+            'background:' + c.bg,
+            'color:#fff',
+            'padding:14px 18px',
+            'border-radius:6px',
+            'box-shadow:0 4px 16px rgba(0,0,0,.18)',
+            'display:flex',
+            'align-items:center',
+            'gap:10px',
+            'font-size:14px',
+            'font-family:Nunito,sans-serif',
+            'font-weight:600',
+            'animation:fadeInUp .25s ease both'
+        ].join(';');
+
+        toast.innerHTML =
+            '<i class="fas ' + c.icon + ' fa-lg" style="flex-shrink:0"></i>' +
+            '<span style="flex:1">' + message + '</span>' +
+            '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:#fff;font-size:18px;line-height:1;cursor:pointer;margin-left:4px">&times;</button>';
+
+        document.body.appendChild(toast);
+        setTimeout(function () { if (toast.parentElement) toast.remove(); }, 4500);
+    }
+
+    /* Inject the keyframe once */
+    if (!document.getElementById('ai-toast-style')) {
+        var s = document.createElement('style');
+        s.id = 'ai-toast-style';
+        s.textContent = '@keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}';
+        document.head.appendChild(s);
     }
 });
 </script>
+{% endblock %}

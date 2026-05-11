@@ -4,47 +4,279 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Marketplace Fintech{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1e293b; }
-        .navbar-brand { font-weight: 700; color: #3b82f6 !important; }
-        .navbar { border-bottom: 1px solid #f1f5f9; background: white !important; }
-        .nav-link { font-weight: 500; color: #475569 !important; }
-        .nav-link:hover { color: #3b82f6 !important; }
-        .btn-primary { background-color: #3b82f6; border: none; font-weight: 500; border-radius: 8px; }
-        .btn-primary:hover { background-color: #2563eb; }
-        .cart-badge { background-color: #ef4444; font-size: 0.65rem; padding: 2px 6px; border-radius: 50px; position: absolute; top: 0; right: 0; transform: translate(50%, -50%); }
+        :root {
+            --bg-base:      #080d14;
+            --bg-card:      #0e1623;
+            --bg-card2:     #111b2b;
+            --border:       #1a2a40;
+            --border-glow:  rgba(0,229,255,.15);
+            --accent:       #00e5ff;
+            --accent2:      #00b4cc;
+            --accent-glow:  rgba(0,229,255,.18);
+            --gold:         #f0b429;
+            --gold-dim:     rgba(240,180,41,.10);
+            --green:        #00e676;
+            --green-dim:    rgba(0,230,118,.10);
+            --red:          #ff1744;
+            --red-dim:      rgba(255,23,68,.10);
+            --text-1:       #f0f4ff;
+            --text-2:       #f0f4ff;
+            --text-3:       #f0f4ff;
+            --font-head:    'Syne', sans-serif;
+            --font-body:    'Space Grotesk', sans-serif;
+            --font-mono:    'DM Mono', monospace;
+            --radius:       16px;
+            --navbar-h:     72px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-base);
+            color: var(--text-1);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.2); border-radius: 3px; }
+
+        /* ── BACKGROUND EFFECTS ── */
+        .bg-grid {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background-image:
+                linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+            background-size: 52px 52px;
+            animation: gridDrift 25s linear infinite;
+        }
+        @keyframes gridDrift {
+            0%   { background-position: 0 0; }
+            100% { background-position: 52px 52px; }
+        }
+        .bg-orb {
+            position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0;
+        }
+        .bg-orb-1 {
+            width: 600px; height: 600px; top: -200px; left: -150px;
+            background: radial-gradient(circle, rgba(0,229,255,.08) 0%, transparent 70%);
+            animation: orbFloat 10s ease-in-out infinite alternate;
+        }
+        .bg-orb-2 {
+            width: 440px; height: 440px; bottom: -160px; right: -100px;
+            background: radial-gradient(circle, rgba(240,180,41,.07) 0%, transparent 70%);
+            animation: orbFloat 14s ease-in-out infinite alternate-reverse;
+        }
+        @keyframes orbFloat {
+            from { transform: translate(0,0) scale(1); }
+            to   { transform: translate(28px,18px) scale(1.06); }
+        }
+
+        /* ── NAVBAR ── */
+        .navbar {
+            height: var(--navbar-h);
+            background: rgba(8,13,20,.97);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+        }
+        .navbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+            opacity: 0.25;
+        }
+        .navbar-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-family: var(--font-head); font-weight: 700;
+            background: linear-gradient(90deg, var(--text-1), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .logo-icon {
+            width: 34px; height: 34px; border-radius: 9px;
+            background: linear-gradient(135deg, #1de9b6, #00b4cc);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 16px; color: #080d14;
+            font-family: var(--font-head);
+            box-shadow: 0 0 16px rgba(0,229,255,.3);
+            -webkit-text-fill-color: #080d14;
+        }
+        .nav-link {
+            font-family: var(--font-body); font-size: 14px; font-weight: 500;
+            color: var(--text-2) !important;
+            padding: 8px 16px !important;
+            transition: all .2s; border-radius: 10px;
+        }
+        .nav-link:hover {
+            background: rgba(255,255,255,.05);
+            color: var(--accent) !important;
+        }
+        .nav-link.active {
+            color: var(--accent) !important;
+            background: rgba(0,229,255,.08);
+            border: 1px solid rgba(0,229,255,.15);
+        }
+
+        .btn-cart {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
+            background: transparent; color: var(--text-1);
+            border: 1px solid var(--border); transition: all .2s;
+            position: relative;
+            text-decoration: none;
+        }
+        .btn-cart:hover {
+            border-color: var(--accent); background: rgba(0,229,255,.06); color: var(--accent);
+        }
+        .cart-badge {
+            position: absolute; top: -5px; right: -5px;
+            padding: 2px 7px; border-radius: 20px;
+            background: var(--red); color: white;
+            font-size: 10px; font-weight: 700; font-family: var(--font-mono);
+            box-shadow: 0 0 10px rgba(255,23,68,.4);
+        }
+
+        main { flex: 1; position: relative; z-index: 1; }
+
+        /* ── FOOTER ── */
+        .site-footer {
+            background: rgba(8,13,20,.98);
+            border-top: 1px solid var(--border);
+            position: relative;
+            z-index: 10; padding: 40px 0 20px;
+        }
+        .site-footer::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+            opacity: 0.35;
+        }
+        .footer-copy {
+            font-size: 13px; color: var(--text-3); font-family: var(--font-mono);
+            text-align: center;
+        }
+
+        /* ── WALLET COMMON COMPONENTS ── */
+        .wallet-card {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px;
+            position: relative; overflow: hidden;
+            transition: all .25s ease;
+        }
+        .wallet-card:hover { border-color: rgba(0,229,255,.2); transform: translateY(-2px); }
+
+        .act-btn {
+            width: 34px; height: 34px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; cursor: pointer; border: 1px solid var(--border);
+            background: rgba(255,255,255,.03); color: var(--text-2);
+            transition: all .2s; text-decoration: none;
+        }
+        .act-btn:hover { color: var(--text-1); border-color: var(--accent); background: rgba(0,229,255,.06); }
+        .act-btn.del:hover { color: var(--red); border-color: var(--red-dim); background: rgba(255,23,68,.08); }
+
+        .modal-btn-primary {
+            width: 100%; padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent) 0%, #0099cc 100%);
+            border: none; border-radius: 12px; color: #080d14;
+            font-family: var(--font-head); font-weight: 700; font-size: 14px;
+            letter-spacing: .04em; cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 8px 24px rgba(0,229,255,.2);
+        }
+        .modal-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(0,229,255,.3); color: #080d14; }
+
+        .f-label {
+            display: block; font-size: 11px; font-weight: 700; letter-spacing: .08em;
+            text-transform: uppercase; color: var(--text-3); margin-bottom: 8px;
+        }
+        .f-input, .f-select {
+            width: 100%; padding: 12px 16px;
+            background: rgba(0,0,0,.25);
+            border: 1px solid rgba(90,112,144,.3);
+            border-radius: 12px; color: var(--text-1);
+            font-size: 14px; font-family: var(--font-body); outline: none;
+            transition: all .2s;
+        }
+        .f-input:focus, .f-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .status-badge {
+            padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 700;
+            font-family: var(--font-mono); letter-spacing: .05em;
+            display: inline-flex; align-items: center;
+        }
+        .status-badge.actif { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,230,118,.2); }
+        .status-badge.bloque { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,23,68,.2); }
+
+        .tx-type {
+            display: inline-block; padding: 3px 10px; border-radius: 6px;
+            font-size: 10px; font-weight: 700; font-family: var(--font-mono);
+            background: rgba(0,229,255,.08); color: var(--accent);
+            border: 1px solid rgba(0,229,255,.12);
+        }
+
+        .page-header { margin-bottom: 40px; }
+        .page-label { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+        .page-title { font-family: var(--font-head); font-weight: 800; font-size: 32px; color: white; }
+        .page-sub { font-size: 14px; color: var(--text-3); margin-top: 4px; }
+
+        .btn-outline-head {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--text-2); padding: 8px 20px; border-radius: 10px;
+            font-size: 13px; font-weight: 600; transition: all .2s;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-outline-head:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,.05); }
+
     </style>
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
-        <div class="container-fluid px-md-5 py-2">
-            <a class="navbar-brand d-flex align-items-center" href="{{ path('app_marketplace_index') }}">
-                <i class="fas fa-store rounded-circle bg-primary text-white p-2 me-2"></i>
-                FINTECH SHOP
+    <div class="bg-grid"></div>
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container-fluid px-md-5">
+            <a class="navbar-brand" href="{{ path('app_marketplace_index') }}">
+                <div class="logo-icon">C</div>
+                <span>CHAMPIONS STORE</span>
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+                <i class="fas fa-bars text-white"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item mx-2">
-                        <a class="nav-link" href="{{ path('app_marketplace_index') }}">Marketplace</a>
+                    <li class="nav-item">
+                        <a class="nav-link {{ app.request.attributes.get('_route') == 'app_marketplace_index' ? 'active' : '' }}" href="{{ path('app_marketplace_index') }}">Marketplace</a>
                     </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link" href="{{ path('app_order_index') }}">My Orders</a>
+                    <li class="nav-item">
+                        <a class="nav-link {{ app.request.attributes.get('_route') == 'app_order_index' ? 'active' : '' }}" href="{{ path('app_order_index') }}">Orders</a>
                     </li>
-                    <li class="nav-item mx-2">
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ path('app_projet') }}">Dashboard</a>
                     </li>
-                    <li class="nav-item mx-2 position-relative">
-                        <a class="btn btn-outline-primary rounded-pill px-4" href="{{ path('app_cart_index') }}">
-                            <i class="fas fa-shopping-cart me-2"></i> Cart
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn-cart" href="{{ path('app_cart_index') }}">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Panier</span>
                             {% if app.session.get('panier')|length > 0 %}
-                                <span class="cart-badge text-white font-weight-bold">{{ app.session.get('panier')|length }}</span>
+                                <span class="cart-badge">{{ app.session.get('panier')|length }}</span>
                             {% endif %}
                         </a>
                     </li>
@@ -55,18 +287,17 @@
 
     <main class="py-5">
         <div class="container-fluid px-md-5">
-
             {% block body %}{% endblock %}
         </div>
     </main>
 
-    <footer class="py-5 border-top bg-light mt-auto">
-        <div class="container-fluid text-center">
-            <p class="text-muted small">© {{ "now"|date("Y") }} Fintech Shop Marketplace. Tous droits réservés.</p>
+    <footer class="site-footer">
+        <div class="container text-center">
+            <p class="footer-copy">© {{ "now"|date("Y") }} Champions Marketplace. Engineered for Excellence.</p>
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block javascripts %}{% endblock %}
 </body>
 </html>
