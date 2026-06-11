@@ -105,9 +105,9 @@ This project was built collaboratively. Each team member owned a dedicated featu
 | 1 | **User Management & Auth** | Registration, login, JWT, OAuth2 (Google/Auth0), 2FA |
 | 2 | **Trading & Portfolio** | Asset management, trade execution, portfolio tracking |
 | 3 | **Payments & Transactions** | Stripe payments, transaction history, invoicing |
-| 4 | **Fraud Detection** | Python microservice for anomaly detection on transactions |
-| 5 | **Notifications & Alerts** | Email (Gmail), SMS (Twilio), and in-app notifications |
-| 6 | **Dashboard & Reporting** | Charts, PDF exports, QR codes, calendar integration |
+| 4 | **Loan management** | Loan applications, approval workflow, repayment tracking |
+| 5 | **Trading training sessions** | Session scheduling, participant registration, learning materials management, and progress tracking |
+| 6 | **crypto Marketplace** | Cryptocurrency listing and trading, real-time market data, wallet integration, and transaction monitoring |
 
 > The integrated and final version of the application lives on the **`dev`** branch.
 
